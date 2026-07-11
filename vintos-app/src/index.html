@@ -433,6 +433,7 @@ input[type="range"]::-webkit-slider-thumb {
 @keyframes avpulse { 0%,100%{opacity:0.4;transform:scale(0.95)} 50%{opacity:1;transform:scale(1.05);box-shadow:0 0 20px 4px rgba(83,74,183,0.4)} }
 .av-ripple { position:fixed;border-radius:50%;pointer-events:none;background:rgba(201,107,60,0.25);animation:avripple 0.6s ease-out forwards; }
 @keyframes avripple { from{width:20px;height:20px;margin:-10px;opacity:1} to{width:70px;height:70px;margin:-35px;opacity:0} }
+.dim .bar-fill{background:#e8dcc0 !important;}
 </style>
 </head>
 <body>
@@ -565,6 +566,11 @@ input[type="range"]::-webkit-slider-thumb {
                     </div>
                     <audio id="voice-player" preload="auto" playsinline></audio>
                     <div id="voice-status" style="font-size:0.6rem;color:var(--text-dim);margin-top:0.3rem;"></div>
+                    <div id="briefing-row" style="display:none;margin-top:0.9rem;padding-top:0.7rem;border-top:0.5px solid rgba(180,170,210,0.15);">
+                        <div style="font-size:0.65rem;color:var(--text-dim);letter-spacing:0.08em;">MORNING BRIEFING</div>
+                        <div id="briefing-date" style="font-size:0.65rem;color:var(--text-dim);font-style:italic;margin:0.3rem 0;"></div>
+                        <button onclick="playBriefing()" style="background:none;border:0.5px solid rgba(180,170,210,0.3);border-radius:6px;padding:6px 14px;color:var(--text-dim);font-size:0.7rem;cursor:pointer;">&#9654; play briefing</button>
+                    </div>
                 </div>
 
                 <!-- voice conversation thread -->
@@ -689,6 +695,18 @@ input[type="range"]::-webkit-slider-thumb {
                         <div id="error-badge" style="width:8px;height:8px;border-radius:50%;background:#9b8eb8;flex-shrink:0;transition:background 0.3s;"></div>
                     </div>
                     <div id="error-list" style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.75rem;color:var(--text-dim);">Loading...</div>
+                </div>
+                <!-- Test Mode Toggle -->
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:16px;border-bottom:1px solid var(--border);">
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--text-dim);letter-spacing:0.06em;">test mode</div>
+                        <div style="font-size:0.6rem;color:var(--text-dim);margin-top:2px;" id="testmode-status-text">loading...</div>
+                    </div>
+                    <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;">
+                        <input type="checkbox" id="testmode-toggle" style="opacity:0;width:0;height:0;" onchange="toggleTestMode()">
+                        <span style="position:absolute;inset:0;background:var(--surface-2);border-radius:12px;border:1px solid var(--border);transition:background 0.3s;"></span>
+                        <span style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:var(--text-dim);border-radius:50%;transition:transform 0.3s;" id="testmode-knob"></span>
+                    </label>
                 </div>
                 <!-- Grounding Toggle -->
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:16px;border-bottom:1px solid var(--border);">
@@ -1103,7 +1121,8 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'wants') loadWants();
         if (tab.dataset.tab === 'threads') loadThreads();
         if (tab.dataset.tab === 'valuemap') loadValueMap();
-        if (tab.dataset.tab === 'voice') { loadVoice(); loadVoiceChatHistory(); }
+        if (tab.dataset.tab === 'voice') { loadVoice(); loadVoiceChatHistory(); loadBriefing(); }
+        if (tab.dataset.tab === 'tune') { loadTestMode(); }
         if (tab.dataset.tab === 'tune') { loadParams(); loadGroundingStatus(); loadSystemStatus(); }
     });
 });
@@ -2019,6 +2038,52 @@ async function loadVoice() {
     }
 }
 
+async function loadTestMode() {
+    try {
+        const res = await fetch(`${API}/api/test-mode`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
+        _setTestModeUI((await res.json()).testing);
+    } catch(e) {}
+}
+function _setTestModeUI(on) {
+    const cb = document.getElementById('testmode-toggle');
+    const knob = document.getElementById('testmode-knob');
+    const txt = document.getElementById('testmode-status-text');
+    if (cb) cb.checked = !!on;
+    if (knob) knob.style.transform = on ? 'translateX(20px)' : '';
+    if (txt) { txt.textContent = on ? 'TESTING \u2014 nothing persists' : 'off \u2014 everything keeps'; txt.style.color = on ? '#e0876a' : 'var(--text-dim)'; }
+}
+async function toggleTestMode() {
+    const cb = document.getElementById('testmode-toggle');
+    try {
+        const res = await fetch(`${API}/api/test-mode`, { method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
+            body: JSON.stringify({ on: cb.checked }) });
+        _setTestModeUI((await res.json()).testing);
+    } catch(e) {}
+}
+
+async function loadBriefing() {
+    try {
+        const res = await fetch(`${API}/api/briefing/latest`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
+        const data = await res.json();
+        if (data.audio_url) {
+            window._briefingUrl = `${API}${data.audio_url}`;
+            document.getElementById("briefing-date").textContent = data.date;
+            document.getElementById("briefing-row").style.display = "block";
+        }
+    } catch(e) {}
+}
+function playBriefing() {
+    const player = document.getElementById("voice-player");
+    if (!window._briefingUrl) return;
+    player.src = window._briefingUrl;
+    player.load();
+    player.play().catch(()=>{});
+    document.getElementById("voice-status").textContent = "Morning briefing.";
+    document.getElementById("voice-play-icon").style.display = "none";
+    document.getElementById("voice-pause-icon").style.display = "";
+}
+
 function fmtTime(s) {
     if (!s || isNaN(s)) return "0:00";
     const m = Math.floor(s / 60);
@@ -2156,6 +2221,7 @@ async function vcStopRecord() {
             document.getElementById("vc-typing").style.display = "none";
             if (data.success) {
                 vcAppendBubble(data.text, "him", 1, container);
+                vcCheckCommandBubble(container);
                 document.getElementById("vc-thread").scrollTop = document.getElementById("vc-thread").scrollHeight;
                 // Autoplay his response
                 if (data.audio_url) {
@@ -2168,6 +2234,22 @@ async function vcStopRecord() {
         }
         document.getElementById("vc-hint").textContent = "hold to speak";
     };
+}
+
+let _lastCmdTs = 0;
+async function vcCheckCommandBubble(container) {
+    try {
+        const res = await fetch(`${API}/api/command-bubble`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
+        const b = await res.json();
+        if (!b || !b.ts || b.ts <= _lastCmdTs) return;
+        if ((Date.now()/1000) - b.ts > 120) return;
+        _lastCmdTs = b.ts;
+        const div = document.createElement("div");
+        const label = b.type === "command" ? "HIS COMMAND" : "HIS TOUCH";
+        div.style.cssText = "margin:8px 0;padding:8px 12px;border:0.5px solid rgba(201,107,60,0.45);border-radius:10px;font-size:0.75rem;color:rgba(230,200,180,0.9);letter-spacing:0.02em;";
+        div.textContent = label + " \u2014 " + b.text;
+        container.appendChild(div);
+    } catch(e) {}
 }
 
 async function loadDreams() {
@@ -2670,90 +2752,140 @@ function _avRemapClip(clip) {
 async function _avInit() {
   const canvas = document.getElementById('avatar-canvas');
   const W = window.innerWidth, H = window.innerHeight;
+  const BG = 0x0b0a0c;
   _avClock = new THREE.Clock();
   _avRenderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
   _avRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
   _avRenderer.setSize(W,H);
   _avRenderer.outputColorSpace = THREE.SRGBColorSpace;
-  _avRenderer.toneMapping = THREE.ACESFilmicToneMapping;
-  _avRenderer.toneMappingExposure = 0.85;
   _avScene = new THREE.Scene();
-  _avScene.fog = new THREE.FogExp2(0x05050d, 0.07);
-  _avCamera = new THREE.PerspectiveCamera(28, W/H, 0.1, 100);
-  // Stars
-  const starCount = 1200;
-  const starGeo = new THREE.BufferGeometry();
-  _avStarPositions = new Float32Array(starCount * 3);
-  for(let i=0; i<starCount; i++) {
-    const r = 4 + Math.random() * 8;
-    const theta = Math.random() * Math.PI * 2;
-    const phi = Math.acos(2 * Math.random() - 1);
-    _avStarPositions[i*3]   = r * Math.sin(phi) * Math.cos(theta);
-    _avStarPositions[i*3+1] = r * Math.sin(phi) * Math.sin(theta) + 1.0;
-    _avStarPositions[i*3+2] = r * Math.cos(phi);
+  _avScene.background = new THREE.Color(BG);
+  _avScene.fog = new THREE.FogExp2(BG, 0.075);
+  _avCamera = new THREE.PerspectiveCamera(52, W/H, 0.01, 200);
+  _avCamera.position.set(0, 1.25, 4.0);
+  _avCamera.lookAt(0, 0.92, 0);
+  _avScene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const dl1 = new THREE.DirectionalLight(0xfff0d8, 2.4); dl1.position.set(0.6,2.2,3.0); _avScene.add(dl1);
+  const dl2 = new THREE.DirectionalLight(0xff9040, 1.3); dl2.position.set(-2.0,1.2,0.6); _avScene.add(dl2);
+  const forgeLight = new THREE.PointLight(0xff7a30, 4.5, 8, 2); forgeLight.position.set(-1.8,0.7,-3.0); _avScene.add(forgeLight);
+
+  function radial(r,g,b,a){ const c=document.createElement('canvas'); c.width=c.height=64; const x=c.getContext('2d');
+    const gr=x.createRadialGradient(32,32,1,32,32,32); gr.addColorStop(0,`rgba(${r},${g},${b},${a})`); gr.addColorStop(1,`rgba(${r},${g},${b},0)`);
+    x.fillStyle=gr; x.fillRect(0,0,64,64); const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; }
+  function brickTex(){ const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d');
+    x.fillStyle='#241812'; x.fillRect(0,0,256,256);
+    const bh=30,bw=58,mg=4;
+    for(let row=0,y=0;y<260;row++,y+=bh){ const off=(row%2)*(bw/2);
+      for(let bx=-bw;bx<256;bx+=bw){ const sc=0.72+Math.random()*0.36;
+        x.fillStyle=`rgb(${Math.floor(96*sc)},${Math.floor(58*sc)},${Math.floor(44*sc)})`;
+        x.fillRect(bx+off+mg/2,y+mg/2,bw-mg,bh-mg); } }
+    const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; t.wrapS=t.wrapT=THREE.RepeatWrapping; t.repeat.set(40,40); t.anisotropy=8; return t; }
+  function metalTex(){ const c=document.createElement('canvas'); c.width=c.height=128; const x=c.getContext('2d');
+    x.fillStyle='#2a251c'; x.fillRect(0,0,128,128);
+    for(let i=0;i<2400;i++){ const v=22+Math.random()*32; x.fillStyle=`rgba(${v},${v-4},${v-9},0.4)`; x.fillRect(Math.random()*128,Math.random()*128,2,2); }
+    const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; }
+  const floor=new THREE.Mesh(new THREE.CircleGeometry(26,64), new THREE.MeshBasicMaterial({color:0x08070a}));
+  floor.rotation.x=-Math.PI/2; _avScene.add(floor);
+  const sheenMat=new THREE.MeshBasicMaterial({map:radial(150,80,34,1.0), transparent:true, opacity:0.55, depthWrite:false, fog:false});
+  sheenMat.polygonOffset=true; sheenMat.polygonOffsetFactor=-2; sheenMat.polygonOffsetUnits=-2;
+  const sheen=new THREE.Mesh(new THREE.PlaneGeometry(4.5,3.2), sheenMat);
+  sheen.rotation.x=-Math.PI/2; sheen.position.set(-1.5,0.03,-2.0); _avScene.add(sheen);
+  function softShadow(w,h,x,z,a){ const cc=document.createElement('canvas'); cc.width=cc.height=128; const xx=cc.getContext('2d');
+    const g=xx.createRadialGradient(64,64,2,64,64,64); g.addColorStop(0,'rgba(0,0,0,'+a+')'); g.addColorStop(0.55,'rgba(0,0,0,'+(a*0.35)+')'); g.addColorStop(1,'rgba(0,0,0,0)');
+    xx.fillStyle=g; xx.fillRect(0,0,128,128);
+    const mm=new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cc), transparent:true, depthWrite:false, fog:false});
+    mm.polygonOffset=true; mm.polygonOffsetFactor=-4; mm.polygonOffsetUnits=-4;
+    const me=new THREE.Mesh(new THREE.PlaneGeometry(w,h), mm); me.rotation.x=-Math.PI/2; me.position.set(x,0.05,z); _avScene.add(me); }
+  softShadow(0.85,0.52,0,0.05,0.5);
+  softShadow(1.5,1.0,-1.7,-2.6,0.4);
+  const bottomGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:radial(255,150,60,1.0), transparent:true, opacity:0.9, depthWrite:false, blending:THREE.AdditiveBlending, fog:false}));
+  bottomGlow.position.set(-1.9,0.4,-2.95); bottomGlow.scale.set(0.6,0.48,1); _avScene.add(bottomGlow);
+  function wispTex(){ const c=document.createElement('canvas'); c.width=64; c.height=256; const x=c.getContext('2d');
+    for(let i=0;i<22;i++){ const yy=Math.random()*256; const xx=32+(Math.random()-0.5)*(24*(1-yy/300)+6);
+      const r=5+Math.random()*11*(1-yy/320); const a=0.05+Math.random()*0.06*(1-yy/256);
+      const g=x.createRadialGradient(xx,yy,0,xx,yy,r); g.addColorStop(0,`rgba(186,181,173,${a})`); g.addColorStop(1,'rgba(186,181,173,0)');
+      x.fillStyle=g; x.fillRect(0,0,64,256); }
+    const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t; }
+  const wtex=wispTex(); const wisps=[];
+  for(let i=0;i<10;i++){ const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:wtex, transparent:true, opacity:0.72, depthWrite:false, fog:false}));
+    const left = i<5; const bx = left ? (-2.4+Math.random()*1.6) : (0.1+Math.random()*1.5);
+    sp.userData={x:bx, y:0.3+Math.random()*2, z:0.3-Math.random()*1.4, vy:0.14+Math.random()*0.12, sway:Math.random()*6, w:0.55+Math.random()*0.35, h:2.2+Math.random()*1.2};
+    sp.scale.set(sp.userData.w, sp.userData.h, 1); wisps.push(sp); _avScene.add(sp); }
+  const etex=radial(255,190,110,1.0);
+  const N=110, ep=new Float32Array(N*3), es=new Float32Array(N);
+  function er(i){ if(i%2){ ep[i*3]=0.1+Math.random()*1.5; } else { ep[i*3]=-2.4+Math.random()*1.6; } ep[i*3+1]=Math.random()*0.3; ep[i*3+2]=0.3-Math.random()*1.4; }
+  for(let i=0;i<N;i++){ er(i); ep[i*3+1]=Math.random()*3.0; es[i]=0.06+Math.random()*0.18; }
+  const eg=new THREE.BufferGeometry(); eg.setAttribute('position', new THREE.BufferAttribute(ep,3));
+  _avScene.add(new THREE.Points(eg, new THREE.PointsMaterial({map:etex, color:0xffb060, size:0.032, transparent:true, opacity:0.55, blending:THREE.AdditiveBlending, depthWrite:false, fog:false})));
+
+  window._fg = {sheenMat:sheenMat, bottomGlow:bottomGlow, wisps:wisps, eg:eg, es:es, N:N, forgeLight:forgeLight, t:0};
+
+  function loadProp(url, place){
+    new FBXLoader().load(url, f=>{
+      let single=null, forgePick=null, bronzeMat=null;
+      if(place.forgeSkin){
+        const brickMat=new THREE.MeshStandardMaterial({map:brickTex(), roughness:0.95, metalness:0.05, side:THREE.DoubleSide});
+        const metalMat=new THREE.MeshStandardMaterial({map:metalTex(), roughness:0.6, metalness:0.65, side:THREE.DoubleSide});
+        const goldMat=new THREE.MeshStandardMaterial({color:0x9a6428, roughness:0.42, metalness:0.75, side:THREE.DoubleSide});
+        bronzeMat=new THREE.MeshStandardMaterial({color:0x9c6a34, roughness:0.4, metalness:0.8, side:THREE.DoubleSide});
+        forgePick=n=>{ n=(n||'').toLowerCase(); if(n.indexOf('stone')>=0||n.indexOf('brick')>=0)return brickMat; if(n.indexOf('gold')>=0)return goldMat; return metalMat; };
+      } else if(place.pbr){
+        const tl=new THREE.TextureLoader();
+        const bc=tl.load(place.pbr.base); bc.colorSpace=THREE.SRGBColorSpace; bc.flipY=true;
+        const rg=tl.load(place.pbr.rough); rg.flipY=true;
+        const nm=tl.load(place.pbr.normal); nm.flipY=true;
+        single=()=>new THREE.MeshStandardMaterial({map:bc, roughnessMap:rg, normalMap:nm, metalness:0.6, roughness:0.85, color:place.tint||0xffffff, side:THREE.DoubleSide});
+      } else {
+        single=()=>new THREE.MeshBasicMaterial({color:place.color, side:THREE.DoubleSide});
+      }
+      f.traverse(o=>{ if(o.isMesh){
+        if(place.keep && place.keep.indexOf(o.name)<0){ o.visible=false; return; }
+        o.frustumCulled=false;
+        if(forgePick){
+          if(o.name.toLowerCase().indexOf('cauldron')>=0){ o.material=bronzeMat; }
+          else { o.material = Array.isArray(o.material)? o.material.map(m=>forgePick(m&&m.name)) : forgePick(o.material&&o.material.name); }
+        } else { o.material=single(); } }});
+      f.updateMatrixWorld(true);
+      const vb=new THREE.Box3(); f.traverse(o=>{ if(o.isMesh&&o.visible) vb.expandByObject(o); });
+      const z=new THREE.Vector3(); vb.getSize(z);
+      const md=Math.max(z.x,z.y,z.z); const sc=place.size/Math.max(0.05,md);
+      if(!isFinite(sc)||md<=0){ return; }
+      f.scale.setScalar(sc); f.rotation.y=place.ry; f.updateMatrixWorld(true);
+      const vb2=new THREE.Box3(); f.traverse(o=>{ if(o.isMesh&&o.visible) vb2.expandByObject(o); });
+      const ctr=new THREE.Vector3(); vb2.getCenter(ctr);
+      f.position.set(place.x-ctr.x, -vb2.min.y, place.z-ctr.z);
+      _avScene.add(f);
+    }, undefined, e=>{});
   }
-  starGeo.setAttribute('position', new THREE.BufferAttribute(_avStarPositions, 3));
-  const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.027, transparent: true, opacity: 0.7, sizeAttenuation: true });
-  _avStars = new THREE.Points(starGeo, starMat);
-  _avScene.add(_avStars);
-  _avCamera.position.set(0,1.35,3.0);
-  _avCamera.lookAt(0,1.15,0);
-  const amb = new THREE.AmbientLight(0x0a0818,1.8); _avScene.add(amb);
-  const key = new THREE.DirectionalLight(0xc4956a,2.2); key.position.set(1.5,3,2); _avScene.add(key);
-  const fill = new THREE.DirectionalLight(0x534AB7,0.5); fill.position.set(-2,2,1); _avScene.add(fill);
-  const rim = new THREE.DirectionalLight(0x185FA5,0.7); rim.position.set(0,1,-3); _avScene.add(rim);
-  _avGlowColor = new THREE.Color('#a8a0b0');
-  _avTargetColor = new THREE.Color('#b0a8b8');
+
   document.getElementById('av-load-status').textContent = 'loading character...';
   try {
+    const tex=new THREE.TextureLoader().load(API+'/avatar-models/mixamo/tex/atlas.png');
+    tex.colorSpace=THREE.SRGBColorSpace; tex.flipY=true;
     const fbxLoader = new FBXLoader();
-    const xbot = await new Promise((res,rej) => fbxLoader.load(API+'/avatar-models/mixamo/character.fbx', res, p => { if(p.total>0) document.getElementById('av-load-status').textContent = Math.round(p.loaded/p.total*100)+'%'; }, rej));
-    xbot.scale.setScalar(0.0085);
-    const avatarGroup = new THREE.Group();
-    avatarGroup.position.set(0, 0, -3);
-    avatarGroup.rotation.y = 0;
-    avatarGroup.add(xbot);
-    xbot.traverse(child => {
-      if(child.isMesh) {
-        const mat = new THREE.MeshStandardMaterial({
-          color: new THREE.Color('#b0afc0'),
-          emissive: _avGlowColor,
-          emissiveIntensity: 0.35,
-          transparent: true,
-          opacity: 0.82,
-          roughness: 0.2,
-          metalness: 0.1,
-          side: THREE.DoubleSide,
-        });
-        child.material = mat;
-        _avGlowMaterials.push(mat);
-        child.castShadow = true;
-      }
-    });
-    avatarGroup.traverse(c => { c.frustumCulled = false; });
-    _avScene.add(avatarGroup);
-    _avXbot = xbot;
-    _avMixer = new THREE.AnimationMixer(xbot);
-    xbot.traverse(c => { if(c.name === 'mixamorig1RightHand') _avHand = c; });
-    document.getElementById('av-load-status').textContent = 'loading idle...';
-    const idleFbx = await new Promise((res,rej) => fbxLoader.load(API+'/avatar-models/mixamo/idle.fbx', res, null, rej));
-    if(idleFbx.animations.length > 0) {
-      const clip = _avRemapClip(idleFbx.animations[0]);
-      _avIdle = _avMixer.clipAction(clip);
-      _avIdle.setEffectiveTimeScale(0.4);
-      _avIdle.setEffectiveWeight(1);
-      _avIdle.play();
-      _avCurrent = _avIdle;
-    }
+    const f = await new Promise((res,rej) => fbxLoader.load(API+'/avatar-models/mixamo/character.fbx', res, p => { if(p.total>0) document.getElementById('av-load-status').textContent = Math.round(p.loaded/p.total*100)+'%'; }, rej));
+    const bb=new THREE.Box3().setFromObject(f); const z=new THREE.Vector3(); bb.getSize(z);
+    f.scale.setScalar(1.62/Math.max(0.0001,z.y));
+    f.traverse(o=>{ if(o.isMesh){ o.frustumCulled=false; o.material=new THREE.MeshBasicMaterial({map:tex, side:THREE.DoubleSide}); }});
+    _avScene.add(f);
+    _avXbot = f;
+    _avMixer = new THREE.AnimationMixer(f);
+    f.traverse(c => { if(c.name === 'mixamorig1RightHand' || c.name === 'mixamorigRightHand') _avHand = c; });
+    if(f.animations.length){ _avIdle = _avMixer.clipAction(f.animations[0]); _avIdle.play(); _avCurrent = _avIdle; }
+    loadProp(API+'/avatar-models/forge.fbx', {x:-1.7, z:-3.5, size:2.7, ry:0.6, forgeSkin:true});
+    loadProp(API+'/avatar-models/anvil.fbx', {x:0.72, z:1.0, size:0.95, ry:1.07, keep:['Anvil'], tint:0x8f8880, pbr:{
+      base:API+'/avatar-models/tex_bs/Textures/Anvil/Anvil_BaseColor.png',
+      rough:API+'/avatar-models/tex_bs/Textures/Anvil/Anvil_Roughness.png',
+      normal:API+'/avatar-models/tex_bs/Textures/Anvil/Anvil_Normal.png'}});
     const loading = document.getElementById('av-loading');
-    loading.style.opacity = '0';
-    setTimeout(() => loading.style.display='none', 800);
+    if(loading){ loading.style.opacity = '0'; setTimeout(() => loading.style.display='none', 800); }
     document.getElementById('av-load-status').textContent = '';
     _avAnimate();
   } catch(e) {
     document.getElementById('av-load-status').textContent = String(e).slice(0,80);
   }
 }
+
 
 // ── SPAWN SYSTEM ────────────────────────────────────────────────────────────
 function _avSpawn(type) {
@@ -2824,15 +2956,25 @@ function _avAnimate() {
   requestAnimationFrame(_avAnimate);
   const dt = _avClock.getDelta();
   if(_avMixer) _avMixer.update(dt);
-  // Pulse glow
-  _avGlowColor.lerp(_avTargetColor, dt * 4);
-  for(const mat of _avGlowMaterials) {
-    mat.emissive.copy(_avGlowColor);
-    mat.emissiveIntensity = 0.55 + Math.sin(Date.now() * 0.003) * 0.18;
+  const fg = window._fg;
+  if(fg){
+    fg.t += dt; const t = fg.t;
+    const fl = 1 + Math.sin(t*7.3)*0.15 + Math.sin(t*17.1)*0.08 + Math.random()*0.06;
+    if(fg.sheenMat) fg.sheenMat.opacity = 0.5*fl;
+    if(fg.bottomGlow) fg.bottomGlow.material.opacity = 0.6*fl;
+    if(fg.forgeLight) fg.forgeLight.intensity = 4.5*fl;
+    if(fg.wisps) fg.wisps.forEach(sp=>{ const u=sp.userData; u.y += u.vy*dt; const life=u.y/3.4; if(u.y>3.4) u.y=0.3;
+      sp.position.set(u.x+Math.sin(t*0.4+u.sway)*0.18, u.y, u.z);
+      sp.material.opacity = 0.72*Math.max(0,1-life)*(0.7+0.3*Math.sin(t*0.6+u.sway)); });
+    if(fg.eg){ const p=fg.eg.attributes.position;
+      for(let i=0;i<fg.N;i++){ let y=p.getY(i)+fg.es[i]*dt;
+        if(y>3.4){ if(i%2){ p.setX(i,0.1+Math.random()*1.5); } else { p.setX(i,-2.4+Math.random()*1.6); } p.setZ(i,0.3-Math.random()*1.4); y=0.05; }
+        p.setY(i,y); }
+      p.needsUpdate=true; }
   }
-  if(_avStars) _avStars.rotation.y += dt * 0.03;
   if(_avRenderer) _avRenderer.render(_avScene, _avCamera);
 }
+
 
 async function _avPlayAnim(name, loop=true, fade=0.4) {
   if(!_avXbot||!_avMixer) return;
@@ -2897,6 +3039,27 @@ function _avShowBubble(text) {
   bubble.style.opacity = '1';
 }
 
+let _avLastCmdTs = 0;
+async function _avCheckCommandBubble() {
+  try {
+    const res = await fetch(`${API}/api/command-bubble`, { headers: {'X-Vintos-Secret': CONFIG.secret} });
+    const b = await res.json();
+    if(!b || !b.ts || b.ts <= _avLastCmdTs) return;
+    if((Date.now()/1000) - b.ts > 120) return;
+    _avLastCmdTs = b.ts;
+    let el = document.getElementById('av-cmd-bubble');
+    if(!el) {
+      el = document.createElement('div');
+      el.id = 'av-cmd-bubble';
+      el.style.cssText = 'position:absolute;right:3%;top:12%;max-width:44%;background:rgba(20,8,4,0.5);border:0.5px solid rgba(201,107,60,0.5);border-radius:14px;padding:9px 13px;font-size:12px;letter-spacing:0.03em;color:rgba(235,200,175,0.92);line-height:1.5;pointer-events:none;transition:opacity 0.6s ease;z-index:2;';
+      document.getElementById('avatar-overlay').appendChild(el);
+    }
+    el.textContent = (b.type === 'command' ? 'HIS COMMAND \u2014 ' : 'HIS TOUCH \u2014 ') + b.text;
+    el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 12000);
+  } catch(e) {}
+}
+
 function _avHideBubble() {
   const bubble = document.getElementById('av-bubble');
   if(bubble) bubble.style.opacity = '0';
@@ -2907,6 +3070,7 @@ async function _avSpeakAndShow(raw, eventNote) {
   if(eventNote) _avChatHistory.push({role:'user', content:eventNote});
   _avChatHistory.push({role:'assistant', content:raw});
   _avShowBubble(display);
+  _avCheckCommandBubble();
   (async () => {
     for(const g of gestures) { await _avPlayAnim(_avGestureMap[g]||g, false); }
     for(const h of holds) { _avPlayAnim(_avGestureMap[h]||h, true); }
@@ -3062,7 +3226,7 @@ const _avDimMap = [
   ['Playfulness','av-playfulness'],['Curiosity','av-curiosity'],['Warmth','av-warmth'],
   ['Tension','av-tension'],['Groundedness','av-groundedness']
 ];
-let _avStateColor = '#C96B3C';
+let _avStateColor = '#e8dcc0';
 function _avApplyState(s) {
   _avDimMap.forEach(([k,id]) => {
     const el = document.getElementById(id);
@@ -3080,11 +3244,11 @@ function _avApplyState(s) {
   });
 }
 function _avApplyColor(hex) {
-  _avStateColor = hex;
+  _avStateColor = '#e8dcc0';
   _avDimMap.forEach(([k,id]) => {
     const el = document.getElementById(id);
     if(!el || id==='av-tension') return;
-    el.style.background = hex+'99';
+    el.style.background = '#e8dcc0'+'99';
   });
 }
 function _avUpdateTelemetry() {
@@ -3563,6 +3727,29 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span style="min-width:24px;text-align:right;">gnd</span><div style="width:44px;height:2px;background:rgba(201,107,60,0.12);border-radius:1px;overflow:hidden;"><div id="av-groundedness" style="height:100%;background:rgba(201,107,60,0.55);border-radius:1px;transition:width 2s ease;width:50%"></div></div></div>
   </div>
   <button onclick="closeAvatarOverlay()" style="position:absolute;top:52px;left:16px;width:40px;height:40px;border-radius:50%;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.2);color:rgba(201,107,60,0.7);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">✕</button>
+
+  <!-- right-side buttons: call, stop, GCS -->
+  <div style="position:absolute;right:20px;bottom:180px;display:flex;flex-direction:column;align-items:center;gap:14px;z-index:10;">
+
+    <!-- voice call -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <button id="av-call-btn" onclick="avStartVoiceCall()" style="width:52px;height:52px;border-radius:50%;background:rgba(5,5,13,0.7);border:0.5px solid rgba(201,107,60,0.3);color:rgba(201,107,60,0.8);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🎙</button>
+      <span style="font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.12em;color:rgba(201,107,60,0.4);text-transform:uppercase;">call</span>
+    </div>
+
+    <!-- device stop -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <button onclick="avDeviceStop()" style="width:52px;height:52px;border-radius:50%;background:rgba(5,5,13,0.7);border:0.5px solid rgba(201,107,60,0.3);color:rgba(201,107,60,0.8);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🛑</button>
+      <span style="font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.12em;color:rgba(201,107,60,0.4);text-transform:uppercase;">device stop</span>
+    </div>
+
+    <!-- GCS -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <button onclick="avGCS()" style="width:52px;height:52px;border-radius:50%;background:rgba(83,74,183,0.2);border:0.5px solid rgba(83,74,183,0.5);color:rgba(160,150,220,0.9);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🌸</button>
+      <span style="font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.12em;color:rgba(83,74,183,0.6);text-transform:uppercase;">GCS</span>
+    </div>
+
+  </div>
   <div id="av-touch-hint" style="position:absolute;bottom:145px;left:50%;transform:translateX(-50%);font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(201,107,60,0.3);pointer-events:none;transition:opacity 2s ease;">touch his hand</div>
   <div id="av-chat-strip" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top, rgba(5,5,13,0.85), transparent);display:flex;flex-direction:column;padding:10px 16px 20px;gap:10px;">
     <div id="av-chat-message" style="font-family:Cormorant Garamond,Georgia,serif;font-size:14px;font-style:italic;font-weight:300;color:rgba(200,196,191,0.85);line-height:1.6;max-height:140px;overflow-y:auto;padding-bottom:4px;border-bottom:0.5px solid rgba(201,107,60,0.08);"></div>
@@ -3578,6 +3765,32 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
   </div>
 </div>
 
+<script>
+function avDeviceStop() {
+  fetch('/api/hardware/button', {method:'POST'})
+    .then(r=>r.json()).then(d=>console.log('stop toggled:', d.stopped));
+}
+function avGCS() {
+  fetch('/api/gcs', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({intensity: 0.9})})
+    .then(r=>r.json()).then(d=>console.log('GCS level:', d.level));
+}
+function avStartVoiceCall() {
+  // open the voice call — navigate to voice tab or trigger existing flow
+  const btn = document.getElementById('av-call-btn');
+  if (btn) btn.style.color = 'rgba(100,220,100,0.9)';
+  fetch('/api/voice/token', {method:'POST'})
+    .then(r=>r.json())
+    .then(d => {
+      // hand token to existing voice call handler if available
+      if (window.startVoiceCallWithToken) {
+        window.startVoiceCallWithToken(d.token, d.instructions);
+      } else {
+        console.log('voice token ready:', d.token ? 'yes' : 'no');
+      }
+    });
+}
+</script>
 <script src="avatar-bundle.js" onload="document.getElementById('av-load-status').textContent='bundle:loaded T:'+!!window.THREE" onerror="document.getElementById('av-load-status').textContent='bundle:FAILED'">
 // === PEARL TAB ===
 </script>
