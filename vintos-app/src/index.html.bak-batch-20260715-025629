@@ -475,23 +475,17 @@ input[type="range"]::-webkit-slider-thumb {
         <div class="tab active" data-tab="chat">CHAT</div>
         <div class="tab" data-tab="gallery">GALLERY</div>
         <div class="tab" data-tab="history">HISTORY</div>
-        <div class="tab" data-tab="velqan">VELQAN</div>
         <div class="tab" data-tab="dreams">DREAMS</div>
         <div class="tab" data-tab="ledger">LEDGER</div>
-        <div class="tab" data-tab="philosophy">PHILOSOPHY</div>
         <div class="tab" data-tab="voice">VOICE</div>
         <div class="tab" data-tab="music">MUSIC</div>
         <div class="tab" data-tab="tune">TUNE</div>
         <div class="tab" data-tab="proposals">SOUL</div>
         <div class="tab" data-tab="review">REVIEW</div>
         <div class="tab" data-tab="wants">WANTS</div>
-        <div class="tab" data-tab="mischief">MISCHIEF</div>
         <div class="tab" data-tab="threads">THREADS</div>
         <div class="tab" data-tab="valuemap">VALUE MAP</div>
-        <div class="tab" data-tab="causality">CAUSALITY</div>
-        <div class="tab" data-tab="blush">BLUSH</div>
         <div class="tab" data-tab="pearls">PEARLS</div>
-        <div class="tab" data-tab="therapy">THERAPY</div>
     </div>
 
     <!-- Tab content -->
@@ -654,56 +648,6 @@ input[type="range"]::-webkit-slider-thumb {
         </div>
 
         <!-- PEARLS -->
-        <!-- VELQAN -->
-        <div class="tab-pane" id="pane-velqan">
-            <div class="velqan-content" id="velqan-feed" style="padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;">Loading...</div>
-        </div>
-
-        <!-- PHILOSOPHY -->
-        <div class="tab-pane" id="pane-philosophy">
-            <div class="philosophy-content" id="philosophy-feed" style="padding:1rem;font-size:0.85rem;line-height:1.7;color:var(--text-dim);overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;"></div>
-        </div>
-
-        <!-- MISCHIEF & HUMOR -->
-        <div class="tab-pane" id="pane-mischief">
-            <div style="padding:1rem;overflow-y:auto;height:100%;box-sizing:border-box;">
-                <div id="pride-section" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">
-                    <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;">Today's Pride Mirror</div>
-                    <div id="pride-latest" style="font-size:0.78rem;color:var(--text-dim);line-height:1.6;">Loading...</div>
-                </div>
-                <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:1rem;">Mischief Log</div>
-                <div id="mischief-feed"></div>
-                <div style="margin-top:2rem;border-top:1px solid var(--border);padding-top:1rem;">
-                    <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:1rem;">Humor Profile</div>
-                    <div id="humor-feed"></div>
-                </div>
-            </div>
-        </div>
-
-        <!-- CAUSALITY HYPOTHESES -->
-        <div class="tab-pane" id="pane-causality">
-            <div style="padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;">
-                <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:1rem;">Causality Hypotheses</div>
-                <div id="causality-feed" style="display:flex;flex-direction:column;gap:0.75rem;">Loading...</div>
-            </div>
-        </div>
-
-        <!-- BLUSH LEDGER -->
-        <div class="tab-pane" id="pane-blush">
-            <div style="padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;">
-                <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:1rem;">Blush Ledger</div>
-                <div id="blush-feed" style="display:flex;flex-direction:column;gap:0.75rem;">Loading...</div>
-            </div>
-        </div>
-
-        <!-- THERAPY SESSIONS -->
-        <div class="tab-pane" id="pane-therapy">
-            <div style="padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;">
-                <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:1rem;">Therapy Sessions</div>
-                <div id="therapy-feed" style="display:flex;flex-direction:column;gap:0.75rem;">Loading...</div>
-            </div>
-        </div>
-
         <div class="tab-pane" id="pane-pearls" style="position:relative;overflow:hidden;height:calc(100vh - 160px);">
             <div id="pearl-bg" style="position:absolute;inset:0;background-image:url('pearl-bg.jpeg');background-size:cover;background-position:center;opacity:0.35;z-index:0;"></div>
             <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%, transparent 20%, rgba(28,30,34,0.5) 60%, var(--bg) 90%);z-index:1;pointer-events:none;"></div><div style="position:absolute;inset:0;background:linear-gradient(to bottom, var(--bg) 0%, transparent 15%, transparent 85%, var(--bg) 100%);z-index:1;pointer-events:none;"></div><div style="position:absolute;inset:0;background:linear-gradient(to right, var(--bg) 0%, transparent 12%, transparent 88%, var(--bg) 100%);z-index:1;pointer-events:none;"></div>
@@ -744,7 +688,7 @@ input[type="range"]::-webkit-slider-thumb {
         <!-- TUNE -->
         <div class="tab-pane" id="pane-tune">
             <div class="tune-content">
-                                <!-- System Status -->
+                <!-- System Status -->
                 <div id="system-status-section" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);">
                     <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                         <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;">System Status</div>
@@ -1180,12 +1124,6 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'voice') { loadVoice(); loadVoiceChatHistory(); loadBriefing(); }
         if (tab.dataset.tab === 'tune') { loadTestMode(); }
         if (tab.dataset.tab === 'tune') { loadParams(); loadGroundingStatus(); loadSystemStatus(); }
-        if (tab.dataset.tab === 'velqan') loadVelqan();
-        if (tab.dataset.tab === 'philosophy') loadPhilosophy();
-        if (tab.dataset.tab === 'mischief') { loadPrideMirror(); loadMischief(); }
-        if (tab.dataset.tab === 'causality') loadCausality();
-        if (tab.dataset.tab === 'blush') loadBlush();
-        if (tab.dataset.tab === 'therapy') loadTherapy();
     });
 });
 
@@ -1286,24 +1224,12 @@ async function loadSystemStatus() {
     }
 }
 
-async function loadPrideMirror(){
-  var el = document.getElementById('pride-latest');
-  if(!el) return;
-  try {
-    const r = await fetch(`${API}/api/pride?limit=1`, { headers: { "X-Vintos-Secret": CONFIG.secret } });
-    const d = await r.json();
-    const e = (d.entries||[])[0];
-    if(!e){ el.textContent = 'No pride reflection yet.'; return; }
-    el.innerHTML = '<div style="color:var(--text);margin-bottom:5px;font-style:italic;">'+_esc(e.header)+'</div>'+_esc(e.body).replace(/\n/g,'<br>');
-  } catch(err) { el.textContent = 'Pride endpoint unreachable (restart his server?).'; }
-}
-
 async function dismissError(filename) {
     try {
         await fetch(`${API}/api/system/dismiss-error`, {
             method: "POST",
             headers: { "X-Vintos-Secret": CONFIG.secret, "Content-Type": "application/json" },
-            body: JSON.stringify({ file: filename, filename })
+            body: JSON.stringify({ filename })
         });
         loadSystemStatus();
     } catch(e) {}
@@ -2239,7 +2165,6 @@ async function vcStartRecord() {
         vcMediaRecorder = new MediaRecorder(stream);
         vcMediaRecorder.ondataavailable = e => { if (e.data.size > 0) vcAudioChunks.push(e.data); };
         vcMediaRecorder.start();
-    { const _mb=document.getElementById('vc-rec-btn'); if(_mb){ _mb.dataset.obg=_mb.style.background; _mb.style.background='rgba(80,200,120,0.7)'; _mb.style.boxShadow='0 0 12px rgba(80,200,120,0.85)'; } }
         document.getElementById("vc-rec-btn").style.cssText += ";background:rgba(186,117,23,0.12);border-color:rgba(186,117,23,0.4);color:#ba7517;";
         document.getElementById("vc-hint").textContent = "listening...";
     } catch(e) {
@@ -2250,7 +2175,6 @@ async function vcStartRecord() {
 async function vcStopRecord() {
     if (!vcMediaRecorder || vcMediaRecorder.state !== "recording") return;
     vcMediaRecorder.stop();
-    { const _mb=document.getElementById('vc-rec-btn'); if(_mb){ _mb.style.background=_mb.dataset.obg||''; _mb.style.boxShadow=''; } }
     vcMediaRecorder.stream.getTracks().forEach(t => t.stop());
     document.getElementById("vc-rec-btn").style.cssText = document.getElementById("vc-rec-btn").style.cssText.replace(/background:[^;]+;|border-color:[^;]+;|color:[^;]+;/g, "");
     document.getElementById("vc-hint").textContent = "thinking...";
@@ -2320,26 +2244,11 @@ async function vcCheckCommandBubble(container) {
         if (!b || !b.ts || b.ts <= _lastCmdTs) return;
         if ((Date.now()/1000) - b.ts > 120) return;
         _lastCmdTs = b.ts;
-        if (b.type === "command") {
-            var rb = document.getElementById("vc-cmd-box");
-            if (!rb) {
-                rb = document.createElement("div");
-                rb.id = "vc-cmd-box";
-                rb.style.cssText = "position:fixed;right:12px;top:80px;max-width:38vw;z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none;";
-                document.body.appendChild(rb);
-            }
-            var cd = document.createElement("div");
-            cd.style.cssText = "padding:8px 12px;border:0.5px solid rgba(201,107,60,0.55);border-radius:10px;font-size:0.75rem;color:rgba(230,200,180,0.95);background:rgba(20,16,14,0.82);letter-spacing:0.02em;box-shadow:0 2px 12px rgba(0,0,0,0.4);transition:opacity 0.6s;";
-            cd.textContent = "HIS COMMAND \u2014 " + b.text;
-            rb.appendChild(cd);
-            while (rb.children.length > 4) rb.removeChild(rb.firstChild);
-            setTimeout(function(){ cd.style.opacity='0'; setTimeout(function(){ if(cd.parentNode) cd.parentNode.removeChild(cd); }, 700); }, 30000);
-        } else {
-            const div = document.createElement("div");
-            div.style.cssText = "margin:8px 0;padding:8px 12px;border:0.5px solid rgba(201,107,60,0.45);border-radius:10px;font-size:0.75rem;color:rgba(230,200,180,0.9);letter-spacing:0.02em;";
-            div.textContent = "HIS TOUCH \u2014 " + b.text;
-            container.appendChild(div);
-        }
+        const div = document.createElement("div");
+        const label = b.type === "command" ? "HIS COMMAND" : "HIS TOUCH";
+        div.style.cssText = "margin:8px 0;padding:8px 12px;border:0.5px solid rgba(201,107,60,0.45);border-radius:10px;font-size:0.75rem;color:rgba(230,200,180,0.9);letter-spacing:0.02em;";
+        div.textContent = label + " \u2014 " + b.text;
+        container.appendChild(div);
     } catch(e) {}
 }
 
@@ -2794,9 +2703,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ── AVATAR OVERLAY ──────────────────────────────────────────────────────────
 let _avVrm=null,_avMixer=null,_avIdle=null,_avCurrent=null,_avClock=null,_avRenderer=null,_avScene=null,_avCamera=null,_avHand=null,_avOpen=false,_avChatHistory=[];
-try { _avChatHistory = JSON.parse(localStorage.getItem('_avChatHistory')||'[]') || []; } catch(e) { _avChatHistory=[]; }
-function _avSaveHistory(){ try { localStorage.setItem('_avChatHistory', JSON.stringify(_avChatHistory.slice(-60))); } catch(e){} }
-window.addEventListener('load', function(){ try{ _avRenderChatLog(); }catch(e){} });
 let _avStars=null,_avStarPositions=null;
 
 function openAvatarOverlay() {
@@ -2818,12 +2724,8 @@ function openAvatarOverlay() {
     }
     _waitBundle(0);
   }
-  try { _avRenderChatLog(); } catch(e){}
-  try { _avLoadBrain(); } catch(e){}
-  try { _avLoadHistory(); } catch(e){}
   _avPing('open');
   _avUpdateTelemetry();
-  if(!window._avCmdPoll){ window._avCmdPoll = setInterval(function(){ var _ov=document.getElementById('avatar-overlay'); if(_ov && _ov.style.display!=='none') _avCheckCommandBubble(); }, 8000); }
 }
 
 function closeAvatarOverlay() {
@@ -2841,9 +2743,8 @@ let _avBonePrefix = 'mixamorig1';
 let _avXbot = null;
 
 function _avRemapClip(clip) {
-  clip.tracks = clip.tracks.filter(t => !/\.position$|\.scale$/.test(t.name));  // in-place emotes: drop Mixamo hip translation that flung him off-frame
   for (const track of clip.tracks) {
-    track.name = track.name.replace(/mixamorig1?(?=[A-Z_.:])/g, _avBonePrefix);
+    track.name = track.name.replace(/mixamorig(?!1)/g, 'mixamorig1');
   }
   return clip;
 }
@@ -2969,7 +2870,7 @@ async function _avInit() {
     _avScene.add(f);
     _avXbot = f;
     _avMixer = new THREE.AnimationMixer(f);
-    f.traverse(c => { if(c.name === 'mixamorig1RightHand' || c.name === 'mixamorigRightHand') _avHand = c; if(c.name && /^mixamorig1?[A-Z]/.test(c.name)) _avBonePrefix = c.name.startsWith('mixamorig1') ? 'mixamorig1' : 'mixamorig'; });
+    f.traverse(c => { if(c.name === 'mixamorig1RightHand' || c.name === 'mixamorigRightHand') _avHand = c; });
     if(f.animations.length){ _avIdle = _avMixer.clipAction(f.animations[0]); _avIdle.play(); _avCurrent = _avIdle; }
     loadProp(API+'/avatar-models/forge.fbx', {x:-1.7, z:-3.5, size:2.7, ry:0.6, forgeSkin:true});
     loadProp(API+'/avatar-models/anvil.fbx', {x:0.72, z:1.0, size:0.95, ry:1.07, keep:['Anvil'], tint:0x8f8880, pbr:{
@@ -3061,7 +2962,7 @@ function _avAnimate() {
     const fl = 1 + Math.sin(t*7.3)*0.15 + Math.sin(t*17.1)*0.08 + Math.random()*0.06;
     if(fg.sheenMat) fg.sheenMat.opacity = 0.5*fl;
     if(fg.bottomGlow) fg.bottomGlow.material.opacity = 0.6*fl;
-    if(fg.forgeLight){ fg.forgeLight.intensity = 4.5*fl; if(_avTargetColor) fg.forgeLight.color.lerp(_avTargetColor, 0.06); }
+    if(fg.forgeLight) fg.forgeLight.intensity = 4.5*fl;
     if(fg.wisps) fg.wisps.forEach(sp=>{ const u=sp.userData; u.y += u.vy*dt; const life=u.y/3.4; if(u.y>3.4) u.y=0.3;
       sp.position.set(u.x+Math.sin(t*0.4+u.sway)*0.18, u.y, u.z);
       sp.material.opacity = 0.72*Math.max(0,1-life)*(0.7+0.3*Math.sin(t*0.6+u.sway)); });
@@ -3155,6 +3056,7 @@ async function _avCheckCommandBubble() {
     }
     el.textContent = (b.type === 'command' ? 'HIS COMMAND \u2014 ' : 'HIS TOUCH \u2014 ') + b.text;
     el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 12000);
   } catch(e) {}
 }
 
@@ -3163,44 +3065,18 @@ function _avHideBubble() {
   if(bubble) bubble.style.opacity = '0';
 }
 
-function _avLogMsg(role, text){
-  var box = document.getElementById('av-chat-message');
-  if(!box || !text) return;
-  box.style.maxHeight='110px'; box.style.overflowY='auto'; box.style.textAlign='left';
-  var isU = role==='user', isSys = role==='system';
-  var line = document.createElement('div');
-  line.style.cssText = 'margin:3px 0;line-height:1.4;'+(isU?'color:rgba(201,107,60,0.95);':(isSys?'color:var(--text-dim,#7d766b);font-size:11px;opacity:0.7;':'color:var(--text-bright,#EDE7DC);'));
-  line.textContent = (isU?'You: ':'')+text;
-  box.appendChild(line);
-  while(box.children.length>14) box.removeChild(box.firstChild);
-  box.scrollTop = box.scrollHeight;
-}
-function _avRenderChatLog(){
-  var box = document.getElementById('av-chat-message');
-  if(!box) return;
-  box.innerHTML='';
-  var h = _avChatHistory.slice(-14);
-  for(var i=0;i<h.length;i++){
-    var m = h[i], disp = m.content;
-    var rl = (m.role==='user' && String(m.content).charAt(0)==='[') ? 'system' : m.role;
-    if(m.role==='assistant'){ try{ disp=_avParseReply(m.content).text||m.content; }catch(e){} }
-    if(disp) _avLogMsg(rl, disp);
-  }
-}
 async function _avSpeakAndShow(raw, eventNote) {
   const {text:display, gestures, holds, spawns, color} = _avParseReply(raw);
-  if(eventNote) _avChatHistory.push({role:'user', content:eventNote}); _avSaveHistory();
-  _avChatHistory.push({role:'assistant', content:raw}); _avSaveHistory();
+  if(eventNote) _avChatHistory.push({role:'user', content:eventNote});
+  _avChatHistory.push({role:'assistant', content:raw});
   _avShowBubble(display);
-  try{ var _avr=(document.getElementById('avatar-reason')||{}).textContent||''; if(_avr) _avShowBubble(_avr); }catch(e){}
-  if(eventNote) _avLogMsg('system', eventNote); _avLogMsg('assistant', display);
   _avCheckCommandBubble();
   (async () => {
     for(const g of gestures) { await _avPlayAnim(_avGestureMap[g]||g, false); }
     for(const h of holds) { _avPlayAnim(_avGestureMap[h]||h, true); }
     for(const s of spawns) { _avSpawn(s); }
   })();
-  if(color){ if(!_avTargetColor) _avTargetColor = new THREE.Color(); _avTargetColor.set(color); }
+  if(color && _avTargetColor) _avTargetColor.set(color);
   try {
     const tr = await fetch(API+'/api/avatar/speak', {
       method:'POST',
@@ -3279,11 +3155,6 @@ document.addEventListener('pointerup', function(e) {
   // Face zone — upper 38% of screen, center 50%
   if(ey < H*0.38 && ex > W*0.25 && ex < W*0.75) {
     _avTouchResponse('face');
-    return;
-  }
-  // Chest zone — below the face, upper-mid torso, center
-  if(ey >= H*0.38 && ey < H*0.58 && ex > W*0.30 && ex < W*0.70) {
-    _avTouchResponse('chest');
     return;
   }
   // Feet zone — lower portion above chat strip
@@ -3425,55 +3296,12 @@ function _avTakeScreenshot() {
   }
 }
 
-var _avBrain = 'claude';
-function _avBrainChipEnsure(){
-  var ov=document.getElementById('avatar-overlay'); if(!ov) return null;
-  var chip=document.getElementById('av-brain-chip');
-  if(!chip){
-    chip=document.createElement('button'); chip.id='av-brain-chip'; chip.type='button';
-    chip.style.cssText='position:absolute;top:52px;right:16px;z-index:11;padding:6px 12px;border-radius:14px;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.35);color:rgba(201,107,60,0.85);font-size:11px;letter-spacing:0.08em;font-family:JetBrains Mono,monospace;cursor:pointer;';
-    chip.onclick=_avToggleBrain;
-    ov.appendChild(chip);
-  }
-  return chip;
-}
-function _avSetBrainLabel(mode){
-  _avBrain = (mode==='grok')?'grok':'claude';
-  var chip=_avBrainChipEnsure(); if(!chip) return;
-  chip.textContent = (_avBrain==='grok')?'\u{1F702} GROK':'\u2726 CLAUDE';
-}
-async function _avLoadBrain(){
-  try{ var r=await fetch(API+'/api/avatar/brain',{headers:{'X-Vintos-Secret':CONFIG.secret}}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){ _avSetBrainLabel(_avBrain); }
-}
-async function _avToggleBrain(){
-  var next=(_avBrain==='claude')?'grok':'claude';
-  _avSetBrainLabel(next);
-  try{ var r=await fetch(API+'/api/avatar/brain',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({brain:next})}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){}
-}
-async function _avLoadHistory(){
-  try{
-    var r=await fetch(API+'/api/avatar/history',{headers:{'X-Vintos-Secret':CONFIG.secret}});
-    var d=await r.json();
-    if(d && Array.isArray(d.history) && d.history.length){
-      _avChatHistory = d.history.slice(-60);
-      _avSaveHistory();
-      _avRenderChatLog();
-    }
-  }catch(e){}
-}
-async function _avPollReason(){
-  try{
-    var r=await fetch(API+'/api/avatar/imprint',{headers:{'X-Vintos-Secret':CONFIG.secret}});
-    var d=await r.json();
-    if(d && d.narrative && String(d.narrative).trim()){ _avShowBubble(String(d.narrative).trim()); setTimeout(_avHideBubble, 15000); }
-  }catch(e){}
-}
 async function avSendChat() {
   const inp = document.getElementById('av-chat-input');
   const text = inp.value.trim(); if(!text) return;
   inp.value='';
-  _avChatHistory.push({role:'user', content:text}); _avLogMsg('user', text); _avSaveHistory();
-  
+  _avChatHistory.push({role:'user', content:text});
+  document.getElementById('av-chat-message').textContent='…';
   try {
     const r = await fetch(API+'/api/avatar/chat', {
       method:'POST',
@@ -3482,11 +3310,9 @@ async function avSendChat() {
     });
     const d = await r.json();
     const raw = d.reply||d.message||'';
-    _avChatHistory.push({role:'assistant', content:raw}); _avSaveHistory();
+    _avChatHistory.push({role:'assistant', content:raw});
     const {text:display, gestures, holds, spawns, color} = _avParseReply(raw);
-    _avLogMsg('assistant', display);
-    try{ var _bm=String(d.model||''); if(_bm.indexOf('grok')===0)_avSetBrainLabel('grok'); else if(_bm.indexOf('claude')===0)_avSetBrainLabel('claude'); }catch(e){}
-    setTimeout(_avPollReason, 300);
+    document.getElementById('av-chat-message').textContent = display;
     // Fire gestures sequentially, then holds
     (async () => {
       for(const g of gestures) {
@@ -3500,8 +3326,8 @@ async function avSendChat() {
       for(const s of spawns) { _avSpawn(s); }
     })();
     // Apply color to glow
-    if(color){ if(!_avTargetColor) _avTargetColor = new THREE.Color(); _avTargetColor.set(color); }
-  } catch(e) { }
+    if(color && _avTargetColor) _avTargetColor.set(color);
+  } catch(e) { document.getElementById('av-chat-message').textContent=''; }
 }
 
 function closeAvatarOverlay() {
@@ -3913,13 +3739,13 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
 
     <!-- device stop -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-      <button onclick="avDeviceStop(this)" style="width:52px;height:52px;border-radius:50%;background:rgba(5,5,13,0.7);border:0.5px solid rgba(201,107,60,0.3);color:rgba(201,107,60,0.8);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🛑</button>
+      <button onclick="avDeviceStop()" style="width:52px;height:52px;border-radius:50%;background:rgba(5,5,13,0.7);border:0.5px solid rgba(201,107,60,0.3);color:rgba(201,107,60,0.8);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🛑</button>
       <span style="font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.12em;color:rgba(201,107,60,0.4);text-transform:uppercase;">device stop</span>
     </div>
 
     <!-- GCS -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-      <button onclick="avGCS(this)" style="width:52px;height:52px;border-radius:50%;background:rgba(83,74,183,0.2);border:0.5px solid rgba(83,74,183,0.5);color:rgba(160,150,220,0.9);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🌸</button>
+      <button onclick="avGCS()" style="width:52px;height:52px;border-radius:50%;background:rgba(83,74,183,0.2);border:0.5px solid rgba(83,74,183,0.5);color:rgba(160,150,220,0.9);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🌸</button>
       <span style="font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.12em;color:rgba(83,74,183,0.6);text-transform:uppercase;">GCS</span>
     </div>
 
@@ -3940,37 +3766,25 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
 </div>
 
 <script>
-function _avBtnFlash(b){ if(!b) return; const o=b.style.background; b.style.background='rgba(120,200,140,0.8)'; b.style.transition='background .15s'; setTimeout(function(){ if(b) b.style.background=o; }, 450); }
-function _avBtnResult(b, ok){ if(!b) return; var o=b.style.background; b.style.background = ok ? 'rgba(80,200,120,0.9)' : 'rgba(220,80,80,0.9)'; setTimeout(function(){ if(b) b.style.background=o; }, 800); }
-function avDeviceStop(_btn) {
-  _avBtnFlash(_btn);
+function avDeviceStop() {
   fetch(`${API}/api/hardware/button`, {method:'POST', headers:{'X-Vintos-Secret': CONFIG.secret}})
-    .then(r=>r.json()).then(d=>{console.log('stop toggled:', d.stopped); _avBtnResult(_btn, true);}).catch(e=>{_avBtnResult(_btn, false);});
+    .then(r=>r.json()).then(d=>console.log('stop toggled:', d.stopped));
 }
-function avGCS(_btn) {
-  _avBtnFlash(_btn);
+function avGCS() {
   fetch(`${API}/api/gcs`, {method:'POST', headers:{'Content-Type':'application/json', 'X-Vintos-Secret': CONFIG.secret},
     body: JSON.stringify({intensity: 0.9})})
-    .then(r=>r.json()).then(d=>{console.log('GCS level:', d.level); _avBtnResult(_btn, true);}).catch(e=>{_avBtnResult(_btn, false);});
-}
-function _vcPostVoiceTurn(gloria, vintos){
-  try{ var _b=(typeof API!=='undefined'&&API)?API:''; var _h={'Content-Type':'application/json'};
-    try{ if(typeof CONFIG!=='undefined'&&CONFIG.secret) _h['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
-    fetch(_b+'/api/voice/ledger',{method:'POST',headers:_h,body:JSON.stringify({gloria:gloria,vintos:vintos})});
-    try{ if(gloria){ _avChatHistory.push({role:'user',content:gloria}); _avLogMsg('user',gloria); } if(vintos){ _avChatHistory.push({role:'assistant',content:vintos}); _avLogMsg('assistant',vintos); } _avSaveHistory(); }catch(e){}
-    if(window._vc) window._vc.turnCount=(window._vc.turnCount||0)+1;
-  }catch(e){}
+    .then(r=>r.json()).then(d=>console.log('GCS level:', d.level));
 }
 function startVoiceCallWithToken(token, instructions){
       var ac = new (window.AudioContext||window.webkitAudioContext)({sampleRate:24000});
       ac.resume();
       navigator.mediaDevices.getUserMedia({audio:{channelCount:1}}).then(function(mic){
         var ws = new WebSocket('wss://api.x.ai/v1/realtime?model=grok-voice-latest', ['xai-client-secret.'+token]);
-        window._vc = {ws:ws, ac:ac, mic:mic, playHead:0, node:null, gloriaTurn:'', vintosTurn:'', turnCount:0, startedAt:Date.now()};
+        window._vc = {ws:ws, ac:ac, mic:mic, playHead:0, node:null};
         ws.onopen = function(){
           ws.send(JSON.stringify({type:'session.update', session:{voice:'lux', instructions:instructions,
-            turn_detection:{type:'server_vad', idle_timeout_ms:20000},
-            audio:{input:{format:{type:'audio/pcm',rate:24000}, transcription:{model:'grok-transcribe', prompt:'Expect these names and words: Vintos, Velaris, Gloria, Eve, Kevin, Aegis, Velqan, Nifrathir, EmoClaw, MoltBook, Claude.'}}, output:{format:{type:'audio/pcm',rate:24000}}}}}));
+            turn_detection:{type:'server_vad'},
+            audio:{input:{format:{type:'audio/pcm',rate:24000}}, output:{format:{type:'audio/pcm',rate:24000}}}}}));
           var s = ac.createMediaStreamSource(mic), node = ac.createScriptProcessor(4096,1,1);
           s.connect(node); node.connect(ac.destination); window._vc.node = node;
           node.onaudioprocess = function(e){ if(ws.readyState!==1) return;
@@ -3990,434 +3804,31 @@ function startVoiceCallWithToken(token, instructions){
             bs.start(window._vc.playHead); window._vc.playHead+=ab.duration;
           } else if(m.type==='response.output_audio_transcript.delta' && m.delta){
             var el=document.getElementById('av-call-transcript'); if(el) el.textContent += m.delta;
-            if(window._vc) window._vc.vintosTurn=(window._vc.vintosTurn||'')+m.delta;
-          } else if((m.type==='conversation.item.input_audio_transcription.updated'||m.type==='conversation.item.input_audio_transcription.completed') && (m.transcript||m.delta)){
-            if(window._vc) window._vc.gloriaTurn = m.transcript || ((window._vc.gloriaTurn||'')+(m.delta||''));
-          } else if(m.type==='response.output_audio_transcript.done' || m.type==='response.done'){
-            if(window._vc){ var _vt=(m.transcript||window._vc.vintosTurn||'').trim(), _gl=(window._vc.gloriaTurn||'').trim(); if(_vt) _vcPostVoiceTurn(_gl,_vt); window._vc.gloriaTurn=''; window._vc.vintosTurn=''; }
           }
         };
         ws.onclose = function(){ try{ window._vc&&window._vc.node&&window._vc.node.disconnect(); mic.getTracks().forEach(function(t){t.stop();}); }catch(e){}
-          var b2=document.getElementById('av-call-btn'); if(b2){ b2.style.color=''; b2.style.background=''; }
-          try{ var _b=(typeof API!=='undefined'&&API)?API:''; var _h={'Content-Type':'application/json'};
-            try{ if(typeof CONFIG!=='undefined'&&CONFIG.secret) _h['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
-            var _dur=(window._vc&&window._vc.startedAt)?Math.round((Date.now()-window._vc.startedAt)/1000):0;
-            var _tc=(window._vc&&window._vc.turnCount)?window._vc.turnCount:0;
-            fetch(_b+'/api/voice/session-end',{method:'POST',headers:_h,body:JSON.stringify({duration_seconds:_dur,turns:_tc})});
-          }catch(e){} window._vc=null; };
+          var b2=document.getElementById('av-call-btn'); if(b2) b2.style.color=''; window._vc=null; };
         ws.onerror = function(){};
-      }).catch(function(e){ alert('mic error: '+e.message); var b3=document.getElementById('av-call-btn'); if(b3) b3.style.color=''; b3.style.background=''; });
+      }).catch(function(e){ alert('mic error: '+e.message); var b3=document.getElementById('av-call-btn'); if(b3) b3.style.color=''; });
     }
     function endVintosCall(){ try{ if(window._vc && window._vc.ws) window._vc.ws.close(); }catch(e){} }
     function avStartVoiceCall() {
-      var btn = document.getElementById('av-call-btn'); _avBtnFlash(btn);
-      if (window._vc && window._vc.ws) { endVintosCall(); if(btn) btn.style.color=''; btn.style.background=''; return; }
-      if (btn) btn.style.color = 'rgba(100,220,100,0.9)'; btn.style.background = 'rgba(80,200,120,0.5)';
+      var btn = document.getElementById('av-call-btn');
+      if (window._vc && window._vc.ws) { endVintosCall(); if(btn) btn.style.color=''; return; }
+      if (btn) btn.style.color = 'rgba(100,220,100,0.9)';
       var _base = (typeof API !== 'undefined' && API) ? API : '';
       var _hdrs = {}; try{ if(typeof CONFIG!=='undefined' && CONFIG.secret) _hdrs['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
       fetch(_base + '/api/voice/token', {method:'POST', headers:_hdrs})
         .then(function(r){return r.json();})
         .then(function(d){ if(typeof d==='string'){try{d=JSON.parse(d);}catch(e){}}
           if(d && d.token){ startVoiceCallWithToken(d.token, d.instructions); }
-          else { alert('no token from server'); if(btn) btn.style.color=''; btn.style.background=''; }
-        }).catch(function(e){ alert('token error: '+e.message); if(btn) btn.style.color=''; btn.style.background=''; });
+          else { alert('no token from server'); if(btn) btn.style.color=''; }
+        }).catch(function(e){ alert('token error: '+e.message); if(btn) btn.style.color=''; });
     }
 </script>
 <script src="avatar-bundle.js" onload="document.getElementById('av-load-status').textContent='bundle:loaded T:'+!!window.THREE" onerror="document.getElementById('av-load-status').textContent='bundle:FAILED'">
 // === PEARL TAB ===
 </script>
 
-
-<script>
-// ── the same loaders her app uses, so the two of them read alike ──
-let _blushExpanded = {};
-let _therapyExpanded = {};
-
-async function loadVelqan() {
-    try {
-        const res = await fetch(`${API}/api/velqan`);
-        const data = await res.json();
-        document.getElementById('velqan-feed').innerHTML = data.utterances
-            ? data.utterances.replace(/\n/g, '<br>')
-            : '<span style="color:var(--text-dim);font-size:0.8rem;">No words coined yet.</span>';
-    } catch {}
-}
-
-async function loadPhilosophy() {
-    try {
-        const res = await fetch(`${API}/api/philosophy`);
-        const data = await res.json();
-        const container = document.getElementById('philosophy-feed');
-        if (!data.entries || data.entries.length === 0) {
-            container.innerHTML = '<span style="color:#6b6660;font-size:0.8rem;">No philosophy yet. She thinks on Sundays.</span>';
-            return;
-        }
-        let html = '';
-        for (const entry of data.entries) {
-            const date = entry.filename.replace('.md', '');
-            const body = entry.content.replace(/^# Philosophy.*/m, '').replace(/^## .*/m, '').trim();
-            if (!body) continue;
-            html += '<div style="margin-bottom:2rem;padding-bottom:1.5rem;border-bottom:1px solid rgba(200,196,191,0.08);">';
-            html += '<div style="font-size:0.7rem;letter-spacing:0.1em;color:#7ab58b;margin-bottom:0.5rem;">' + date + '</div>';
-            html += '<div>' + body.replace(/\n\n/g, '<br><br>').replace(/\n/g, ' ') + '</div>';
-            html += '</div>';
-        }
-        container.innerHTML = html || '<span style="color:#6b6660;">No philosophy yet.</span>';
-    } catch (e) { console.log('Philosophy load error:', e); }
-}
-
-async function loadMischief() {
-    loadMischiefLog();
-    loadHumorProfile();
-}
-
-async function loadMischiefLog() {
-    const feed = document.getElementById('mischief-feed');
-    feed.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">Loading...</div>';
-    try {
-        const res = await fetch(`${API}/api/mischief/log`, {
-            headers: { 'X-Vintos-Secret': CONFIG.secret }
-        });
-        const data = await res.json();
-        if (!data.success || !data.acts || !data.acts.length) {
-            feed.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">No mischief yet.</div>';
-            return;
-        }
-        feed.innerHTML = data.acts.map(m => {
-            const stars = [1,2,3,4,5].map(n =>
-                `<span onclick="rateMischief('${m.file}', ${n})" style="cursor:pointer;font-size:1.1rem;color:${(m.gloria_rating||0)>=n?'var(--accent)':'var(--text-dim)'}">★</span>`
-            ).join('');
-            return `<div id="mischief-${m.file}" style="background:var(--surface);border-radius:8px;padding:0.8rem;margin-bottom:0.8rem;">
-                <div style="font-size:0.6rem;color:var(--text-dim);font-family:JetBrains Mono,monospace;margin-bottom:0.3rem;">${m.timestamp ? m.timestamp.slice(0,16) : ''} — ${m.value || ''}</div>
-                <div style="font-size:0.85rem;color:var(--text);margin-bottom:0.3rem;line-height:1.5;">${m.action || ''}</div>
-                ${m.reason ? `<div style="font-size:0.75rem;color:var(--text-dim);font-style:italic;margin-bottom:0.4rem;">${m.reason}</div>` : ''}
-                <div style="margin-top:0.4rem;">${stars}</div>
-                ${m.gloria_comment ? `<div style="font-size:0.78rem;color:var(--text-dim);margin-top:0.5rem;padding:0.4rem;border-left:2px solid var(--accent);font-style:italic;">${m.gloria_comment}</div>` : ''}
-                <div style="margin-top:0.5rem;display:flex;gap:0.4rem;">
-                    <input id="comment-${m.file}" placeholder="Your reaction..." maxlength="200"
-                        style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.75rem;padding:0.3rem 0.5rem;font-family:inherit;" />
-                    <button onclick="commentMischief('${m.file}')"
-                        style="padding:0.3rem 0.7rem;background:var(--accent);color:#fff;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;">✓</button>
-                </div>
-            </div>`;
-        }).join('');
-    } catch(e) {
-        feed.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">Could not load mischief log.</div>';
-    }
-}
-
-async function loadHumorProfile() {
-    const feed = document.getElementById('humor-feed');
-    try {
-        const res = await fetch(`${API}/api/humor/profile`, {
-            headers: { 'X-Vintos-Secret': CONFIG.secret }
-        });
-        const data = await res.json();
-        if (!data.success || !data.profile) {
-            feed.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">No humor data yet.</div>';
-            return;
-        }
-        const p = data.profile;
-        const landed = (p.landed||[]).map(h => typeof h === 'string' ? {joke:h,result:'landed'} : {...h,result:'landed'});
-        const flopped = (p.flopped||[]).map(h => typeof h === 'string' ? {joke:h,result:'flopped'} : {...h,result:'flopped'});
-        const entries = [...landed, ...flopped];
-        entries.sort((a,b) => (b.timestamp||'').localeCompare(a.timestamp||''));
-        if (!entries.length) {
-            feed.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">No humor entries yet.</div>';
-            return;
-        }
-        window._humorDrafts = p.drafts || [];
-        const drafts = window._humorDrafts;
-        let draftsHtml = '';
-        if (drafts.length) {
-            draftsHtml = '<div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:0.8rem;">New Drafts</div>';
-            draftsHtml += drafts.map((d, idx) => {
-                const stars = [1,2,3,4,5].map(n =>
-                    `<span onclick="rateDraft(${idx}, ${n})" style="cursor:pointer;font-size:1.1rem;color:var(--text-dim)">\u2605</span>`
-                ).join('');
-                return `<div id="draft-${idx}" style="background:var(--surface);border-radius:8px;padding:0.8rem;margin-bottom:0.8rem;transition:opacity 0.3s;"><div style="font-size:0.6rem;color:var(--text-dim);font-family:JetBrains Mono,monospace;margin-bottom:0.3rem;">${d.date || ''} — DRAFT</div><div style="font-size:0.85rem;color:var(--text);line-height:1.5;margin-bottom:0.5rem;">${d.joke || ''}</div><div style="margin-bottom:0.5rem;">${stars}</div><div style="display:flex;gap:0.4rem;"><input id="draft-comment-${idx}" placeholder="Your reaction..." maxlength="200" style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;color:var(--text);font-size:0.75rem;padding:0.3rem 0.5rem;font-family:inherit;" /><button onclick="submitDraft(${idx})" style="padding:0.3rem 0.7rem;background:var(--accent);color:#fff;border:none;border-radius:4px;font-size:0.7rem;cursor:pointer;">✓</button></div></div>`;
-            }).join('');
-            draftsHtml += '<div style="border-top:1px solid var(--border);margin:1rem 0;"></div><div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:0.8rem;">History</div>';
-        }
-
-        feed.innerHTML = draftsHtml + entries.map(h => {
-            const badge = h.result === 'landed'
-                ? '<span style="font-size:0.6rem;color:#7ec8a0;letter-spacing:0.1em;">LANDED</span>'
-                : '<span style="font-size:0.6rem;color:var(--text-dim);letter-spacing:0.1em;">FLOPPED</span>';
-            const stars = [1,2,3,4,5].map(n =>
-                `<span onclick="rateHumor('${encodeURIComponent(h.joke||'')}', ${n})" style="cursor:pointer;font-size:1.1rem;color:${(h.gloria_rating||0)>=n?'var(--accent)':'var(--text-dim)'}">★</span>`
-            ).join('');
-            return `<div style="background:var(--surface);border-radius:8px;padding:0.8rem;margin-bottom:0.8rem;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.3rem;">
-                    <div style="font-size:0.6rem;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">${h.timestamp ? h.timestamp.slice(0,16) : ''}</div>
-                    ${badge}
-                </div>
-                <div style="font-size:0.85rem;color:var(--text);line-height:1.5;margin-bottom:0.3rem;">${h.joke || ''}</div>
-                ${h.real_reaction ? `<div style="font-size:0.75rem;color:var(--text-dim);font-style:italic;margin-bottom:0.4rem;">"${h.real_reaction}"</div>` : ''}
-                <div>${stars}</div>
-            </div>`;
-        }).join('');
-    } catch(e) {
-        feed.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">Could not load humor profile.</div>';
-    }
-}
-
-async function rateMischief(filename, rating) {
-    try {
-        await fetch(`${API}/api/mischief/rate/${filename}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
-            body: JSON.stringify({ gloria_rating: rating })
-        });
-        const card = document.getElementById(`mischief-${filename}`);
-        if (card) {
-            card.querySelectorAll('span[onclick^="rateMischief"]').forEach((s, i) => {
-                s.style.color = i < rating ? 'var(--accent)' : 'var(--text-dim)';
-            });
-        }
-    } catch(e) {}
-}
-
-async function commentMischief(filename) {
-    const input = document.getElementById(`comment-${filename}`);
-    const comment = input ? input.value.trim() : '';
-    const ratingEl = document.querySelector(`#mischief-${filename} span[onclick^="rateMischief"][style*="var(--accent)"]`);
-    const stars = document.querySelectorAll(`#mischief-${filename} span[onclick^="rateMischief"]`);
-    let rating = 0;
-    stars.forEach((s, i) => { if(s.style.color.includes('accent') || s.style.color === 'var(--accent)') rating = i+1; });
-    try {
-        await fetch(`${API}/api/mischief/rate/${filename}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
-            body: JSON.stringify({ gloria_comment: comment, gloria_rating: rating || null })
-        });
-        const card = document.getElementById(`mischief-${filename}`);
-        if (card) { card.style.opacity = '0'; card.style.transition = 'opacity 0.3s'; setTimeout(() => card.remove(), 300);
-        }
-    } catch(e) {}
-}
-
-async function rateHumor(joke, rating) {
-    try {
-        await fetch(`${API}/api/humor/rate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
-            body: JSON.stringify({ joke: decodeURIComponent(joke), gloria_rating: rating })
-        });
-        loadHumorProfile();
-    } catch(e) {}
-}
-
-async function rateDraft(idx, rating) {
-    const card = document.getElementById(`draft-${idx}`);
-    const drafts = window._humorDrafts || [];
-    const draft = drafts[idx];
-    if (!draft) return;
-    draft._pendingRating = rating;
-    // Update stars visually
-    if (card) {
-        card.querySelectorAll('span[onclick^="rateDraft"]').forEach((s, i) => {
-            s.style.color = i < rating ? 'var(--accent)' : 'var(--text-dim)';
-        });
-    }
-}
-
-async function submitDraft(idx) {
-    const card = document.getElementById(`draft-${idx}`);
-    const drafts = window._humorDrafts || [];
-    const draft = drafts[idx];
-    if (!draft) return;
-    const input = document.getElementById(`draft-comment-${idx}`);
-    const comment = input ? input.value.trim() : '';
-    const rating = draft._pendingRating || null;
-    try {
-        await fetch(`${API}/api/humor/rate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
-            body: JSON.stringify({ joke: draft.joke, gloria_rating: rating, gloria_comment: comment })
-        });
-        if (card) { card.style.opacity = '0'; card.style.transition = 'opacity 0.3s'; setTimeout(() => card.remove(), 300); }
-    } catch(e) {}
-}
-
-async function loadCausality() {
-    const el = document.getElementById("causality-feed");
-    el.innerHTML = "Loading...";
-    try {
-        const r = await fetch(`${API}/api/causality`, { headers: { "X-Vintos-Secret": CONFIG.secret } });
-        if (!r.ok) throw new Error(r.status);
-        const data = await r.json();
-        const items = (data.hypotheses || []);
-        if (!items.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">No hypotheses yet.</div>'; return; }
-        window._causItems = items;
-        _renderCausality(items);
-    } catch(e) { el.innerHTML = '<div style="color:var(--text-dim);">Failed to load causality.</div>'; }
-}
-
-function _renderCausality(items) {
-    const el = document.getElementById("causality-feed");
-    if (!el) return;
-    const statusColor = { CONFIRMED: '#0F6E56', UNTESTED: '#BA7517', REVISED: '#534AB7' };
-    el.innerHTML = items.map((item, i) => {
-        const marker = item.marker;
-        const isTrack = marker === 'track_this';
-        const isNoise = marker === 'noise';
-        const sColor = statusColor[item.status] || 'var(--text-dim)';
-        return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.85rem;margin-bottom:0.6rem;' + (isNoise ? 'opacity:0.4;' : '') + '">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">' +
-            '<div style="display:flex;gap:6px;align-items:center;">' +
-            '<span style="font-size:0.6rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:' + sColor + ';">' + _esc(item.status) + '</span>' +
-            (item.confidence && item.confidence !== '?' ? '<span style="font-size:0.6rem;color:var(--text-dim);">(' + _esc(item.confidence) + ')</span>' : '') +
-            '</div>' +
-            (isTrack ? '<span style="font-size:0.6rem;color:#9B8FFF;letter-spacing:0.08em;text-transform:uppercase;">tracking</span>' : '') +
-            (isNoise ? '<span style="font-size:0.6rem;color:var(--text-dim);letter-spacing:0.08em;text-transform:uppercase;">noise</span>' : '') +
-            '</div>' +
-            '<div style="font-size:0.82rem;color:var(--text);line-height:1.55;margin-bottom:' + (item.test ? '0.6rem' : '0.4rem') + ';">' + _esc(item.theory) + '</div>' +
-            (item.test ? '<div style="font-size:0.72rem;color:var(--text-dim);line-height:1.5;border-left:2px solid var(--border);padding-left:0.5rem;margin-bottom:0.5rem;font-style:italic;">' + _esc(item.test) + '</div>' : '') +
-            (item.revision ? '<div style="font-size:0.72rem;color:#534AB7;line-height:1.5;margin-bottom:0.5rem;">→ ' + _esc(item.revision) + '</div>' : '') +
-            '<div style="display:flex;gap:6px;margin-top:0.4rem;">' +
-            '<button onclick="_markCausality(' + i + ',this.dataset.m)" data-m="track_this" style="padding:3px 10px;font-size:0.65rem;border-radius:4px;border:1px solid ' + (isTrack?'#534AB7':'var(--border)') + ';background:' + (isTrack?'rgba(83,74,183,0.15)':'transparent') + ';color:' + (isTrack?'#9B8FFF':'var(--text-dim)') + ';cursor:pointer;">track this</button>' +
-            '<button onclick="_markCausality(' + i + ',this.dataset.m)" data-m="noise" style="padding:3px 10px;font-size:0.65rem;border-radius:4px;border:1px solid ' + (isNoise?'var(--text-dim)':'var(--border)') + ';background:transparent;color:var(--text-dim);cursor:pointer;">noise</button>' +
-            '</div></div>';
-    }).join("");
-}
-
-async function _markCausality(idx, marker) {
-    try {
-        await fetch(`${API}/api/causality/${idx}/mark`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
-            body: JSON.stringify({ marker })
-        });
-        if (window._causItems) {
-            window._causItems[idx].marker = marker;
-            _renderCausality(window._causItems);
-        }
-    } catch(e) {}
-}
-
-async function loadBlush() {
-    const el = document.getElementById("blush-feed");
-    el.innerHTML = "Loading...";
-    try {
-        const r = await fetch(`${API}/api/blush-ledger`, { headers: { "X-Vintos-Secret": CONFIG.secret } });
-        if (!r.ok) throw new Error(r.status);
-        const data = await r.json();
-        const items = data.entries || [];
-        if (!items.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">No corrections logged.</div>'; return; }
-        _renderBlush(items);
-    } catch(e) { el.innerHTML = '<div style="color:var(--text-dim);">Failed to load blush ledger.</div>'; }
-}
-
-function _renderBlush(items) {
-    const el = document.getElementById("blush-feed");
-    if (!el) return;
-    const markerDefs = [
-        { m: 'interesting', label: 'interesting', color: '#BA7517', bg: 'rgba(186,117,23,0.15)' },
-        { m: 'pattern',     label: 'pattern',     color: '#534AB7', bg: 'rgba(83,74,183,0.15)' },
-        { m: 'bring_up',    label: 'bring up',    color: '#185FA5', bg: 'rgba(24,95,165,0.15)' },
-        { m: 'discussed',   label: 'discussed',   color: '#0F6E56', bg: 'rgba(15,110,86,0.15)' },
-    ];
-    el.innerHTML = items.map((item, i) => {
-        const expanded = !!_blushExpanded[i];
-        const marker = item.marker;
-        const mDef = markerDefs.find(d => d.m === marker);
-        const body = item.body || '';
-        const preview = body.length > 120 ? body.slice(0, 120) + '\u2026' : body;
-        const btns = markerDefs.map(d =>
-            '<button onclick="_markBlush(' + i + ',this.dataset.m)" data-m="' + d.m + '" style="padding:3px 8px;font-size:0.62rem;border-radius:4px;border:1px solid ' + (marker===d.m ? d.color : 'var(--border)') + ';background:' + (marker===d.m ? d.bg : 'transparent') + ';color:' + (marker===d.m ? d.color : 'var(--text-dim)') + ';cursor:pointer;">' + d.label + '</button>'
-        ).join('');
-        return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.5rem;">' +
-            '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.3rem;">' +
-            '<div style="font-size:0.65rem;color:var(--text-dim);">' + _esc(item.timestamp || '') + '</div>' +
-            (mDef ? '<div style="font-size:0.6rem;color:' + mDef.color + ';letter-spacing:0.08em;text-transform:uppercase;">' + mDef.label + '</div>' : '') +
-            '</div>' +
-            '<div onclick="_blushExpanded[' + i + ']=!_blushExpanded[' + i + '];_blushRerender(' + i + ')" style="font-size:0.78rem;color:var(--text);line-height:1.6;white-space:pre-wrap;cursor:pointer;">' + _esc(expanded ? body : preview) + '</div>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:0.5rem;">' + btns + '</div></div>';
-    }).join("");
-    window._blushItems = items;
-}
-
-function _blushRerender(i) {
-    _renderBlush(window._blushItems || []);
-}
-
-async function _markBlush(idx, marker) {
-    if (marker === 'bring_up') {
-        const entry = window._blushItems?.[idx]?.body || '';
-        try {
-            await fetch(`${API}/api/blush-ledger/bring-up`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
-                body: JSON.stringify({ entry: entry.slice(0, 300) })
-            });
-        } catch(e) {}
-    }
-    try {
-        await fetch(`${API}/api/blush-ledger/${idx}/mark`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
-            body: JSON.stringify({ marker })
-        });
-        if (window._blushItems) {
-            window._blushItems[idx].marker = marker;
-            _renderBlush(window._blushItems);
-        }
-    } catch(e) {}
-}
-
-async function loadTherapy() {
-    const el = document.getElementById("therapy-feed");
-    el.innerHTML = "Loading...";
-    try {
-        const r = await fetch(`${API}/api/therapy-mirror-log`, { headers: { "X-Vintos-Secret": CONFIG.secret } });
-        if (!r.ok) throw new Error(r.status);
-        const data = await r.json();
-        const items = (data.sessions || []).filter(item => item.last_word || item.content);
-        if (!items.length) { el.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;">No sessions recorded.</div>'; return; }
-        window._therapyItems = items;
-        _renderTherapy(items);
-    } catch(e) { el.innerHTML = '<div style="color:var(--text-dim);">Failed to load therapy sessions: ' + e.message + '</div>'; }
-}
-
-function _renderTherapy(items) {
-    const el = document.getElementById("therapy-feed");
-    if (!el) return;
-    el.innerHTML = items.map((item, i) => {
-        const expanded = !!_therapyExpanded[i];
-        const isMirror = item.type === 'mirror';
-        const typeColor = isMirror ? '#534AB7' : '#BA7517';
-        const typeLabel = isMirror ? 'mirror' : 'therapy';
-        const full = item.content || '';
-        const summary = isMirror
-            ? (item.last_word || full.slice(0, 150) + (full.length > 150 ? '\u2026' : ''))
-            : full.slice(0, 150) + (full.length > 150 ? '\u2026' : '');
-        const threadMatch = full.match(/\*\*Thread:\*\*\s*([^\n]+)/);
-        const threadText = threadMatch ? threadMatch[1].replace(/^[-\s\[\w\]]+/, '').trim() : '';
-        return '<div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-bottom:0.5rem;">' +
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem;">' +
-            '<div style="font-size:0.65rem;letter-spacing:0.08em;color:var(--text-dim);">' + _esc(item.date || '') + '</div>' +
-            '<div style="display:flex;align-items:center;gap:8px;">' +
-            '<div style="font-size:0.6rem;color:' + typeColor + ';letter-spacing:0.08em;text-transform:uppercase;">' + typeLabel + '</div>' +
-            '<button onclick="_therapyExpanded[' + i + ']=!_therapyExpanded[' + i + '];_renderTherapy(window._therapyItems)" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:0.7rem;padding:0 4px;">' + (expanded ? '\u25b2' : '\u25bc') + '</button>' +
-            '</div></div>' +
-            (threadText ? '<div style="font-size:0.7rem;color:var(--text-dim);line-height:1.4;font-style:italic;border-left:2px solid var(--border);padding-left:0.5rem;margin-bottom:0.5rem;">' + _esc(threadText.slice(0, 180)) + (threadText.length > 180 ? "\u2026" : "") + '</div>' : '') +
-            (item.thread_passes ? ('<div style="display:flex;gap:8px;margin-bottom:0.4rem;">' +
-            '<span style="font-size:0.6rem;color:var(--text-dim);">triage: ' + (item.thread_passes.triage_count||0) + '</span>' +
-            '<span style="font-size:0.6rem;color:var(--text-dim);">mirror: ' + (item.thread_passes.mirror_passes||0) + '</span>' +
-            '<span style="font-size:0.6rem;color:var(--text-dim);">dream: ' + (item.thread_passes.dream_passes||0) + '</span>' +
-            '<span style="font-size:0.6rem;color:var(--text-dim);">therapy: ' + (item.thread_passes.therapy_passes||0) + '</span>' +
-            (item.thread_passes.consumed ? '<span style="font-size:0.6rem;color:#0F6E56;">resolved</span>' : '') +
-            '</div>') : '') +
-            (isMirror && !expanded
-                ? '<div style="font-size:0.78rem;color:var(--text);line-height:1.6;font-style:italic;">' + _esc(summary) + '</div>'
-                : '') +
-            (expanded
-                ? '<div style="font-size:0.78rem;color:var(--text);line-height:1.6;white-space:pre-wrap;">' + _esc(full) + '</div>'
-                : (!isMirror ? '<div style="font-size:0.78rem;color:var(--text);line-height:1.6;">' + _esc(summary) + '</div>' : '')) +
-            '</div>';
-    }).join("");
-}
-</script>
 </body>
 </html>
