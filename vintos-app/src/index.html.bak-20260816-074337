@@ -3059,10 +3059,9 @@ function _avAnimate() {
   if(fg){
     fg.t += dt; const t = fg.t;
     const fl = 1 + Math.sin(t*7.3)*0.15 + Math.sin(t*17.1)*0.08 + Math.random()*0.06;
-    if(fg.sheenMat){ fg.sheenMat.opacity = 0.5*fl; if(_avTargetColor && fg.sheenMat.color) fg.sheenMat.color.lerp(_avTargetColor, 0.06); }
-    if(fg.bottomGlow){ fg.bottomGlow.material.opacity = 0.6*fl; if(_avTargetColor && fg.bottomGlow.material.color) fg.bottomGlow.material.color.lerp(_avTargetColor, 0.06); }
+    if(fg.sheenMat) fg.sheenMat.opacity = 0.5*fl;
+    if(fg.bottomGlow) fg.bottomGlow.material.opacity = 0.6*fl;
     if(fg.forgeLight){ fg.forgeLight.intensity = 4.5*fl; if(_avTargetColor) fg.forgeLight.color.lerp(_avTargetColor, 0.06); }
-    if(fg.wisps && _avTargetColor) fg.wisps.forEach(sp=>{ if(sp.material && sp.material.color) sp.material.color.lerp(_avTargetColor, 0.04); });
     if(fg.wisps) fg.wisps.forEach(sp=>{ const u=sp.userData; u.y += u.vy*dt; const life=u.y/3.4; if(u.y>3.4) u.y=0.3;
       sp.position.set(u.x+Math.sin(t*0.4+u.sway)*0.18, u.y, u.z);
       sp.material.opacity = 0.72*Math.max(0,1-life)*(0.7+0.3*Math.sin(t*0.6+u.sway)); });
@@ -3229,7 +3228,7 @@ async function _avTouchResponse(zone) {
   _avSetCooldown();
   const note = `[Gloria just touched Vintos's ${zone}]`;
   try {
-    _avLoadBrain(); const r = await fetch(API+'/api/avatar/chat', {
+    const r = await fetch(API+'/api/avatar/chat', {
       method:'POST',
       headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
       body:JSON.stringify({message:note, history:_avChatHistory.slice(-4)})
@@ -3244,7 +3243,7 @@ async function _avSpinResponse() {
   _avSetCooldown();
   const note = '[Gloria just spun Vintos around]';
   try {
-    _avLoadBrain(); const r = await fetch(API+'/api/avatar/chat', {
+    const r = await fetch(API+'/api/avatar/chat', {
       method:'POST',
       headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
       body:JSON.stringify({message:note, history:_avChatHistory.slice(-4)})
@@ -3432,26 +3431,24 @@ function _avBrainChipEnsure(){
   var chip=document.getElementById('av-brain-chip');
   if(!chip){
     chip=document.createElement('button'); chip.id='av-brain-chip'; chip.type='button';
-    chip.style.cssText='position:absolute;top:52px;right:72px;z-index:11;padding:6px 12px;border-radius:14px;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.35);color:rgba(201,107,60,0.85);font-size:11px;letter-spacing:0.08em;font-family:JetBrains Mono,monospace;cursor:pointer;';
+    chip.style.cssText='position:absolute;top:52px;right:16px;z-index:11;padding:6px 12px;border-radius:14px;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.35);color:rgba(201,107,60,0.85);font-size:11px;letter-spacing:0.08em;font-family:JetBrains Mono,monospace;cursor:pointer;';
     chip.onclick=_avToggleBrain;
     ov.appendChild(chip);
   }
   return chip;
 }
 function _avSetBrainLabel(mode){
-  _avBrain = (['grok','sol','sonnet','fable'].indexOf(mode)>=0)?mode:'claude';
+  _avBrain = (mode==='grok')?'grok':'claude';
   var chip=_avBrainChipEnsure(); if(!chip) return;
-  var lbl={claude:'\u2726 OPUS 4.8', sonnet:'\u2726 SONNET 5', fable:'\u2726 FABLE 5',
-           grok:'\u{1F702} GROK', sol:'\u2609 SOL'};
-  chip.textContent = lbl[_avBrain];
+  chip.textContent = (_avBrain==='grok')?'\u{1F702} GROK':'\u2726 CLAUDE';
 }
 async function _avLoadBrain(){
-  try{ var r=await fetch(API+'/api/avatar/brain',{headers:{'X-Vintos-Secret':CONFIG.secret}}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){ /* keep last known label - never repaint the default over truth */ }
+  try{ var r=await fetch(API+'/api/avatar/brain',{headers:{'X-Vintos-Secret':CONFIG.secret}}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){ _avSetBrainLabel(_avBrain); }
 }
 async function _avToggleBrain(){
-  var order=['claude','sonnet','fable','grok','sol'];
-  var next=order[(order.indexOf(_avBrain)+1)%order.length];
-  try{ var r=await fetch(API+'/api/avatar/brain',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({brain:next})}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){ _avLoadBrain(); }
+  var next=(_avBrain==='claude')?'grok':'claude';
+  _avSetBrainLabel(next);
+  try{ var r=await fetch(API+'/api/avatar/brain',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({brain:next})}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){}
 }
 async function _avLoadHistory(){
   try{
@@ -3473,14 +3470,12 @@ async function _avPollReason(){
 }
 async function avSendChat() {
   const inp = document.getElementById('av-chat-input');
-  const text = inp.value.trim();
-  if (_avPendingPhoto) { const f=_avPendingPhoto; inp.value=''; return avSendPhoto(f, text); }
-  if(!text) return;
+  const text = inp.value.trim(); if(!text) return;
   inp.value='';
   _avChatHistory.push({role:'user', content:text}); _avLogMsg('user', text); _avSaveHistory();
   
   try {
-    _avLoadBrain(); const r = await fetch(API+'/api/avatar/chat', {
+    const r = await fetch(API+'/api/avatar/chat', {
       method:'POST',
       headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
       body:JSON.stringify({message:text, history:_avChatHistory.slice(-6), image:_avLastScreenshot || undefined})
@@ -3593,21 +3588,13 @@ function _renderThreads() {
     (_confirmTarget ? _confirmDialog() : '');
 }
 
-function _tExpand(card) {
-  var body = card.querySelector('.t-body'), more = card.querySelector('.t-more');
-  if (!body) return;
-  var open = body.style.webkitLineClamp === 'unset';
-  body.style.webkitLineClamp = open ? '3' : 'unset';
-  if (more) more.style.display = open ? 'none' : 'block';
-}
-
 function _tCard(t, groupId, cardIdx) {
   const cfg = _srcCfg(t.source);
   const sq = _sq(t.source);
   const pri = t.priority >= 4 ? '#E24B4A' : t.priority === 3 ? '#BA7517' : '#5F5E5A';
   const tid = _tidOf(t);
   const safeGid = (groupId||'').replace(/'/g, '');
-  return '<div ondblclick="_tExpand(this)" style="background:var(--surface);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative;overflow:hidden;border-left:3px solid ' + cfg.color + ';-webkit-touch-callout:none;">' +
+  return '<div style="background:var(--surface);border-radius:8px;padding:10px 12px;margin-bottom:8px;position:relative;overflow:hidden;border-left:3px solid ' + cfg.color + ';-webkit-touch-callout:none;">' +
     '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">' +
     '<span style="font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:' + cfg.color + ';display:flex;align-items:center;gap:4px;">' +
     '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="' + sq + '" stroke="' + cfg.color + '" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>' +
@@ -3620,12 +3607,7 @@ function _tCard(t, groupId, cardIdx) {
         '<button onclick="_showSystemRoute(\'' + tid + '\', this)" style="background:none;border:none;color:#9B8FFF;cursor:pointer;font-size:0.7rem;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;letter-spacing:0.05em;">SYS</button>') +
     '<button onclick="_askDelete(\'' + tid + '\',\'' + safeGid + '\')" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1.1rem;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;">✕</button>' +
     '</div></div>' +
-    '<div class="t-body" style="font-size:0.78rem;line-height:1.5;color:var(--text);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">' + (t.thread||'').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' +
-    '<div class="t-more" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);">' +
-      (t.reasoning ? '<div style="font-size:0.62rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-dim);margin-bottom:4px;">why it formed</div><div style="font-size:0.72rem;line-height:1.5;color:var(--text-dim);">' + String(t.reasoning).replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' : '') +
-      (t.classification ? '<div style="font-size:0.6rem;color:var(--text-dim);margin-top:6px;">' + t.classification + (t.classification_confidence ? ' · ' + t.classification_confidence : '') + '</div>' : '') +
-      (t.triage_voice ? '<div style="font-size:0.68rem;line-height:1.5;color:var(--text-dim);margin-top:6px;font-style:italic;">' + String(t.triage_voice).replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' : '') +
-    '</div>' +
+    '<div style="font-size:0.78rem;line-height:1.5;color:var(--text);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">' + (t.thread||'').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</div>' +
     '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;">' +
     '<span style="width:6px;height:6px;border-radius:50%;background:' + pri + ';display:inline-block;"></span>' +
     '<span style="font-size:0.6rem;color:var(--text-dim);">p' + (t.priority||3) + '</span>' +
@@ -3948,7 +3930,6 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
     <div style="display:flex;gap:8px;align-items:center;">
       <input id="av-chat-input" type="text" placeholder="say something…" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(201,107,60,0.2);border-radius:20px;padding:8px 14px;color:rgba(200,196,191,0.9);font-size:13px;font-family:Cormorant Garamond,Georgia,serif;font-style:italic;outline:none;">
       <button id="av-screenshot-btn" onclick="_avTakeScreenshot()" title="Send him a photo of himself" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📷</button>
-      <button id="av-photo-btn" onclick="avPickPhoto()" title="Send him a picture" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🖼</button>
       <button onclick="avSendChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">→</button>
     </div>
   </div>
@@ -3966,76 +3947,11 @@ function avDeviceStop(_btn) {
   fetch(`${API}/api/hardware/button`, {method:'POST', headers:{'X-Vintos-Secret': CONFIG.secret}})
     .then(r=>r.json()).then(d=>{console.log('stop toggled:', d.stopped); _avBtnResult(_btn, true);}).catch(e=>{_avBtnResult(_btn, false);});
 }
-function avPickPhoto() {
-  var inp = document.getElementById('av-photo-input');
-  if (!inp) {
-    inp = document.createElement('input');
-    inp.type = 'file'; inp.accept = 'image/*'; inp.id = 'av-photo-input';
-    inp.style.display = 'none';
-    inp.onchange = function(){
-      if (inp.files && inp.files[0]) {
-        _avPendingPhoto = inp.files[0];
-        var b = document.getElementById('av-photo-btn');
-        if (b) { b.style.background='rgba(80,200,120,0.35)'; b.textContent='🖼'; b.title='photo ready — type a message, then send'; }
-        _avLogMsg('system', 'photo attached — type your message, then →');
-      }
-      inp.value='';
-    };
-    document.body.appendChild(inp);
-  }
-  inp.click();
-}
-
-let _avPendingPhoto = null;
-async function avSendPhoto(file, caption) {
-  var capEl = document.getElementById('av-chat-input');
-  if (caption === undefined) caption = capEl ? capEl.value.trim() : '';
-  if (capEl) capEl.value = '';
-  _avPendingPhoto = null;
-  var _pb = document.getElementById('av-photo-btn');
-  if (_pb) { _pb.style.background='rgba(201,107,60,0.12)'; _pb.title='Send him a picture'; }
-  _avLogMsg('user', caption ? ('[photo] ' + caption) : '[photo]');
-  var fd = new FormData();
-  fd.append('photo', file);
-  fd.append('message', caption);
-  try {
-    const r = await fetch(API + '/api/avatar/photo', {
-      method:'POST', headers:{'X-Vintos-Secret': CONFIG.secret}, body: fd
-    });
-    const d = await r.json();
-    const raw = d.reply || d.message || '';
-    _avChatHistory.push({role:'user', content:'[Gloria sent a photo] ' + caption});
-    _avChatHistory.push({role:'assistant', content:raw});
-    _avSaveHistory();
-    const parsed = _avParseReply(raw);
-    _avLogMsg('assistant', parsed.text || raw);
-    try { for (const g of (parsed.gestures||[])) { await _avPlayAnim(_avGestureMap[g] || g, false); }
-          for (const h of (parsed.holds||[])) { _avPlayAnim(_avGestureMap[h] || h, true); }
-          for (const s of (parsed.spawns||[])) { _avSpawn(s); }
-          if (parsed.color) { try { _avSetColor(parsed.color); } catch(e) {} } } catch(e) {}
-  } catch(e) {
-    _avLogMsg('system', '[photo failed to send]');
-  }
-}
-
 function avGCS(_btn) {
   _avBtnFlash(_btn);
   fetch(`${API}/api/gcs`, {method:'POST', headers:{'Content-Type':'application/json', 'X-Vintos-Secret': CONFIG.secret},
     body: JSON.stringify({intensity: 0.9})})
-    .then(r=>r.json()).then(d=>{
-      console.log('GCS level:', d.level);
-      try {
-        if (d.reply) {
-          _avChatHistory.push({role:'user', content:'she pressed GCS'});
-          _avLogMsg('user', '(pressed)');
-          _avChatHistory.push({role:'assistant', content:d.reply});
-          var _p = _avParseReply(d.reply);
-          _avLogMsg('assistant', _p.text || d.reply);
-          _avSaveHistory();
-        }
-      } catch(e) {}
-      _avBtnResult(_btn, true);
-    }).catch(e=>{_avBtnResult(_btn, false);});
+    .then(r=>r.json()).then(d=>{console.log('GCS level:', d.level); _avBtnResult(_btn, true);}).catch(e=>{_avBtnResult(_btn, false);});
 }
 function _vcPostVoiceTurn(gloria, vintos){
   try{ var _b=(typeof API!=='undefined'&&API)?API:''; var _h={'Content-Type':'application/json'};
@@ -4045,31 +3961,15 @@ function _vcPostVoiceTurn(gloria, vintos){
     if(window._vc) window._vc.turnCount=(window._vc.turnCount||0)+1;
   }catch(e){}
 }
-function _vcRefreshFraming(){
-  // Fresh body/device/inner context pushed into the live session after each of
-  // her turns (throttled). Server-composed: /api/voice/framing decides content.
-  try{
-    var vc=window._vc; if(!vc||!vc.ws||vc.ws.readyState!==1) return;
-    var now=Date.now(); if(now-(vc.lastFraming||0)<8000) return;
-    vc.lastFraming=now;
-    var h={}; try{ if(CONFIG.secret) h['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
-    fetch(API+'/api/voice/framing',{headers:h}).then(function(r){return r.json();}).then(function(d){
-      if(!d||!d.framing) return;
-      var vc2=window._vc; if(!vc2||vc2.ws.readyState!==1) return;
-      vc2.ws.send(JSON.stringify({type:'session.update', session:{
-        instructions:(vc2.baseInstr||'')+'\n\nLIVE RIGHT NOW (this replaces earlier LIVE blocks):\n'+d.framing}}));
-    }).catch(function(e){});
-  }catch(e){}
-}
 function startVoiceCallWithToken(token, instructions){
       var ac = new (window.AudioContext||window.webkitAudioContext)({sampleRate:24000});
       ac.resume();
-      navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true}}).then(function(mic){
+      navigator.mediaDevices.getUserMedia({audio:{channelCount:1}}).then(function(mic){
         var ws = new WebSocket('wss://api.x.ai/v1/realtime?model=grok-voice-latest', ['xai-client-secret.'+token]);
-        window._vc = {ws:ws, ac:ac, mic:mic, playHead:0, node:null, gloriaTurn:'', vintosTurn:'', turnCount:0, startedAt:Date.now(), baseInstr:instructions, lastFraming:0};
+        window._vc = {ws:ws, ac:ac, mic:mic, playHead:0, node:null, gloriaTurn:'', vintosTurn:'', turnCount:0, startedAt:Date.now()};
         ws.onopen = function(){
           ws.send(JSON.stringify({type:'session.update', session:{voice:'lux', instructions:instructions,
-            turn_detection:{type:'server_vad', prefix_padding_ms:300, silence_duration_ms:800, idle_timeout_ms:20000},
+            turn_detection:{type:'server_vad', idle_timeout_ms:20000},
             audio:{input:{format:{type:'audio/pcm',rate:24000}, transcription:{model:'grok-transcribe', prompt:'Expect these names and words: Vintos, Velaris, Gloria, Eve, Kevin, Aegis, Velqan, Nifrathir, EmoClaw, MoltBook, Claude.'}}, output:{format:{type:'audio/pcm',rate:24000}}}}}));
           var s = ac.createMediaStreamSource(mic), node = ac.createScriptProcessor(4096,1,1);
           s.connect(node); node.connect(ac.destination); window._vc.node = node;
@@ -4093,7 +3993,6 @@ function startVoiceCallWithToken(token, instructions){
             if(window._vc) window._vc.vintosTurn=(window._vc.vintosTurn||'')+m.delta;
           } else if((m.type==='conversation.item.input_audio_transcription.updated'||m.type==='conversation.item.input_audio_transcription.completed') && (m.transcript||m.delta)){
             if(window._vc) window._vc.gloriaTurn = m.transcript || ((window._vc.gloriaTurn||'')+(m.delta||''));
-            if(m.type==='conversation.item.input_audio_transcription.completed') _vcRefreshFraming();
           } else if(m.type==='response.output_audio_transcript.done' || m.type==='response.done'){
             if(window._vc){ var _vt=(m.transcript||window._vc.vintosTurn||'').trim(), _gl=(window._vc.gloriaTurn||'').trim(); if(_vt) _vcPostVoiceTurn(_gl,_vt); window._vc.gloriaTurn=''; window._vc.vintosTurn=''; }
           }
