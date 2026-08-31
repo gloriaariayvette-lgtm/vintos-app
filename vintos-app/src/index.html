@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#1C1E22">
@@ -3496,15 +3496,23 @@ function _avTakeScreenshot() {
 
 var _avBrain = 'claude';
 function _avBrainChipEnsure(){
-  var ov=document.getElementById('avatar-overlay'); if(!ov) return null;
+  // The chip lives at the top of the control drawer now — never over the telemetry bars.
+  var host=document.getElementById('av-drawer-body') || document.getElementById('avatar-overlay'); if(!host) return null;
   var chip=document.getElementById('av-brain-chip');
   if(!chip){
     chip=document.createElement('button'); chip.id='av-brain-chip'; chip.type='button';
-    chip.style.cssText='position:absolute;top:52px;right:72px;z-index:11;padding:6px 12px;border-radius:14px;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.35);color:rgba(201,107,60,0.85);font-size:11px;letter-spacing:0.08em;font-family:JetBrains Mono,monospace;cursor:pointer;';
+    chip.style.cssText='padding:8px 12px;border-radius:14px;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.35);color:rgba(201,107,60,0.85);font-size:11px;letter-spacing:0.08em;font-family:JetBrains Mono,monospace;cursor:pointer;white-space:nowrap;';
     chip.onclick=_avToggleBrain;
-    ov.appendChild(chip);
+    host.insertBefore(chip, host.firstChild);
   }
   return chip;
+}
+function avToggleDrawer(){
+  var d=document.getElementById('av-drawer'); if(!d) return;
+  var open = d.getAttribute('data-open')==='1';
+  d.setAttribute('data-open', open?'0':'1');
+  d.style.transform = open ? 'translateX(calc(100% - 30px))' : 'translateX(0)';
+  var ch=document.getElementById('av-drawer-chev'); if(ch) ch.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 function _avSetBrainLabel(mode){
   _avBrain = (['grok','sol','sonnet','fable'].indexOf(mode)>=0)?mode:'claude';
@@ -3988,8 +3996,12 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
   </div>
   <button onclick="closeAvatarOverlay()" style="position:absolute;top:52px;left:16px;width:40px;height:40px;border-radius:50%;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.2);color:rgba(201,107,60,0.7);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">✕</button>
 
-  <!-- right-side buttons: call, stop, GCS -->
-  <div style="position:absolute;right:20px;bottom:180px;display:flex;flex-direction:column;align-items:center;gap:14px;z-index:10;">
+  <!-- right-side control drawer: model chip + call, stop, GCS. Tucked off-screen
+       until the handle is tapped, so nothing sits on the telemetry bars and no
+       button can be hit by accident. -->
+  <div id="av-drawer" style="position:absolute;right:0;bottom:180px;z-index:10;display:flex;align-items:flex-end;transform:translateX(calc(100% - 30px));transition:transform 0.3s cubic-bezier(.4,0,.2,1);">
+  <button id="av-drawer-handle" onclick="avToggleDrawer()" aria-label="controls" style="width:30px;height:88px;border-radius:12px 0 0 12px;background:rgba(5,5,13,0.75);border:0.5px solid rgba(201,107,60,0.3);border-right:none;color:rgba(201,107,60,0.8);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span id="av-drawer-chev" style="transition:transform 0.3s ease;">‹</span></button>
+  <div id="av-drawer-body" style="background:rgba(5,5,13,0.85);border:0.5px solid rgba(201,107,60,0.3);border-right:none;border-radius:12px 0 0 12px;padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:14px;">
 
     <!-- voice call -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
@@ -4010,11 +4022,12 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
     </div>
 
   </div>
+  </div>
   <div id="av-touch-hint" style="position:absolute;bottom:145px;left:50%;transform:translateX(-50%);font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(201,107,60,0.3);pointer-events:none;transition:opacity 2s ease;">touch his hand</div>
   <div id="av-chat-strip" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top, rgba(5,5,13,0.85), transparent);display:flex;flex-direction:column;padding:10px 16px 20px;gap:10px;">
     <div id="av-chat-message" style="font-family:Cormorant Garamond,Georgia,serif;font-size:14px;font-style:italic;font-weight:300;color:rgba(200,196,191,0.85);line-height:1.6;max-height:140px;overflow-y:auto;padding-bottom:4px;border-bottom:0.5px solid rgba(201,107,60,0.08);"></div>
     <div style="display:flex;gap:8px;align-items:center;">
-      <input id="av-chat-input" type="text" placeholder="say something…" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(201,107,60,0.2);border-radius:20px;padding:8px 14px;color:rgba(200,196,191,0.9);font-size:13px;font-family:Cormorant Garamond,Georgia,serif;font-style:italic;outline:none;">
+      <input id="av-chat-input" type="text" placeholder="say something…" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(201,107,60,0.2);border-radius:20px;padding:8px 14px;color:rgba(200,196,191,0.9);font-size:16px;font-family:Cormorant Garamond,Georgia,serif;font-style:italic;outline:none;">
       <button id="av-screenshot-btn" onclick="_avTakeScreenshot()" title="Send him a photo of himself" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📷</button>
       <button id="av-photo-btn" onclick="avPickPhoto()" title="Send him a picture" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🖼</button>
       <button onclick="avSendChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">→</button>
