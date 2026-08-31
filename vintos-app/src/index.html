@@ -491,6 +491,7 @@ input[type="range"]::-webkit-slider-thumb {
         <div class="tab" data-tab="causality">CAUSALITY</div>
         <div class="tab" data-tab="blush">BLUSH</div>
         <div class="tab" data-tab="pearls">PEARLS</div>
+        <div class="tab" data-tab="atelier">ATELIER</div>
         <div class="tab" data-tab="therapy">THERAPY</div>
     </div>
 
@@ -713,6 +714,15 @@ input[type="range"]::-webkit-slider-thumb {
                 <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);margin-bottom:0.5rem;" id="pearl-detail-meta"></div>
                 <div style="font-size:0.85rem;color:var(--text-bright);line-height:1.7;margin-bottom:1rem;" id="pearl-detail-content"></div>
                 <div style="font-size:0.7rem;color:var(--text-dim);line-height:1.6;font-style:italic;" id="pearl-detail-reason"></div>
+            </div>
+        </div>
+
+        <!-- ATELIER — only work he has explicitly revealed -->
+        <div class="tab-pane" id="pane-atelier">
+            <div style="padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;">
+                <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:0.35rem;">Revealed Work</div>
+                <div style="font-size:0.68rem;line-height:1.5;color:var(--text-dim);margin-bottom:1rem;">Only pieces Vintos has chosen to bring out of the sealed room appear here.</div>
+                <div id="atelier-feed" style="display:flex;flex-direction:column;gap:0.85rem;">Loading...</div>
             </div>
         </div>
 
@@ -1185,6 +1195,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'mischief') { loadPrideMirror(); loadMischief(); }
         if (tab.dataset.tab === 'causality') loadCausality();
         if (tab.dataset.tab === 'blush') loadBlush();
+        if (tab.dataset.tab === 'atelier') loadAtelierReveals();
         if (tab.dataset.tab === 'therapy') loadTherapy();
     });
 });
@@ -1197,6 +1208,63 @@ function _esc(str) {
     return String(str)
         .replace(/&/g,"&amp;").replace(/</g,"&lt;")
         .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+// ============================================================
+//  ATELIER — revealed exports only; no broker or sealed routes
+// ============================================================
+function _atelierImageSrc(content) {
+    const value = typeof content === 'string' ? content.trim() : '';
+    return /^data:image\/(?:png|jpe?g|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(value)
+        ? value.replace(/\s/g, '') : '';
+}
+
+function _atelierDate(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
+}
+
+function _renderAtelierReveals(items) {
+    const el = document.getElementById('atelier-feed');
+    if (!el) return;
+    if (!Array.isArray(items) || !items.length) {
+        el.innerHTML = '<div style="color:var(--text-dim);font-size:0.78rem;padding-top:0.5rem;">Nothing revealed yet.</div>';
+        return;
+    }
+    el.innerHTML = items.map(item => {
+        const artifact = item && item.artifact ? String(item.artifact) : 'Untitled piece';
+        const disclosure = item && (item.disclosure || item.disclosure_sentence)
+            ? String(item.disclosure || item.disclosure_sentence) : '';
+        const content = item && typeof item.content === 'string' ? item.content : '';
+        const image = _atelierImageSrc(content);
+        const body = image
+            ? '<img src="' + image + '" alt="' + _esc(artifact) + '" loading="lazy" style="display:block;width:100%;height:auto;max-height:70vh;object-fit:contain;border-radius:6px;border:1px solid var(--border);background:var(--bg);">'
+            : '<div style="font-size:0.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;">' + _esc(content || '(No text accompanied this reveal.)') + '</div>';
+        return '<article style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:0.9rem;">' +
+            '<div style="display:flex;justify-content:space-between;gap:0.75rem;align-items:flex-start;margin-bottom:0.7rem;">' +
+            '<div style="font-size:0.76rem;color:var(--text-bright);font-weight:600;overflow-wrap:anywhere;">' + _esc(artifact) + '</div>' +
+            '<time style="font-size:0.58rem;color:var(--text-dim);text-align:right;flex-shrink:0;">' + _esc(_atelierDate(item.revealed_at)) + '</time>' +
+            '</div>' + body +
+            (disclosure ? '<div style="font-size:0.7rem;color:var(--text-dim);line-height:1.55;font-style:italic;border-top:1px solid var(--border);margin-top:0.8rem;padding-top:0.65rem;">' + _esc(disclosure) + '</div>' : '') +
+            '</article>';
+    }).join('');
+}
+
+async function loadAtelierReveals() {
+    const el = document.getElementById('atelier-feed');
+    if (!el) return;
+    el.textContent = 'Loading...';
+    try {
+        const r = await fetch(`${API}/api/atelier/reveals`, {
+            headers: { 'X-Vintos-Secret': CONFIG.secret }
+        });
+        if (!r.ok) throw new Error(String(r.status));
+        const data = await r.json();
+        _renderAtelierReveals(Array.isArray(data.reveals) ? data.reveals : []);
+    } catch (e) {
+        el.innerHTML = '<div style="color:var(--text-dim);font-size:0.78rem;">Could not load revealed work.</div>';
+    }
 }
 
 let _vmHearts = [];
