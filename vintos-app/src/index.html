@@ -3496,7 +3496,7 @@ var _avStage = {
   _el: function(i){
     if(!this.layers[i]){
       var v=document.createElement('video');
-      v.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.9s ease;';
+      v.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity 0.9s ease;';
       v.playsInline=true; v.muted=true; v.loop=true;
       var ov=document.getElementById('avatar-overlay');
       var canvas=document.getElementById('avatar-canvas');
