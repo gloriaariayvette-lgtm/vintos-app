@@ -3508,9 +3508,18 @@ var _avStage = {
     var H=(ov&&ov.clientHeight)||window.innerHeight, S=(strip&&strip.offsetHeight)||160;
     return Math.max(200, H - S + 38);
   },
+  _fit: function(v){
+    if(!v || !v.videoWidth || !v.videoHeight) return;
+    var ov=document.getElementById('avatar-overlay'), strip=document.getElementById('av-chat-strip');
+    var W=(ov&&ov.clientWidth)||window.innerWidth, H=(ov&&ov.clientHeight)||window.innerHeight;
+    var S=(strip&&strip.offsetHeight)||160, bottom=H-S+38;
+    var asp=v.videoWidth/v.videoHeight, w=W*1.08, h=w/asp;
+    if(h>bottom+24){ h=bottom+24; w=h*asp; }
+    v.style.width=w+'px'; v.style.height=h+'px';
+    v.style.left=((W-w)/2)+'px'; v.style.top=(bottom-h)+'px';
+  },
   relayout: function(){
-    var h=this._videoH();
-    this.layers.forEach(function(v){ if(v) v.style.height=h+'px'; });
+    var self=this; this.layers.forEach(function(v){ self._fit(v); });
   },
   _hideCanvas: function(){
     var c=document.getElementById('avatar-canvas'); if(c) c.style.display='none';
@@ -3520,8 +3529,9 @@ var _avStage = {
     if(!this.layers[i]){
       var v=document.createElement('video');
       var mask='radial-gradient(ellipse 78% 74% at 50% 48%, black 66%, transparent 100%)';
-      v.style.cssText='position:absolute;top:-2%;left:-4%;width:108%;height:'+_avStage._videoH()+'px;object-fit:contain;opacity:0;transition:opacity 0.9s ease;-webkit-mask-image:'+mask+';mask-image:'+mask+';';
+      v.style.cssText='position:absolute;top:0;left:0;width:100%;height:'+_avStage._videoH()+'px;object-fit:cover;opacity:0;transition:opacity 0.9s ease;-webkit-mask-image:'+mask+';mask-image:'+mask+';';
       v.playsInline=true; v.muted=true; v.loop=true;
+      v.addEventListener('loadedmetadata', function(){ _avStage._fit(v); });
       var ov=document.getElementById('avatar-overlay');
       var canvas=document.getElementById('avatar-canvas');
       ov.insertBefore(v, canvas.nextSibling);
@@ -3585,7 +3595,7 @@ var _avStage = {
   speak: async function(text){
     if(!this.active() || !text) return false;
     try{
-      var r=await fetch(API+'/api/avatar/speak',{method:'POST',
+      var r=await fetch(API+'/api/avatar/stage/speak',{method:'POST',
         headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
         body:JSON.stringify({text:text, room:this.room})});
       if(!r.ok) return false;
