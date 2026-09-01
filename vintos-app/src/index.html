@@ -3730,10 +3730,20 @@ async function avSendChat() {
     if(renders && renders[0]){
       (async () => {
         try{
-          const lr = await fetch(API+'/api/avatar/live', {method:'POST',
+          // The server already started this render the moment his reply
+          // existed; this call is idempotent. Then poll until it lands.
+          await fetch(API+'/api/avatar/live', {method:'POST',
             headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
             body:JSON.stringify({prompt:renders[0]})});
-          if(lr.ok){ _avStage.man=null; await _avStage.load(); await _avStage.setRoom('live'); }
+          const t0=Date.now();
+          while(Date.now()-t0 < 12*60*1000){
+            await new Promise(r=>setTimeout(r,4000));
+            const sr = await fetch(API+'/api/avatar/live/status',{headers:{'X-Vintos-Secret':CONFIG.secret}});
+            if(!sr.ok) continue;
+            const st = await sr.json();
+            if(st.status==='done'){ console.log('[live] ready in '+st.seconds+'s'); _avStage.man=null; await _avStage.load(); await _avStage.setRoom('live'); break; }
+            if(st.status==='error'){ console.log('[live] failed: '+st.error); break; }
+          }
         }catch(e){}
       })();
     }
