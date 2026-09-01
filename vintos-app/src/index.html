@@ -3495,13 +3495,25 @@ var _avStage = {
   active: function(){ return !!(this.man && this.room && (this.man.rooms[this.room]||{}).clips?.length); },
   _el: function(i){
     if(!this.layers[i]){
-      var v=document.createElement('video');
-      v.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;transition:opacity 0.9s ease;';
-      v.playsInline=true; v.muted=true; v.loop=true;
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 0.9s ease;overflow:hidden;';
+      var bg=document.createElement('video');
+      bg.style.cssText='position:absolute;top:-6%;left:-6%;width:112%;height:112%;object-fit:cover;filter:blur(30px) brightness(0.55) saturate(1.1);';
+      bg.playsInline=true; bg.muted=true; bg.loop=true;
+      var fg=document.createElement('video');
+      fg.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:26px;box-shadow:0 14px 44px rgba(0,0,0,0.5);';
+      fg.playsInline=true; fg.muted=true; fg.loop=true;
+      fg.addEventListener('loadedmetadata', function(){
+        var W=wrap.clientWidth*0.94, H=wrap.clientHeight*0.94;
+        var a=(fg.videoWidth||16)/(fg.videoHeight||9);
+        var w=Math.min(W, H*a);
+        fg.style.width=w+'px'; fg.style.height=(w/a)+'px';
+      });
+      wrap.appendChild(bg); wrap.appendChild(fg);
       var ov=document.getElementById('avatar-overlay');
       var canvas=document.getElementById('avatar-canvas');
-      ov.insertBefore(v, canvas.nextSibling);
-      this.layers[i]=v;
+      ov.insertBefore(wrap, canvas.nextSibling);
+      this.layers[i]={wrap:wrap,bg:bg,fg:fg};
     }
     return this.layers[i];
   },
@@ -3521,20 +3533,21 @@ var _avStage = {
     }catch(e){ this.man=null; }
   },
   _show: async function(url, opts){
-    var next=1-this.front, v=this._el(next), old=this.layers[this.front];
-    v.loop=!!opts.loop; v.muted=!!opts.muted;
-    v.src=url;
+    var next=1-this.front, L=this._el(next), old=this.layers[this.front];
+    L.fg.loop=!!opts.loop; L.fg.muted=!!opts.muted;
+    L.fg.src=url; L.bg.src=url;
     var self=this;
-    v.oncanplay=function(){
-      v.oncanplay=null;
-      v.play().catch(function(){});
-      v.style.opacity='1';
-      if(old){ old.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.pause();}catch(e){} }, 1000); }
+    L.fg.oncanplay=function(){
+      L.fg.oncanplay=null;
+      L.fg.play().catch(function(){});
+      L.bg.play().catch(function(){});
+      L.wrap.style.opacity='1';
+      if(old){ old.wrap.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.fg.pause();old.bg.pause();}catch(e){} }, 1000); }
       self.front=next;
       var canvas=document.getElementById('avatar-canvas');
       if(canvas) canvas.style.display='none';
     };
-    if(opts.onended) v.onended=opts.onended; else v.onended=null;
+    if(opts.onended) L.fg.onended=opts.onended; else L.fg.onended=null;
   },
   setRoom: async function(name){
     if(!this.man || !this.man.rooms[name] || !(this.man.rooms[name].clips||[]).length) return;
