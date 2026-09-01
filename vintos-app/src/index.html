@@ -3507,13 +3507,73 @@ function _avBrainChipEnsure(){
   }
   return chip;
 }
+/* Drawer dock state: {side:'left'|'right', bottom:px}. Tap the handle to open/
+   close; drag it to slide along the edge or across to the other side. */
+var _avDrawerDock = (function(){
+  try { var s = JSON.parse(localStorage.getItem('av_drawer_dock')||'{}');
+        if (s && (s.side==='left'||s.side==='right') && typeof s.bottom==='number') return s; } catch(e){}
+  return { side:'right', bottom:110 };
+})();
+function _avDrawerApply(){
+  var d=document.getElementById('av-drawer'), h=document.getElementById('av-drawer-handle'),
+      b=document.getElementById('av-drawer-body'); if(!d||!h||!b) return;
+  var right = _avDrawerDock.side==='right';
+  var maxB = Math.max(20, window.innerHeight - 340);
+  _avDrawerDock.bottom = Math.max(20, Math.min(maxB, _avDrawerDock.bottom));
+  d.style.bottom = _avDrawerDock.bottom + 'px';
+  d.style.right = right ? '0' : 'auto';
+  d.style.left  = right ? 'auto' : '0';
+  d.style.flexDirection = right ? 'row' : 'row-reverse';
+  var rad = right ? '12px 0 0 12px' : '0 12px 12px 0';
+  h.style.borderRadius = rad; b.style.borderRadius = rad;
+  h.style.borderRight = right ? 'none' : '0.5px solid rgba(201,107,60,0.3)';
+  h.style.borderLeft  = right ? '0.5px solid rgba(201,107,60,0.3)' : 'none';
+  b.style.borderRight = h.style.borderRight; b.style.borderLeft = h.style.borderLeft;
+  var open = d.getAttribute('data-open')==='1';
+  var closedX = right ? 'translateX(calc(100% - 30px))' : 'translateX(calc(-100% + 30px))';
+  d.style.transform = open ? 'translateX(0)' : closedX;
+  var ch=document.getElementById('av-drawer-chev');
+  if(ch){ var out = right ? '‹' : '›'; ch.textContent = open ? (right?'›':'‹') : out; }
+  try { localStorage.setItem('av_drawer_dock', JSON.stringify(_avDrawerDock)); } catch(e){}
+}
 function avToggleDrawer(){
   var d=document.getElementById('av-drawer'); if(!d) return;
-  var open = d.getAttribute('data-open')==='1';
-  d.setAttribute('data-open', open?'0':'1');
-  d.style.transform = open ? 'translateX(calc(100% - 30px))' : 'translateX(0)';
-  var ch=document.getElementById('av-drawer-chev'); if(ch) ch.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+  d.setAttribute('data-open', d.getAttribute('data-open')==='1' ? '0' : '1');
+  _avDrawerApply();
 }
+function _avDrawerInit(){
+  var h=document.getElementById('av-drawer-handle'); if(!h) return;
+  var drag=null;
+  h.addEventListener('pointerdown', function(e){
+    drag={x:e.clientX, y:e.clientY, b:_avDrawerDock.bottom, moved:false};
+    h.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  h.addEventListener('pointermove', function(e){
+    if(!drag) return;
+    var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+    if(Math.abs(dx)>8||Math.abs(dy)>8) drag.moved=true;
+    if(!drag.moved) return;
+    var d=document.getElementById('av-drawer');
+    if(d) d.style.transition='none';
+    _avDrawerDock.bottom = drag.b - dy;
+    // crossing past the middle of the screen flips the dock side
+    _avDrawerDock.side = (e.clientX < window.innerWidth/2) ? 'left' : 'right';
+    _avDrawerApply();
+  });
+  function end(e){
+    if(!drag) return;
+    var moved=drag.moved; drag=null;
+    var d=document.getElementById('av-drawer');
+    if(d) d.style.transition='transform 0.3s cubic-bezier(.4,0,.2,1)';
+    if(!moved) avToggleDrawer(); else _avDrawerApply();
+  }
+  h.addEventListener('pointerup', end);
+  h.addEventListener('pointercancel', end);
+  window.addEventListener('resize', _avDrawerApply);
+  _avDrawerApply();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _avDrawerInit);
+else _avDrawerInit();
 function _avSetBrainLabel(mode){
   _avBrain = (['grok','sol','sonnet','fable'].indexOf(mode)>=0)?mode:'claude';
   var chip=_avBrainChipEnsure(); if(!chip) return;
@@ -3996,11 +4056,11 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
   </div>
   <button onclick="closeAvatarOverlay()" style="position:absolute;top:52px;left:16px;width:40px;height:40px;border-radius:50%;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.2);color:rgba(201,107,60,0.7);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">✕</button>
 
-  <!-- right-side control drawer: model chip + call, stop, GCS. Tucked off-screen
-       until the handle is tapped, so nothing sits on the telemetry bars and no
-       button can be hit by accident. -->
+  <!-- control drawer: model chip + call, stop, GCS. Tucked off-screen until the
+       handle is tapped; drag the handle to move it anywhere along either side
+       edge, so it is never in the way. Position persists across launches. -->
   <div id="av-drawer" style="position:absolute;right:0;bottom:110px;z-index:10;display:flex;align-items:flex-end;transform:translateX(calc(100% - 30px));transition:transform 0.3s cubic-bezier(.4,0,.2,1);">
-  <button id="av-drawer-handle" onclick="avToggleDrawer()" aria-label="controls" style="width:30px;height:88px;border-radius:12px 0 0 12px;background:rgba(5,5,13,0.75);border:0.5px solid rgba(201,107,60,0.3);border-right:none;color:rgba(201,107,60,0.8);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><span id="av-drawer-chev" style="transition:transform 0.3s ease;">‹</span></button>
+  <button id="av-drawer-handle" aria-label="controls" style="touch-action:none;width:30px;height:88px;border-radius:12px 0 0 12px;background:rgba(5,5,13,0.75);border:0.5px solid rgba(201,107,60,0.3);border-right:none;color:rgba(201,107,60,0.8);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:grab;"><span id="av-drawer-chev" style="transition:transform 0.3s ease;">‹</span></button>
   <div id="av-drawer-body" style="background:rgba(5,5,13,0.85);border:0.5px solid rgba(201,107,60,0.3);border-right:none;border-radius:12px 0 0 12px;padding:12px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;max-height:46vh;overflow-y:auto;">
 
     <!-- voice call -->
