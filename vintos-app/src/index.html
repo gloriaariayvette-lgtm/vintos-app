@@ -3503,39 +3503,43 @@ function _avParseReply(raw) {
 var _avStage = {
   man: null, room: null, front: 0, layers: [null, null], speaking: false,
   active: function(){ return !!(this.man && this.room && (this.man.rooms[this.room]||{}).clips?.length); },
-  _videoH: function(){
-    var ov=document.getElementById('avatar-overlay'), strip=document.getElementById('av-chat-strip');
-    var H=(ov&&ov.clientHeight)||window.innerHeight, S=(strip&&strip.offsetHeight)||160;
-    return Math.max(200, H - S + 38);
+  _fit: function(L){
+    // Feather the PICTURE's real edges (not the element's): compute the
+    // contain-fitted content rect and mask an ellipse over it.
+    var v=L&&L.fg; if(!v || !v.videoWidth || !v.videoHeight) return;
+    var W=v.clientWidth||window.innerWidth, H=v.clientHeight||window.innerHeight;
+    var asp=v.videoWidth/v.videoHeight, cw=W, ch=W/asp;
+    if(ch>H){ ch=H; cw=H*asp; }
+    var cx=W/2, cy=H/2;
+    var mask='radial-gradient(ellipse '+(cw*0.66)+'px '+(ch*0.66)+'px at '+cx+'px '+cy+'px, black 58%, transparent 100%)';
+    v.style.webkitMaskImage=mask; v.style.maskImage=mask;
   },
-  _fit: function(v){
-    if(!v || !v.videoWidth || !v.videoHeight) return;
-    var ov=document.getElementById('avatar-overlay'), strip=document.getElementById('av-chat-strip');
-    var W=(ov&&ov.clientWidth)||window.innerWidth, H=(ov&&ov.clientHeight)||window.innerHeight;
-    var S=(strip&&strip.offsetHeight)||160, bottom=H-S+38;
-    var asp=v.videoWidth/v.videoHeight, w=W*1.08, h=w/asp;
-    if(h>bottom+24){ h=bottom+24; w=h*asp; }
-    v.style.width=w+'px'; v.style.height=h+'px';
-    v.style.left=((W-w)/2)+'px'; v.style.top=(bottom-h)+'px';
-  },
-  relayout: function(){
-    var self=this; this.layers.forEach(function(v){ self._fit(v); });
-  },
+  relayout: function(){ var self=this; this.layers.forEach(function(L){ self._fit(L); }); },
   _hideCanvas: function(){
     var c=document.getElementById('avatar-canvas'); if(c) c.style.display='none';
     var ov=document.getElementById('avatar-overlay'); if(ov) ov.style.background='#05050d';
   },
   _el: function(i){
     if(!this.layers[i]){
-      var v=document.createElement('video');
-      var mask='radial-gradient(ellipse 78% 74% at 50% 48%, black 66%, transparent 100%)';
-      v.style.cssText='position:absolute;top:0;left:0;width:100%;height:'+_avStage._videoH()+'px;object-fit:cover;opacity:0;transition:opacity 0.9s ease;-webkit-mask-image:'+mask+';mask-image:'+mask+';';
-      v.playsInline=true; v.muted=true; v.loop=true;
-      v.addEventListener('loadedmetadata', function(){ _avStage._fit(v); });
+      // Two copies of the same clip: a blurred, darkened full-bleed copy
+      // behind (so nothing ever meets a hard edge or a bar), and the sharp
+      // picture in front, feathered at its own edges into the blur. The
+      // conversation panel sits over the bottom of both, frosted.
+      var wrap=document.createElement('div');
+      wrap.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 0.9s ease;overflow:hidden;';
+      var bg=document.createElement('video');
+      bg.style.cssText='position:absolute;top:-8%;left:-8%;width:116%;height:116%;object-fit:cover;filter:blur(26px) brightness(0.45) saturate(1.1);';
+      bg.playsInline=true; bg.muted=true; bg.loop=true;
+      var fg=document.createElement('video');
+      fg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;';
+      fg.playsInline=true; fg.muted=true; fg.loop=true;
+      var L={wrap:wrap,bg:bg,fg:fg};
+      fg.addEventListener('loadedmetadata', function(){ _avStage._fit(L); });
+      wrap.appendChild(bg); wrap.appendChild(fg);
       var ov=document.getElementById('avatar-overlay');
       var canvas=document.getElementById('avatar-canvas');
-      ov.insertBefore(v, canvas.nextSibling);
-      this.layers[i]=v;
+      ov.insertBefore(wrap, canvas.nextSibling);
+      this.layers[i]=L;
     }
     return this.layers[i];
   },
@@ -3556,20 +3560,19 @@ var _avStage = {
     }catch(e){ this.man=null; }
   },
   _show: async function(url, opts){
-    var next=1-this.front, v=this._el(next), old=this.layers[this.front];
-    v.loop=!!opts.loop; v.muted=!!opts.muted;
-    v.src=url;
+    var next=1-this.front, L=this._el(next), old=this.layers[this.front];
+    L.fg.loop=!!opts.loop; L.fg.muted=!!opts.muted;
+    L.fg.src=url; L.bg.src=url;
     var self=this;
-    v.oncanplay=function(){
-      v.oncanplay=null;
-      v.play().catch(function(){});
-      v.style.opacity='1';
-      if(old){ old.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.pause();}catch(e){} }, 1000); }
+    L.fg.oncanplay=function(){
+      L.fg.oncanplay=null;
+      L.fg.play().catch(function(){}); L.bg.play().catch(function(){});
+      L.wrap.style.opacity='1';
+      if(old){ old.wrap.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.fg.pause();old.bg.pause();}catch(e){} }, 1000); }
       self.front=next;
-      var canvas=document.getElementById('avatar-canvas');
-      if(canvas) canvas.style.display='none';
+      self._hideCanvas();
     };
-    if(opts.onended) v.onended=opts.onended; else v.onended=null;
+    if(opts.onended) L.fg.onended=opts.onended; else L.fg.onended=null;
   },
   resolve: function(name){
     if(!this.man) return null;
@@ -4245,8 +4248,8 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
   </div>
   </div>
   <div id="av-touch-hint" style="display:none;position:absolute;bottom:145px;left:50%;transform:translateX(-50%);font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(201,107,60,0.3);pointer-events:none;transition:opacity 2s ease;">touch his hand</div>
-  <div id="av-chat-strip" style="position:absolute;bottom:0;left:0;right:0;background:none;display:flex;flex-direction:column;padding:10px 12px 20px;gap:10px;">
-    <div style="position:absolute;inset:0 6px 12px 6px;border-radius:18px;background:rgba(5,5,13,0.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);pointer-events:none;"></div>
+  <div id="av-chat-strip" style="position:absolute;bottom:0;left:0;right:0;background:none;display:flex;flex-direction:column;padding:10px 16px 20px;gap:10px;">
+    <div style="position:absolute;inset:-14px 0 0 0;background:rgba(5,5,13,0.42);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);-webkit-mask-image:linear-gradient(to bottom, transparent, black 28px);mask-image:linear-gradient(to bottom, transparent, black 28px);pointer-events:none;"></div>
     <div id="av-chat-message" style="position:relative;font-family:Cormorant Garamond,Georgia,serif;font-size:14px;font-style:italic;font-weight:300;color:rgba(200,196,191,0.85);line-height:1.6;max-height:140px;overflow-y:auto;padding-bottom:4px;border-bottom:0.5px solid rgba(201,107,60,0.08);"></div>
     <div style="position:relative;display:flex;gap:8px;align-items:center;">
       <input id="av-chat-input" type="text" placeholder="say something…" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(201,107,60,0.2);border-radius:20px;padding:8px 14px;color:rgba(200,196,191,0.9);font-size:16px;font-family:Cormorant Garamond,Georgia,serif;font-style:italic;outline:none;">
