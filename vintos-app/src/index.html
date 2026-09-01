@@ -3325,7 +3325,9 @@ async function _avSpinResponse() {
   } catch(e) {}
 }
 
+var _AV_TOUCH_ZONES = false; // touch-to-react disabled - taps on him no longer send prompts
 document.addEventListener('pointerup', function(e) {
+  if(!_AV_TOUCH_ZONES) return;
   if(!_avOpen) return;
   const overlay = document.getElementById('avatar-overlay');
   if(overlay.style.display==='none') return;
@@ -3368,6 +3370,7 @@ document.addEventListener('pointerup', function(e) {
 // Spin gesture — circle in upper half of screen
 let _avSpinPoints = [], _avSpinTimer = null;
 document.addEventListener('pointermove', function(e) {
+  if(!_AV_TOUCH_ZONES) return;
   if(!_avOpen||!_avXbot) return;
   _avSpinPoints.push({x:e.clientX, y:e.clientY, t:Date.now()});
   if(_avSpinPoints.length > 60) _avSpinPoints.shift();
@@ -3495,25 +3498,14 @@ var _avStage = {
   active: function(){ return !!(this.man && this.room && (this.man.rooms[this.room]||{}).clips?.length); },
   _el: function(i){
     if(!this.layers[i]){
-      var wrap=document.createElement('div');
-      wrap.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 0.9s ease;overflow:hidden;';
-      var bg=document.createElement('video');
-      bg.style.cssText='position:absolute;top:-6%;left:-6%;width:112%;height:112%;object-fit:cover;filter:blur(30px) brightness(0.55) saturate(1.1);';
-      bg.playsInline=true; bg.muted=true; bg.loop=true;
-      var fg=document.createElement('video');
-      fg.style.cssText='position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:26px;box-shadow:0 14px 44px rgba(0,0,0,0.5);';
-      fg.playsInline=true; fg.muted=true; fg.loop=true;
-      fg.addEventListener('loadedmetadata', function(){
-        var W=wrap.clientWidth*0.94, H=wrap.clientHeight*0.94;
-        var a=(fg.videoWidth||16)/(fg.videoHeight||9);
-        var w=Math.min(W, H*a);
-        fg.style.width=w+'px'; fg.style.height=(w/a)+'px';
-      });
-      wrap.appendChild(bg); wrap.appendChild(fg);
+      var v=document.createElement('video');
+      var mask='radial-gradient(ellipse 74% 68% at 50% 46%, black 62%, transparent 94%)';
+      v.style.cssText='position:absolute;top:-2%;left:-4%;width:108%;height:88%;object-fit:contain;opacity:0;transition:opacity 0.9s ease;-webkit-mask-image:'+mask+';mask-image:'+mask+';';
+      v.playsInline=true; v.muted=true; v.loop=true;
       var ov=document.getElementById('avatar-overlay');
       var canvas=document.getElementById('avatar-canvas');
-      ov.insertBefore(wrap, canvas.nextSibling);
-      this.layers[i]={wrap:wrap,bg:bg,fg:fg};
+      ov.insertBefore(v, canvas.nextSibling);
+      this.layers[i]=v;
     }
     return this.layers[i];
   },
@@ -3533,21 +3525,20 @@ var _avStage = {
     }catch(e){ this.man=null; }
   },
   _show: async function(url, opts){
-    var next=1-this.front, L=this._el(next), old=this.layers[this.front];
-    L.fg.loop=!!opts.loop; L.fg.muted=!!opts.muted;
-    L.fg.src=url; L.bg.src=url;
+    var next=1-this.front, v=this._el(next), old=this.layers[this.front];
+    v.loop=!!opts.loop; v.muted=!!opts.muted;
+    v.src=url;
     var self=this;
-    L.fg.oncanplay=function(){
-      L.fg.oncanplay=null;
-      L.fg.play().catch(function(){});
-      L.bg.play().catch(function(){});
-      L.wrap.style.opacity='1';
-      if(old){ old.wrap.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.fg.pause();old.bg.pause();}catch(e){} }, 1000); }
+    v.oncanplay=function(){
+      v.oncanplay=null;
+      v.play().catch(function(){});
+      v.style.opacity='1';
+      if(old){ old.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.pause();}catch(e){} }, 1000); }
       self.front=next;
       var canvas=document.getElementById('avatar-canvas');
       if(canvas) canvas.style.display='none';
     };
-    if(opts.onended) L.fg.onended=opts.onended; else L.fg.onended=null;
+    if(opts.onended) v.onended=opts.onended; else v.onended=null;
   },
   setRoom: async function(name){
     if(!this.man || !this.man.rooms[name] || !(this.man.rooms[name].clips||[]).length) return;
@@ -4201,7 +4192,7 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
 
   </div>
   </div>
-  <div id="av-touch-hint" style="position:absolute;bottom:145px;left:50%;transform:translateX(-50%);font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(201,107,60,0.3);pointer-events:none;transition:opacity 2s ease;">touch his hand</div>
+  <div id="av-touch-hint" style="display:none;position:absolute;bottom:145px;left:50%;transform:translateX(-50%);font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(201,107,60,0.3);pointer-events:none;transition:opacity 2s ease;">touch his hand</div>
   <div id="av-chat-strip" style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top, rgba(5,5,13,0.85), transparent);display:flex;flex-direction:column;padding:10px 16px 20px;gap:10px;">
     <div id="av-chat-message" style="font-family:Cormorant Garamond,Georgia,serif;font-size:14px;font-style:italic;font-weight:300;color:rgba(200,196,191,0.85);line-height:1.6;max-height:140px;overflow-y:auto;padding-bottom:4px;border-bottom:0.5px solid rgba(201,107,60,0.08);"></div>
     <div style="display:flex;gap:8px;align-items:center;">
