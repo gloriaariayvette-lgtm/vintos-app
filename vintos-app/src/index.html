@@ -3474,11 +3474,14 @@ function _avParseReply(raw) {
   // Parse [SCENE: room] — where in the house he is; first one wins
   const scenes = [];
   text = text.replace(/\[SCENE:\s*([^\]]+)\]/gi, (_, s) => { scenes.push(s.trim().toLowerCase()); return ''; });
+  // Parse [RENDER: description] — he chooses to render a fresh live scene
+  const renders = [];
+  text = text.replace(/\[RENDER:\s*([^\]]+)\]/gi, (_, r) => { renders.push(r.trim()); return ''; });
   // Parse [COLOR: #hex] — first one wins
   text = text.replace(/\[COLOR:\s*(#[0-9a-fA-F]{3,6})\]/gi, (_, c) => { if(!color) color = c; return ''; });
   // Strip other bracket tags
   text = text.replace(/\[[^\]]+\]/g, '').replace(/\s+/g, ' ').trim();
-  return { text, gestures, holds, spawns, color, scenes };
+  return { text, gestures, holds, spawns, color, scenes, renders };
 }
 
 /* ── Preset stage: photoreal room loops + local speech clips ─────────────────
@@ -3708,7 +3711,7 @@ async function avSendChat() {
     const d = await r.json();
     const raw = d.reply||d.message||'';
     _avChatHistory.push({role:'assistant', content:raw}); _avSaveHistory();
-    const {text:display, gestures, holds, spawns, color, scenes} = _avParseReply(raw);
+    const {text:display, gestures, holds, spawns, color, scenes, renders} = _avParseReply(raw);
     _avLogMsg('assistant', display);
     try{ var _bm=String(d.model||''); if(_bm.indexOf('grok')===0)_avSetBrainLabel('grok'); else if(_bm.indexOf('claude')===0)_avSetBrainLabel('claude'); }catch(e){}
     setTimeout(_avPollReason, 300);
@@ -3718,6 +3721,18 @@ async function avSendChat() {
       if(scenes && scenes[0]) await _avStage.setRoom(scenes[0]);
       _avStage.speak(display);
     }catch(e){}
+    // Live path: [RENDER: description] — he chose to render a fresh scene.
+    // Runs in the background (~2 min), then crossfades into it.
+    if(renders && renders[0]){
+      (async () => {
+        try{
+          const lr = await fetch(API+'/api/avatar/live', {method:'POST',
+            headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
+            body:JSON.stringify({prompt:renders[0]})});
+          if(lr.ok){ _avStage.man=null; await _avStage.load(); await _avStage.setRoom('live'); }
+        }catch(e){}
+      })();
+    }
     // Fire gestures sequentially, then holds
     (async () => {
       for(const g of gestures) {
