@@ -3511,8 +3511,7 @@ var _avStage = {
     var asp=v.videoWidth/v.videoHeight, cw=W, ch=W/asp;
     if(ch>H){ ch=H; cw=H*asp; }
     var cx=W/2, cy=H/2;
-    var mask='radial-gradient(ellipse '+(cw*0.66)+'px '+(ch*0.66)+'px at '+cx+'px '+cy+'px, black 58%, transparent 100%)';
-    v.style.webkitMaskImage=mask; v.style.maskImage=mask;
+    v.style.webkitMaskImage=''; v.style.maskImage='';
   },
   relayout: function(){ var self=this; this.layers.forEach(function(L){ self._fit(L); }); },
   _hideCanvas: function(){
@@ -3531,7 +3530,7 @@ var _avStage = {
       bg.style.cssText='position:absolute;top:-8%;left:-8%;width:116%;height:116%;object-fit:cover;filter:blur(26px) brightness(0.45) saturate(1.1);';
       bg.playsInline=true; bg.muted=true; bg.loop=true;
       var fg=document.createElement('video');
-      fg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;';
+      fg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%;';
       fg.playsInline=true; fg.muted=true; fg.loop=true;
       var L={wrap:wrap,bg:bg,fg:fg};
       fg.addEventListener('loadedmetadata', function(){ _avStage._fit(L); });
@@ -3759,7 +3758,7 @@ async function avSendChat() {
     });
     const d = await r.json();
     const raw = d.reply||d.message||'';
-    _avChatHistory.push({role:'assistant', content:raw}); _avSaveHistory();
+    _avChatHistory.push({role:'assistant', content:raw.replace(/\[COLOR:[^\]]*\]/gi,'').trim()}); _avSaveHistory();
     const {text:display, gestures, holds, spawns, color, scenes, renders} = _avParseReply(raw);
     _avLogMsg('assistant', display);
     try{ var _bm=String(d.model||''); if(_bm.indexOf('grok')===0)_avSetBrainLabel('grok'); else if(_bm.indexOf('claude')===0)_avSetBrainLabel('claude'); }catch(e){}
