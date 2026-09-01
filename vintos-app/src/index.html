@@ -1639,11 +1639,13 @@ function _wbCard(w, inCap) {
         (isGloria ? '<button data-wbaction="disc" data-wid="' + w.id + '" style="background:none;border:none;color:#534AB7;cursor:pointer;font-size:1rem;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;">✦</button>' : '') +
         (!inCap && !isGloria ? '<button data-wbaction="route" data-wid="' + w.id + '" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:1.1rem;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;">→</button>' : '') +
         (inCap && !isGloria ? '<button data-wbaction="unroute" data-wid="' + w.id + '" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:1.1rem;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;">↩</button>' : '') +
-        (w.capability === 'multistep' ? '<button data-wbaction="steps" data-wid="' + w.id + '" style="background:none;border:none;color:#7B5EA7;cursor:pointer;font-size:1.1rem;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;">+</button>' : '') +
+        ((w.capability === 'multistep' || (w.steps && w.steps.length) || w.plan_state === 'BLOCKED') ? '<button data-wbaction="steps" data-wid="' + w.id + '" style="background:none;border:none;color:#7B5EA7;cursor:pointer;font-size:1.1rem;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;">+</button>' : '') +
         '<button data-wbaction="dismiss" data-wid="' + w.id + '" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:1rem;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center;">✕</button>' +
         '</div></div>' +
         '<div style="font-size:0.82rem;line-height:1.5;color:var(--text);margin-bottom:5px;">' + (w.want || '') + '</div>' +
         (w.reasoning ? '<div style="font-size:0.75rem;color:var(--text-dim);font-style:italic;line-height:1.4;margin-bottom:5px;">' + w.reasoning + '</div>' : '') +
+        ((w.steps && w.steps.length) ? '<div style="font-size:0.68rem;color:#9B8FFF;margin-bottom:5px;">' + w.steps.length + ' planned move' + (w.steps.length === 1 ? '' : 's') + ' · tap + to inspect</div>' : '') +
+        (w.plan_state === 'BLOCKED' ? '<div style="font-size:0.68rem;color:#BA7517;margin-bottom:5px;">plan held: ' + _esc((w.plan_block && (w.plan_block.block_type || w.plan_block.evidence)) || 'planner unavailable') + '</div>' : '') +
         '<div style="display:flex;align-items:center;gap:8px;">' + _wbDots(w.intensity || 1) +
         (!isGloria && !w.capability ? '<span style="font-size:10px;color:var(--text-dim);font-family:monospace;">' + (ready ? '⚡ ready' : '⏱ ' + tl) + '</span>' : '') +
         (w.capability && !isGloria ? '<span style="font-size:10px;color:#0F6E56;">→ ' + (WB_LABELS[w.capability] || w.capability) + '</span>' : '') +
@@ -4605,6 +4607,10 @@ function _renderCausality(items) {
             '<div style="font-size:0.82rem;color:var(--text);line-height:1.55;margin-bottom:' + (item.test ? '0.6rem' : '0.4rem') + ';">' + _esc(item.theory) + '</div>' +
             (item.test ? '<div style="font-size:0.72rem;color:var(--text-dim);line-height:1.5;border-left:2px solid var(--border);padding-left:0.5rem;margin-bottom:0.5rem;font-style:italic;">' + _esc(item.test) + '</div>' : '') +
             (item.revision ? '<div style="font-size:0.72rem;color:#534AB7;line-height:1.5;margin-bottom:0.5rem;">→ ' + _esc(item.revision) + '</div>' : '') +
+            '<div style="font-size:0.64rem;color:var(--text-dim);margin-bottom:0.45rem;">' +
+            (item.nightly_evaluations || 0) + ' nights · ' + (item.supporting_occasions || 0) + ' yes · ' +
+            (item.challenging_occasions || 0) + ' no · ' + (item.unconfirmed_nights || 0) + ' unconfirmed' +
+            (item.last_tested ? ' · last ' + _esc(item.last_tested) : '') + '</div>' +
             '<div style="display:flex;gap:6px;margin-top:0.4rem;">' +
             '<button onclick="_markCausality(' + i + ',this.dataset.m)" data-m="track_this" style="padding:3px 10px;font-size:0.65rem;border-radius:4px;border:1px solid ' + (isTrack?'#534AB7':'var(--border)') + ';background:' + (isTrack?'rgba(83,74,183,0.15)':'transparent') + ';color:' + (isTrack?'#9B8FFF':'var(--text-dim)') + ';cursor:pointer;">track this</button>' +
             '<button onclick="_markCausality(' + i + ',this.dataset.m)" data-m="noise" style="padding:3px 10px;font-size:0.65rem;border-radius:4px;border:1px solid ' + (isNoise?'var(--text-dim)':'var(--border)') + ';background:transparent;color:var(--text-dim);cursor:pointer;">noise</button>' +
@@ -4614,7 +4620,8 @@ function _renderCausality(items) {
 
 async function _markCausality(idx, marker) {
     try {
-        await fetch(`${API}/api/causality/${idx}/mark`, {
+        const ref = window._causItems?.[idx]?.hypothesis_id || window._causItems?.[idx]?.index;
+        await fetch(`${API}/api/causality/${encodeURIComponent(ref)}/mark`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
             body: JSON.stringify({ marker })
@@ -4684,7 +4691,8 @@ async function _markBlush(idx, marker) {
         } catch(e) {}
     }
     try {
-        await fetch(`${API}/api/blush-ledger/${idx}/mark`, {
+        const ref = window._blushItems?.[idx]?.id || window._blushItems?.[idx]?.index;
+        await fetch(`${API}/api/blush-ledger/${encodeURIComponent(ref)}/mark`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
             body: JSON.stringify({ marker })
