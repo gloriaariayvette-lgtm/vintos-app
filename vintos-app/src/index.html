@@ -2868,6 +2868,7 @@ window.addEventListener('load', function(){ try{ _avRenderChatLog(); }catch(e){}
 let _avStars=null,_avStarPositions=null;
 
 function openAvatarOverlay() {
+  try{ if(!_avStage.man) _avStage.load(); }catch(e){}
   const overlay = document.getElementById('avatar-overlay');
   overlay.style.display = 'block';
   overlay.style.pointerEvents = 'all';
@@ -3468,12 +3469,93 @@ function _avParseReply(raw) {
   text = text.replace(/\[HOLD:\s*([^\]]+)\]/gi, (_, g) => { holds.push(g.trim().toLowerCase()); return ''; });
   // Parse [SPAWN: name]
   text = text.replace(/\[SPAWN:\s*([^\]]+)\]/gi, (_, s) => { spawns.push(s.trim().toLowerCase()); return ''; });
+  // Parse [SCENE: room] — where in the house he is; first one wins
+  const scenes = [];
+  text = text.replace(/\[SCENE:\s*([^\]]+)\]/gi, (_, s) => { scenes.push(s.trim().toLowerCase()); return ''; });
   // Parse [COLOR: #hex] — first one wins
   text = text.replace(/\[COLOR:\s*(#[0-9a-fA-F]{3,6})\]/gi, (_, c) => { if(!color) color = c; return ''; });
   // Strip other bracket tags
   text = text.replace(/\[[^\]]+\]/g, '').replace(/\s+/g, ' ').trim();
-  return { text, gestures, holds, spawns, color };
+  return { text, gestures, holds, spawns, color, scenes };
 }
+
+/* ── Preset stage: photoreal room loops + local speech clips ─────────────────
+   Reads /avatar/stage/manifest. When room loops exist the stage video replaces
+   the 3D canvas; [SCENE: room] crossfades rooms; after each reply the server
+   renders a local kokoro+Wav2Lip speech clip that plays over the loop and
+   falls back to the silent loop when it ends. With no manifest or no clips,
+   nothing changes - the 3D avatar keeps working exactly as before. */
+var _avStage = {
+  man: null, room: null, front: 0, layers: [null, null], speaking: false,
+  active: function(){ return !!(this.man && this.room && (this.man.rooms[this.room]||{}).clips?.length); },
+  _el: function(i){
+    if(!this.layers[i]){
+      var v=document.createElement('video');
+      v.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 0.9s ease;';
+      v.playsInline=true; v.muted=true; v.loop=true;
+      var ov=document.getElementById('avatar-overlay');
+      var canvas=document.getElementById('avatar-canvas');
+      ov.insertBefore(v, canvas.nextSibling);
+      this.layers[i]=v;
+    }
+    return this.layers[i];
+  },
+  _fetchBlob: async function(path){
+    var r=await fetch(API+path,{headers:{'X-Vintos-Secret':CONFIG.secret}});
+    if(!r.ok) throw new Error('stage fetch '+r.status);
+    return URL.createObjectURL(await r.blob());
+  },
+  load: async function(){
+    try{
+      var r=await fetch(API+'/avatar/stage/manifest',{headers:{'X-Vintos-Secret':CONFIG.secret}});
+      if(!r.ok) return;
+      this.man=await r.json();
+      var rooms=Object.keys(this.man.rooms||{}).filter(n=>(this.man.rooms[n].clips||[]).length);
+      if(!rooms.length){ this.man=null; return; }
+      this.setRoom(this.man.default && rooms.indexOf(this.man.default)>=0 ? this.man.default : rooms[0]);
+    }catch(e){ this.man=null; }
+  },
+  _show: async function(url, opts){
+    var next=1-this.front, v=this._el(next), old=this.layers[this.front];
+    v.loop=!!opts.loop; v.muted=!!opts.muted;
+    v.src=url;
+    var self=this;
+    v.oncanplay=function(){
+      v.oncanplay=null;
+      v.play().catch(function(){});
+      v.style.opacity='1';
+      if(old){ old.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.pause();}catch(e){} }, 1000); }
+      self.front=next;
+      var canvas=document.getElementById('avatar-canvas');
+      if(canvas) canvas.style.display='none';
+    };
+    if(opts.onended) v.onended=opts.onended; else v.onended=null;
+  },
+  setRoom: async function(name){
+    if(!this.man || !this.man.rooms[name] || !(this.man.rooms[name].clips||[]).length) return;
+    if(name===this.room && !this.speaking) return;
+    this.room=name;
+    var clips=this.man.rooms[name].clips;
+    try{
+      var url=await this._fetchBlob('/avatar/stage/clip/'+clips[Math.floor(Math.random()*clips.length)]);
+      this._show(url,{loop:true,muted:true});
+    }catch(e){}
+  },
+  speak: async function(text){
+    if(!this.active() || !text) return false;
+    try{
+      var r=await fetch(API+'/api/avatar/speak',{method:'POST',
+        headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
+        body:JSON.stringify({text:text, room:this.room})});
+      if(!r.ok) return false;
+      var d=await r.json(); if(!d.url) return false;
+      var url=await this._fetchBlob(d.url);
+      var self=this; this.speaking=true;
+      this._show(url,{loop:false,muted:false,onended:function(){ self.speaking=false; var rm=self.room; self.room=null; self.setRoom(rm); }});
+      return true;
+    }catch(e){ this.speaking=false; return false; }
+  }
+};
 
 let _avLastScreenshot = null;
 
@@ -3624,10 +3706,16 @@ async function avSendChat() {
     const d = await r.json();
     const raw = d.reply||d.message||'';
     _avChatHistory.push({role:'assistant', content:raw}); _avSaveHistory();
-    const {text:display, gestures, holds, spawns, color} = _avParseReply(raw);
+    const {text:display, gestures, holds, spawns, color, scenes} = _avParseReply(raw);
     _avLogMsg('assistant', display);
     try{ var _bm=String(d.model||''); if(_bm.indexOf('grok')===0)_avSetBrainLabel('grok'); else if(_bm.indexOf('claude')===0)_avSetBrainLabel('claude'); }catch(e){}
     setTimeout(_avPollReason, 300);
+    // Preset stage: move rooms on his [SCENE:] tag, then speak the reply
+    // locally (kokoro + Wav2Lip on the server). No-ops when no presets exist.
+    try{
+      if(scenes && scenes[0]) await _avStage.setRoom(scenes[0]);
+      _avStage.speak(display);
+    }catch(e){}
     // Fire gestures sequentially, then holds
     (async () => {
       for(const g of gestures) {
