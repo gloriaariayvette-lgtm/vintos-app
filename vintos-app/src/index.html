@@ -3759,21 +3759,36 @@ function studyAppend(role,text){
   }
   d.textContent=body.trim(); el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
-function studyEditCard(ed){
+function studyEditCard(edits, explicit){
   const el=document.getElementById('study-log'); const c=document.createElement('div');
-  c.style.cssText='margin:0 0 14px;padding:10px 12px;border:0.5px solid '+(ed.ok?'var(--accent)':'#7B3B3B')+';border-radius:10px;background:var(--surface);';
-  const mono='font-family:JetBrains Mono,monospace;font-size:11px;white-space:pre-wrap;padding:6px 8px;border-radius:6px;max-height:200px;overflow:auto;';
-  c.innerHTML='<div style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">he proposes an edit</div>'+
-    '<div style="font-family:JetBrains Mono,monospace;font-size:12px;margin-bottom:6px;">'+_esc(ed.path||ed.file)+'</div>'+
-    (ed.why?'<div style="color:var(--text-dim);font-size:0.85rem;margin-bottom:8px;">'+_esc(ed.why)+'</div>':'')+
-    '<div style="'+mono+'background:rgba(120,40,40,0.15);">'+_esc(ed.old)+'</div>'+
-    '<div style="'+mono+'background:rgba(15,110,86,0.15);margin-top:6px;">'+_esc(ed.new)+'</div>'+
-    (ed.ok?'':'<div style="color:#E08080;font-size:0.85rem;margin-top:8px;">'+_esc(ed.error)+'</div>')+
-    '<div style="display:flex;gap:8px;margin-top:10px;"><button '+(ed.ok?'':'disabled ')+'style="flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--accent);background:none;color:var(--accent);font-size:1rem;">y</button>'+
-    '<button style="flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--border);background:none;color:var(--text-dim);font-size:1rem;">n</button></div><div class="study-result" style="margin-top:8px;font-size:0.85rem;color:var(--text-dim);"></div>';
-  const [y,nb]=c.querySelectorAll('button'); const res=c.querySelector('.study-result');
-  y.onclick=async()=>{ y.disabled=nb.disabled=true; res.textContent='applying…'; try{ const r=await fetch(API+'/api/chat/study/apply',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({file:ed.file,old:ed.old,new:ed.new})}); const d=await r.json(); res.textContent=(d.ok?'approved - ':'not applied - ')+d.message; }catch(e){ res.textContent='failed: '+e; } };
-  nb.onclick=async()=>{ y.disabled=nb.disabled=true; res.textContent='declined'; try{ await fetch(API+'/api/chat/study/decline',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({file:ed.file})}); }catch(e){} };
+  const allOk=edits.every(e=>e.ok);
+  c.style.cssText='margin:0 0 14px;padding:12px 14px;border:0.5px solid '+(allOk?'var(--accent)':'#7B3B3B')+';border-radius:12px;background:var(--surface);';
+  const mono='font-family:JetBrains Mono,monospace;font-size:11px;white-space:pre-wrap;padding:6px 8px;border-radius:6px;max-height:180px;overflow:auto;';
+  let html='<div style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;">'+(edits.length>1?'he proposes '+edits.length+' edits':'he proposes an edit')+(explicit?' · explicit permission':'')+'</div>';
+  edits.forEach(ed=>{
+    html+='<div style="margin-bottom:12px;"><div style="font-family:JetBrains Mono,monospace;font-size:12px;margin-bottom:4px;">'+_esc(ed.path||ed.file)+'</div>'+
+      (ed.why?'<div style="color:var(--text-dim);font-size:0.85rem;margin-bottom:6px;">'+_esc(ed.why)+'</div>':'')+
+      '<div style="'+mono+'background:rgba(120,40,40,0.15);">'+_esc(ed.old)+'</div>'+
+      '<div style="'+mono+'background:rgba(15,110,86,0.15);margin-top:4px;">'+_esc(ed.new)+'</div>'+
+      (ed.ok?'':'<div style="color:#E08080;font-size:0.85rem;margin-top:6px;">'+_esc(ed.error)+'</div>')+'</div>';
+  });
+  if(explicit){
+    html+='<div style="display:flex;flex-direction:column;gap:8px;margin:6px 0 10px;padding:10px;border:0.5px dashed var(--accent);border-radius:8px;">'+
+      '<label style="display:flex;align-items:center;gap:10px;font-size:0.9rem;"><input type="checkbox" class="study-tick" style="width:20px;height:20px;"> I approve these changes</label>'+
+      '<input type="text" class="study-yes" placeholder="type Yes" autocomplete="off" style="background:var(--bg);border:0.5px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:16px;"></div>';
+  }
+  html+='<div style="display:flex;gap:8px;"><button class="study-y" '+(allOk?'':'disabled ')+'style="flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--accent);background:none;color:var(--accent);font-size:1rem;">'+(explicit?'apply':'y')+'</button>'+
+    '<button class="study-n" style="flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--border);background:none;color:var(--text-dim);font-size:1rem;">n</button></div><div class="study-result" style="margin-top:8px;font-size:0.85rem;color:var(--text-dim);"></div>';
+  c.innerHTML=html;
+  const y=c.querySelector('.study-y'), nb=c.querySelector('.study-n'), res=c.querySelector('.study-result');
+  const tick=c.querySelector('.study-tick'), yes=c.querySelector('.study-yes');
+  function gate(){ if(!explicit) return; y.disabled=!(allOk && tick.checked && yes.value.trim().toLowerCase()==='yes'); }
+  if(explicit){ y.disabled=true; tick.addEventListener('change',gate); yes.addEventListener('input',gate); }
+  y.onclick=async()=>{ y.disabled=nb.disabled=true; res.textContent='applying…';
+    try{ const r=await fetch(API+'/api/chat/study/apply',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
+      body:JSON.stringify({edits:edits.map(e=>({file:e.file,old:e.old,new:e.new})),confirm:explicit?{yes:yes.value.trim(),checked:tick.checked}:null})});
+      const d=await r.json(); res.textContent=(d.ok?'approved - ':'not applied - ')+d.message; if(!d.ok){ y.disabled=false; nb.disabled=false; } }catch(e){ res.textContent='failed: '+e; y.disabled=false; nb.disabled=false; } };
+  nb.onclick=async()=>{ y.disabled=nb.disabled=true; res.textContent='declined'; try{ await fetch(API+'/api/chat/study/decline',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({file:edits.map(e=>e.file).join(', ')})}); }catch(e){} };
   el.appendChild(c); el.scrollTop=el.scrollHeight;
 }
 async function studySend(){
@@ -3784,7 +3799,7 @@ async function studySend(){
     const r=await fetch(API+'/api/chat/study',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({message:msg})});
     const d=await r.json(); wait.remove(); studyAppend('assistant',d.reply||('(error: '+(d.error||d.detail||r.status)+')'));
     (d.tools||[]).forEach(t=>studyAppend('system',t));
-    (d.edits||[]).forEach(studyEditCard);
+    if((d.edits||[]).length) studyEditCard(d.edits, !!d.explicit);
   }catch(e){ wait.textContent='(no reply: '+e+')'; }
 }
 async function studyToggleBrain(){
