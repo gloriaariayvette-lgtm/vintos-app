@@ -3530,7 +3530,7 @@ var _avStage = {
       bg.style.cssText='position:absolute;top:-8%;left:-8%;width:116%;height:116%;object-fit:cover;filter:blur(26px) brightness(0.45) saturate(1.1);';
       bg.playsInline=true; bg.muted=true; bg.loop=true;
       var fg=document.createElement('video');
-      fg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;';
+      fg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:50% 50%;';
       fg.playsInline=true; fg.muted=true; fg.loop=true;
       var L={wrap:wrap,bg:bg,fg:fg};
       fg.addEventListener('loadedmetadata', function(){ _avStage._fit(L); });
@@ -3758,7 +3758,7 @@ async function avSendChat() {
     });
     const d = await r.json();
     const raw = d.reply||d.message||'';
-    _avChatHistory.push({role:'assistant', content:raw.replace(/\[COLOR:[^\]]*\]/gi,'').trim()}); _avSaveHistory();
+    _avChatHistory.push({role:'assistant', content:raw.replace(/\[(?:COLOR|GESTURE|HOLD|SPAWN|RELEASE)[^\]]*\]/gi,'').trim()}); _avSaveHistory();
     const {text:display, gestures, holds, spawns, color, scenes, renders} = _avParseReply(raw);
     _avLogMsg('assistant', display);
     try{ var _bm=String(d.model||''); if(_bm.indexOf('grok')===0)_avSetBrainLabel('grok'); else if(_bm.indexOf('claude')===0)_avSetBrainLabel('claude'); }catch(e){}
