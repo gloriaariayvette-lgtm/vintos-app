@@ -4203,7 +4203,7 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
 </script>
 
 <div id="avatar-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;opacity:0;transition:opacity 0.4s ease;background:radial-gradient(ellipse at 50% 60%, #0d0820 0%, #05050d 70%);pointer-events:none;overflow:hidden;">
-  <canvas id="avatar-canvas" style="position:absolute;z-index:7;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
+  <canvas id="avatar-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
   <div id="av-telemetry" style="position:absolute;z-index:7;top:56px;right:16px;font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.08em;color:rgba(201,107,60,0.55);line-height:1.6;pointer-events:none;">
     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span style="min-width:22px;text-align:right;">val</span><div style="width:36px;height:2px;background:rgba(201,107,60,0.12);border-radius:1px;overflow:hidden;"><div id="av-valence" style="height:100%;background:rgba(201,107,60,0.55);border-radius:1px;transition:width 2s ease;width:50%"></div></div></div>
     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span style="min-width:22px;text-align:right;">aro</span><div style="width:36px;height:2px;background:rgba(201,107,60,0.12);border-radius:1px;overflow:hidden;"><div id="av-arousal" style="height:100%;background:rgba(201,107,60,0.55);border-radius:1px;transition:width 2s ease;width:50%"></div></div></div>
@@ -4217,7 +4217,7 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span style="min-width:22px;text-align:right;">ten</span><div style="width:36px;height:2px;background:rgba(201,107,60,0.12);border-radius:1px;overflow:hidden;"><div id="av-tension" style="height:100%;background:rgba(83,74,183,0.7);border-radius:1px;transition:width 2s ease;width:50%"></div></div></div>
     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span style="min-width:22px;text-align:right;">gnd</span><div style="width:36px;height:2px;background:rgba(201,107,60,0.12);border-radius:1px;overflow:hidden;"><div id="av-groundedness" style="height:100%;background:rgba(201,107,60,0.55);border-radius:1px;transition:width 2s ease;width:50%"></div></div></div>
   </div>
-  <button onclick="closeAvatarOverlay()" style="position:absolute;top:52px;left:16px;width:40px;height:40px;border-radius:50%;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.2);color:rgba(201,107,60,0.7);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">✕</button>
+  <button onclick="closeAvatarOverlay()" style="position:absolute;z-index:7;top:52px;left:16px;width:40px;height:40px;border-radius:50%;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.2);color:rgba(201,107,60,0.7);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;">✕</button>
 
   <!-- control drawer: model chip + call, stop, GCS. Tucked off-screen until the
        handle is tapped; drag the handle to move it anywhere along either side
