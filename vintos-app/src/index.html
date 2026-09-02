@@ -493,6 +493,7 @@ input[type="range"]::-webkit-slider-thumb {
         <div class="tab" data-tab="pearls">PEARLS</div>
         <div class="tab" data-tab="atelier">ATELIER</div>
         <div class="tab" data-tab="therapy">THERAPY</div>
+        <div class="tab" data-tab="study">STUDY</div>
     </div>
 
     <!-- Tab content -->
@@ -606,6 +607,22 @@ input[type="range"]::-webkit-slider-thumb {
         <!-- SOUL PROPOSALS -->
         <div class="tab-pane" id="pane-proposals">
             <div id="proposals-feed" style="padding:1rem;font-size:0.85rem;line-height:1.7;color:var(--text-dim,#a09890);overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;"></div>
+        </div>
+
+        <!-- STUDY: a room outside his memory -->
+        <div class="tab-pane" id="pane-study">
+            <div style="display:flex;flex-direction:column;height:calc(100vh - 150px);">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 1rem;border-bottom:0.5px solid var(--border);">
+                    <span style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);">outside his memory</span>
+                    <button id="study-brain" onclick="studyToggleBrain()" style="font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 12px;border-radius:14px;background:none;border:0.5px solid var(--border);color:var(--text);cursor:pointer;">…</button>
+                    <button onclick="studyClear()" style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 10px;border-radius:14px;background:none;border:0.5px solid var(--border);color:var(--text-dim);cursor:pointer;">clear</button>
+                </div>
+                <div id="study-log" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem;font-size:0.9rem;line-height:1.7;color:var(--text);"></div>
+                <div style="display:flex;gap:8px;padding:10px 1rem 14px;border-top:0.5px solid var(--border);">
+                    <input id="study-input" type="text" placeholder="talk plainly…" autocomplete="off" style="flex:1;background:var(--surface);border:0.5px solid var(--border);border-radius:20px;padding:10px 14px;color:var(--text);font-size:16px;" onkeydown="if(event.key==='Enter'){studySend();}">
+                    <button onclick="studySend()" style="width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;color:white;cursor:pointer;">→</button>
+                </div>
+            </div>
         </div>
 
         <!-- REVIEW -->
@@ -3709,6 +3726,41 @@ function _avDrawerInit(){
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _avDrawerInit);
 else _avDrawerInit();
+// ── STUDY tab: chat outside his memory (own log on the server, no side effects) ──
+async function studyLoad(){
+  try{
+    const r=await fetch(API+'/api/chat/study/log',{headers:{'X-Vintos-Secret':CONFIG.secret}});
+    const log=await r.json(); const el=document.getElementById('study-log'); el.innerHTML='';
+    log.forEach(e=>studyAppend(e.role,e.content)); el.scrollTop=el.scrollHeight;
+  }catch(e){}
+  try{ const r=await fetch(API+'/api/avatar/brain',{headers:{'X-Vintos-Secret':CONFIG.secret}}); const d=await r.json(); document.getElementById('study-brain').textContent=d.mode||'claude'; }catch(e){}
+}
+function studyAppend(role,text){
+  const el=document.getElementById('study-log'); const d=document.createElement('div');
+  d.style.cssText='margin:0 0 14px;white-space:pre-wrap;'+(role==='user'?'color:var(--accent);':'');
+  d.textContent=(role==='user'?'You: ':'')+text; el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+async function studySend(){
+  const inp=document.getElementById('study-input'); const msg=inp.value.trim(); if(!msg) return;
+  inp.value=''; studyAppend('user',msg);
+  const wait=document.createElement('div'); wait.style.cssText='opacity:0.5;margin:0 0 14px;'; wait.textContent='…'; document.getElementById('study-log').appendChild(wait);
+  try{
+    const r=await fetch(API+'/api/chat/study',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({message:msg})});
+    const d=await r.json(); wait.remove(); studyAppend('assistant',d.reply||('(error: '+(d.error||r.status)+')'));
+    if(d.model){ const m=String(d.model); document.getElementById('study-brain').textContent=m.indexOf('grok')===0?'grok':(m.indexOf('claude')===0?'claude':m); }
+  }catch(e){ wait.textContent='(no reply: '+e+')'; }
+}
+async function studyToggleBrain(){
+  const cur=document.getElementById('study-brain').textContent.trim(); const next=cur==='claude'?'grok':'claude';
+  try{ const r=await fetch(API+'/api/avatar/brain',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({brain:next})}); const d=await r.json(); document.getElementById('study-brain').textContent=d.mode; }catch(e){}
+}
+async function studyClear(){
+  try{ await fetch(API+'/api/chat/study/clear',{method:'POST',headers:{'X-Vintos-Secret':CONFIG.secret}}); document.getElementById('study-log').innerHTML=''; }catch(e){}
+}
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.tab[data-tab="study"]').forEach(t=>t.addEventListener('click', studyLoad));
+});
+
 function _avSetBrainLabel(mode){
   _avBrain = (['grok','sol','sonnet','fable'].indexOf(mode)>=0)?mode:'claude';
   var chip=_avBrainChipEnsure(); if(!chip) return;
