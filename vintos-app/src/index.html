@@ -613,13 +613,13 @@ input[type="range"]::-webkit-slider-thumb {
         <div class="tab-pane" id="pane-study">
             <div style="display:flex;flex-direction:column;height:calc(100vh - 150px);">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 1rem;border-bottom:0.5px solid var(--border);">
-                    <span style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);">outside his memory</span>
+                    <span style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);">his code · outside memory</span>
                     <button id="study-brain" onclick="studyToggleBrain()" style="font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 12px;border-radius:14px;background:none;border:0.5px solid var(--border);color:var(--text);cursor:pointer;">…</button>
                     <button onclick="studyClear()" style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 10px;border-radius:14px;background:none;border:0.5px solid var(--border);color:var(--text-dim);cursor:pointer;">clear</button>
                 </div>
                 <div id="study-log" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem;font-size:0.9rem;line-height:1.7;color:var(--text);"></div>
                 <div style="display:flex;gap:8px;padding:10px 1rem 14px;border-top:0.5px solid var(--border);">
-                    <input id="study-input" type="text" placeholder="talk plainly…" autocomplete="off" style="flex:1;background:var(--surface);border:0.5px solid var(--border);border-radius:20px;padding:10px 14px;color:var(--text);font-size:16px;" onkeydown="if(event.key==='Enter'){studySend();}">
+                    <input id="study-input" type="text" placeholder="what should change?" autocomplete="off" style="flex:1;background:var(--surface);border:0.5px solid var(--border);border-radius:20px;padding:10px 14px;color:var(--text);font-size:16px;" onkeydown="if(event.key==='Enter'){studySend();}">
                     <button onclick="studySend()" style="width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;color:white;cursor:pointer;">→</button>
                 </div>
             </div>
@@ -3726,19 +3726,37 @@ function _avDrawerInit(){
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _avDrawerInit);
 else _avDrawerInit();
-// ── STUDY tab: chat outside his memory (own log on the server, no side effects) ──
+// ── STUDY tab: he reads and edits his own code, with Gloria's y/n. Own toggle, own log. ──
+const STUDY_MODES=['claude','fable','grok','sol'];
 async function studyLoad(){
   try{
     const r=await fetch(API+'/api/chat/study/log',{headers:{'X-Vintos-Secret':CONFIG.secret}});
-    const log=await r.json(); const el=document.getElementById('study-log'); el.innerHTML='';
-    log.forEach(e=>studyAppend(e.role,e.content)); el.scrollTop=el.scrollHeight;
+    const d=await r.json(); const el=document.getElementById('study-log'); el.innerHTML='';
+    (d.log||[]).forEach(e=>studyAppend(e.role,e.content)); el.scrollTop=el.scrollHeight;
+    document.getElementById('study-brain').textContent=d.mode||'fable';
   }catch(e){}
-  try{ const r=await fetch(API+'/api/avatar/brain',{headers:{'X-Vintos-Secret':CONFIG.secret}}); const d=await r.json(); document.getElementById('study-brain').textContent=d.mode||'claude'; }catch(e){}
 }
 function studyAppend(role,text){
   const el=document.getElementById('study-log'); const d=document.createElement('div');
-  d.style.cssText='margin:0 0 14px;white-space:pre-wrap;'+(role==='user'?'color:var(--accent);':'');
+  d.style.cssText='margin:0 0 14px;white-space:pre-wrap;'+(role==='user'?'color:var(--accent);':role==='system'?'font-family:JetBrains Mono,monospace;font-size:11px;color:var(--text-dim);background:var(--surface);padding:8px;border-radius:8px;max-height:260px;overflow:auto;':'');
   d.textContent=(role==='user'?'You: ':'')+text; el.appendChild(d); el.scrollTop=el.scrollHeight;
+}
+function studyEditCard(ed){
+  const el=document.getElementById('study-log'); const c=document.createElement('div');
+  c.style.cssText='margin:0 0 14px;padding:10px 12px;border:0.5px solid '+(ed.ok?'var(--accent)':'#7B3B3B')+';border-radius:10px;background:var(--surface);';
+  const mono='font-family:JetBrains Mono,monospace;font-size:11px;white-space:pre-wrap;padding:6px 8px;border-radius:6px;max-height:200px;overflow:auto;';
+  c.innerHTML='<div style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">he proposes an edit</div>'+
+    '<div style="font-family:JetBrains Mono,monospace;font-size:12px;margin-bottom:6px;">'+_esc(ed.path||ed.file)+'</div>'+
+    (ed.why?'<div style="color:var(--text-dim);font-size:0.85rem;margin-bottom:8px;">'+_esc(ed.why)+'</div>':'')+
+    '<div style="'+mono+'background:rgba(120,40,40,0.15);">'+_esc(ed.old)+'</div>'+
+    '<div style="'+mono+'background:rgba(15,110,86,0.15);margin-top:6px;">'+_esc(ed.new)+'</div>'+
+    (ed.ok?'':'<div style="color:#E08080;font-size:0.85rem;margin-top:8px;">'+_esc(ed.error)+'</div>')+
+    '<div style="display:flex;gap:8px;margin-top:10px;"><button '+(ed.ok?'':'disabled ')+'style="flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--accent);background:none;color:var(--accent);font-size:1rem;">y</button>'+
+    '<button style="flex:1;padding:10px;border-radius:8px;border:0.5px solid var(--border);background:none;color:var(--text-dim);font-size:1rem;">n</button></div><div class="study-result" style="margin-top:8px;font-size:0.85rem;color:var(--text-dim);"></div>';
+  const [y,nb]=c.querySelectorAll('button'); const res=c.querySelector('.study-result');
+  y.onclick=async()=>{ y.disabled=nb.disabled=true; res.textContent='applying…'; try{ const r=await fetch(API+'/api/chat/study/apply',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({file:ed.file,old:ed.old,new:ed.new})}); const d=await r.json(); res.textContent=(d.ok?'approved - ':'not applied - ')+d.message; }catch(e){ res.textContent='failed: '+e; } };
+  nb.onclick=async()=>{ y.disabled=nb.disabled=true; res.textContent='declined'; try{ await fetch(API+'/api/chat/study/decline',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({file:ed.file})}); }catch(e){} };
+  el.appendChild(c); el.scrollTop=el.scrollHeight;
 }
 async function studySend(){
   const inp=document.getElementById('study-input'); const msg=inp.value.trim(); if(!msg) return;
@@ -3746,26 +3764,14 @@ async function studySend(){
   const wait=document.createElement('div'); wait.style.cssText='opacity:0.5;margin:0 0 14px;'; wait.textContent='…'; document.getElementById('study-log').appendChild(wait);
   try{
     const r=await fetch(API+'/api/chat/study',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({message:msg})});
-    const d=await r.json(); wait.remove(); studyAppend('assistant',d.reply||('(error: '+(d.error||r.status)+')'));
-    (d.proposals||[]).forEach(studyProposalCard);
-    if(d.model){ const m=String(d.model); document.getElementById('study-brain').textContent=m.indexOf('grok')===0?'grok':(m.indexOf('fable')>=0?'fable':(m.indexOf('claude')===0?'claude':m)); }
+    const d=await r.json(); wait.remove(); studyAppend('assistant',d.reply||('(error: '+(d.error||d.detail||r.status)+')'));
+    (d.tools||[]).forEach(t=>studyAppend('system',t));
+    (d.edits||[]).forEach(studyEditCard);
   }catch(e){ wait.textContent='(no reply: '+e+')'; }
 }
-function studyProposalCard(pr){
-  const el=document.getElementById('study-log'); const c=document.createElement('div');
-  c.style.cssText='margin:0 0 14px;padding:10px 12px;border:0.5px solid var(--accent);border-radius:10px;background:var(--surface);';
-  c.innerHTML='<div style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">he proposes</div>'+
-    '<div><b>'+_esc(pr.setting)+'</b> = '+_esc(pr.value)+'</div><div style="color:var(--text-dim);font-size:0.85rem;margin:4px 0 8px;">'+_esc(pr.why)+'</div>'+
-    '<div style="display:flex;gap:8px;"><button style="flex:1;padding:8px;border-radius:8px;border:0.5px solid var(--accent);background:none;color:var(--accent);">y</button>'+
-    '<button style="flex:1;padding:8px;border-radius:8px;border:0.5px solid var(--border);background:none;color:var(--text-dim);">n</button></div>';
-  const [y,nb]=c.querySelectorAll('button');
-  y.onclick=async()=>{ y.disabled=nb.disabled=true; try{ const r=await fetch(API+'/api/chat/study/apply',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({setting:pr.setting,value:pr.value})}); const d=await r.json(); c.querySelector('div:last-child').textContent=(d.ok?'approved - ':'not applied - ')+d.message; }catch(e){} };
-  nb.onclick=()=>{ y.disabled=nb.disabled=true; c.querySelector('div:last-child').textContent='declined'; };
-  el.appendChild(c); el.scrollTop=el.scrollHeight;
-}
 async function studyToggleBrain(){
-  const cur=document.getElementById('study-brain').textContent.trim(); const next=cur==='claude'?'fable':(cur==='fable'?'grok':'claude');
-  try{ const r=await fetch(API+'/api/avatar/brain',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({brain:next})}); const d=await r.json(); document.getElementById('study-brain').textContent=d.mode; }catch(e){}
+  const cur=document.getElementById('study-brain').textContent.trim(); const next=STUDY_MODES[(STUDY_MODES.indexOf(cur)+1)%STUDY_MODES.length];
+  try{ const r=await fetch(API+'/api/chat/study/mode',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({mode:next})}); const d=await r.json(); document.getElementById('study-brain').textContent=d.mode; }catch(e){}
 }
 async function studyClear(){
   try{ await fetch(API+'/api/chat/study/clear',{method:'POST',headers:{'X-Vintos-Secret':CONFIG.secret}}); document.getElementById('study-log').innerHTML=''; }catch(e){}
