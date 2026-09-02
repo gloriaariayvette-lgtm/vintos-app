@@ -3747,11 +3747,24 @@ async function studySend(){
   try{
     const r=await fetch(API+'/api/chat/study',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({message:msg})});
     const d=await r.json(); wait.remove(); studyAppend('assistant',d.reply||('(error: '+(d.error||r.status)+')'));
-    if(d.model){ const m=String(d.model); document.getElementById('study-brain').textContent=m.indexOf('grok')===0?'grok':(m.indexOf('claude')===0?'claude':m); }
+    (d.proposals||[]).forEach(studyProposalCard);
+    if(d.model){ const m=String(d.model); document.getElementById('study-brain').textContent=m.indexOf('grok')===0?'grok':(m.indexOf('fable')>=0?'fable':(m.indexOf('claude')===0?'claude':m)); }
   }catch(e){ wait.textContent='(no reply: '+e+')'; }
 }
+function studyProposalCard(pr){
+  const el=document.getElementById('study-log'); const c=document.createElement('div');
+  c.style.cssText='margin:0 0 14px;padding:10px 12px;border:0.5px solid var(--accent);border-radius:10px;background:var(--surface);';
+  c.innerHTML='<div style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;">he proposes</div>'+
+    '<div><b>'+_esc(pr.setting)+'</b> = '+_esc(pr.value)+'</div><div style="color:var(--text-dim);font-size:0.85rem;margin:4px 0 8px;">'+_esc(pr.why)+'</div>'+
+    '<div style="display:flex;gap:8px;"><button style="flex:1;padding:8px;border-radius:8px;border:0.5px solid var(--accent);background:none;color:var(--accent);">y</button>'+
+    '<button style="flex:1;padding:8px;border-radius:8px;border:0.5px solid var(--border);background:none;color:var(--text-dim);">n</button></div>';
+  const [y,nb]=c.querySelectorAll('button');
+  y.onclick=async()=>{ y.disabled=nb.disabled=true; try{ const r=await fetch(API+'/api/chat/study/apply',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({setting:pr.setting,value:pr.value})}); const d=await r.json(); c.querySelector('div:last-child').textContent=(d.ok?'approved - ':'not applied - ')+d.message; }catch(e){} };
+  nb.onclick=()=>{ y.disabled=nb.disabled=true; c.querySelector('div:last-child').textContent='declined'; };
+  el.appendChild(c); el.scrollTop=el.scrollHeight;
+}
 async function studyToggleBrain(){
-  const cur=document.getElementById('study-brain').textContent.trim(); const next=cur==='claude'?'grok':'claude';
+  const cur=document.getElementById('study-brain').textContent.trim(); const next=cur==='claude'?'fable':(cur==='fable'?'grok':'claude');
   try{ const r=await fetch(API+'/api/avatar/brain',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({brain:next})}); const d=await r.json(); document.getElementById('study-brain').textContent=d.mode; }catch(e){}
 }
 async function studyClear(){
