@@ -609,18 +609,18 @@ input[type="range"]::-webkit-slider-thumb {
             <div id="proposals-feed" style="padding:1rem;font-size:0.85rem;line-height:1.7;color:var(--text-dim,#a09890);overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;"></div>
         </div>
 
-        <!-- STUDY: a room outside his memory -->
+        <!-- STUDY: his code, with Gloria's y/n -->
         <div class="tab-pane" id="pane-study">
-            <div style="display:flex;flex-direction:column;height:calc(100vh - 150px);">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 1rem;border-bottom:0.5px solid var(--border);">
-                    <span style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-dim);">his code · outside memory</span>
-                    <button id="study-brain" onclick="studyToggleBrain()" style="font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 12px;border-radius:14px;background:none;border:0.5px solid var(--border);color:var(--text);cursor:pointer;">…</button>
-                    <button onclick="studyClear()" style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:6px 10px;border-radius:14px;background:none;border:0.5px solid var(--border);color:var(--text-dim);cursor:pointer;">clear</button>
+            <div id="study-frame" style="display:flex;flex-direction:column;height:60vh;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 1rem;border-bottom:0.5px solid var(--border);">
+                    <button id="study-brain" onclick="studyToggleBrain()" style="font-family:JetBrains Mono,monospace;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;padding:7px 14px;border-radius:14px;background:var(--surface);border:0.5px solid var(--border);color:var(--text);cursor:pointer;">…</button>
+                    <div id="study-status" style="flex:1;margin:0 12px;font-size:0.8rem;color:var(--text-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+                    <button onclick="studyClear()" style="font-family:JetBrains Mono,monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:7px 10px;border-radius:14px;background:none;border:0.5px solid var(--border);color:var(--text-dim);cursor:pointer;">clear</button>
                 </div>
-                <div id="study-log" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem;font-size:0.9rem;line-height:1.7;color:var(--text);"></div>
-                <div style="display:flex;gap:8px;padding:10px 1rem 14px;border-top:0.5px solid var(--border);">
-                    <input id="study-input" type="text" placeholder="what should change?" autocomplete="off" style="flex:1;background:var(--surface);border:0.5px solid var(--border);border-radius:20px;padding:10px 14px;color:var(--text);font-size:16px;" onkeydown="if(event.key==='Enter'){studySend();}">
-                    <button onclick="studySend()" style="width:40px;height:40px;border-radius:50%;background:var(--accent);border:none;color:white;cursor:pointer;">→</button>
+                <div id="study-log" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 1rem;font-size:0.92rem;line-height:1.65;color:var(--text);"></div>
+                <div style="display:flex;gap:8px;align-items:flex-end;padding:10px 1rem calc(10px + env(safe-area-inset-bottom));border-top:0.5px solid var(--border);background:var(--bg);">
+                    <textarea id="study-input" rows="1" placeholder="Talk to him about his code…" style="flex:1;resize:none;max-height:120px;background:var(--surface);border:0.5px solid var(--border);border-radius:14px;padding:10px 14px;color:var(--text);font-size:16px;font-family:inherit;line-height:1.4;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();studySend();}" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px';"></textarea>
+                    <button onclick="studySend()" style="width:42px;height:42px;border-radius:50%;background:var(--accent);border:none;color:white;cursor:pointer;font-size:16px;flex-shrink:0;">→</button>
                 </div>
             </div>
         </div>
@@ -3728,18 +3728,36 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else _avDrawerInit();
 // ── STUDY tab: he reads and edits his own code, with Gloria's y/n. Own toggle, own log. ──
 const STUDY_MODES=['claude','fable','grok','sol'];
+function studyFit(){
+  const f=document.getElementById('study-frame'); if(!f) return;
+  const top=f.getBoundingClientRect().top; f.style.height=Math.max(260, window.innerHeight-top-8)+'px';
+}
+window.addEventListener('resize', studyFit);
 async function studyLoad(){
+  studyFit(); setTimeout(studyFit, 250);
   try{
     const r=await fetch(API+'/api/chat/study/log',{headers:{'X-Vintos-Secret':CONFIG.secret}});
     const d=await r.json(); const el=document.getElementById('study-log'); el.innerHTML='';
+    document.getElementById('study-status').textContent='';
     (d.log||[]).forEach(e=>studyAppend(e.role,e.content)); el.scrollTop=el.scrollHeight;
     document.getElementById('study-brain').textContent=d.mode||'fable';
   }catch(e){}
 }
 function studyAppend(role,text){
   const el=document.getElementById('study-log'); const d=document.createElement('div');
-  d.style.cssText='margin:0 0 14px;white-space:pre-wrap;'+(role==='user'?'color:var(--accent);':role==='system'?'font-family:JetBrains Mono,monospace;font-size:11px;color:var(--text-dim);background:var(--surface);padding:8px;border-radius:8px;max-height:260px;overflow:auto;':'');
-  d.textContent=(role==='user'?'You: ':'')+text; el.appendChild(d); el.scrollTop=el.scrollHeight;
+  let body=String(text||'');
+  if(role==='assistant'){
+    const m=body.match(/^\s*STATUS:\s*(.+?)\s*(?:\n|$)/i);
+    if(m){ document.getElementById('study-status').textContent=m[1]; body=body.replace(m[0],''); }
+  }
+  if(role==='user'){
+    d.style.cssText='margin:0 0 12px 18%;padding:10px 14px;border-radius:14px 14px 4px 14px;background:rgba(201,107,60,0.14);border:0.5px solid rgba(201,107,60,0.25);white-space:pre-wrap;';
+  }else if(role==='system'){
+    d.style.cssText='margin:0 0 12px;padding:10px 12px;border-radius:10px;background:var(--surface);border:0.5px solid var(--border);font-family:JetBrains Mono,monospace;font-size:11px;line-height:1.5;color:var(--text-dim);white-space:pre;overflow:auto;max-height:280px;';
+  }else{
+    d.style.cssText='margin:0 18% 12px 0;padding:10px 14px;border-radius:14px 14px 14px 4px;background:var(--surface);border:0.5px solid var(--border);white-space:pre-wrap;';
+  }
+  d.textContent=body.trim(); el.appendChild(d); el.scrollTop=el.scrollHeight;
 }
 function studyEditCard(ed){
   const el=document.getElementById('study-log'); const c=document.createElement('div');
@@ -3760,7 +3778,7 @@ function studyEditCard(ed){
 }
 async function studySend(){
   const inp=document.getElementById('study-input'); const msg=inp.value.trim(); if(!msg) return;
-  inp.value=''; studyAppend('user',msg);
+  inp.value=''; inp.style.height='auto'; studyAppend('user',msg);
   const wait=document.createElement('div'); wait.style.cssText='opacity:0.5;margin:0 0 14px;'; wait.textContent='…'; document.getElementById('study-log').appendChild(wait);
   try{
     const r=await fetch(API+'/api/chat/study',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({message:msg})});
