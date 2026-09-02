@@ -3530,7 +3530,7 @@ var _avStage = {
       bg.style.cssText='position:absolute;top:-8%;left:-8%;width:116%;height:116%;object-fit:cover;filter:blur(26px) brightness(0.45) saturate(1.1);';
       bg.playsInline=true; bg.muted=true; bg.loop=true;
       var fg=document.createElement('video');
-      fg.style.cssText='position:absolute;top:0;left:0;width:100%;height:74%;object-fit:cover;object-position:50% 30%;';
+      fg.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;object-position:50% 12%;';
       fg.playsInline=true; fg.muted=true; fg.loop=true;
       var L={wrap:wrap,bg:bg,fg:fg};
       fg.addEventListener('loadedmetadata', function(){ _avStage._fit(L); });
