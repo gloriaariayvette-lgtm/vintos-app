@@ -504,13 +504,9 @@ input[type="range"]::-webkit-slider-thumb {
             <div class="typing-indicator" id="typing">
                 <span>vintos is thinking...</span>
             </div>
-            <div id="share-status" style="display:none;font-size:0.7rem;color:var(--text-dim);padding:0.25rem 0.9rem;border-top:1px solid var(--border);font-family:JetBrains Mono,monospace;line-height:1.35;"></div>
             <div class="chat-input-bar">
                 <button class="input-btn photo-btn" id="photo-btn" title="Send photo">
                     <svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><circle cx="17" cy="8" r="1" fill="currentColor" stroke="none"/></svg>
-                </button>
-                <button class="input-btn share-btn" id="share-btn" title="Share your screen with him" onclick="toggleScreenShare()">
-                    <svg viewBox="0 0 24 24" stroke-width="1.5"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M12 13V8M9 11l3-3 3 3"/></svg>
                 </button>
                 <textarea id="chat-input" placeholder="speak to him..." rows="1"></textarea>
                 <button class="input-btn send-btn" id="send-btn" title="Send">
@@ -3655,11 +3651,25 @@ var _avStage = {
 let _avLastScreenshot = null;
 
 function _avCaptureScreenshot() {
-  if(!_avRenderer) return null;
+  // Two ways he is on screen: the preset/live stage (a <video>) or the 3D canvas. The old code only read
+  // the canvas, which is hidden and blank whenever the stage is up, and a WebGL canvas read after the frame
+  // is gone - so the camera sent nothing (Gloria, 2026-09-06). Read whichever is actually showing.
   try {
-    const canvas = document.getElementById('avatar-canvas');
-    return canvas.toDataURL('image/png').split(',')[1];
-  } catch(e) { return null; }
+    if (typeof _avStage !== 'undefined' && _avStage.active && _avStage.active()) {
+      var L = _avStage.layers[_avStage.front]; var v = L && L.fg;
+      if (v && v.videoWidth) {
+        var c = document.createElement('canvas'); var w = Math.min(1280, v.videoWidth); var h = Math.round(v.videoHeight * w / v.videoWidth);
+        c.width = w; c.height = h; c.getContext('2d').drawImage(v, 0, 0, w, h);
+        return c.toDataURL('image/jpeg', 0.85).split(',')[1];
+      }
+    }
+    if (_avRenderer && _avScene && _avCamera) {
+      _avRenderer.render(_avScene, _avCamera);            // draw the frame right before reading it
+      const canvas = document.getElementById('avatar-canvas');
+      return canvas.toDataURL('image/jpeg', 0.85).split(',')[1];
+    }
+  } catch(e) {}
+  return null;
 }
 
 function _avTakeScreenshot() {
@@ -4381,8 +4391,7 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
     <div id="av-chat-message" style="position:relative;font-family:Cormorant Garamond,Georgia,serif;font-size:14px;font-style:italic;font-weight:300;color:rgba(232,228,222,0.95);text-shadow:0 1px 3px rgba(0,0,0,0.85),0 0 12px rgba(0,0,0,0.6);line-height:1.6;height:25vh;min-height:25vh;max-height:25vh;overflow-y:auto;padding-top:22px;-webkit-mask-image:linear-gradient(to bottom, transparent 0px, black 30px);mask-image:linear-gradient(to bottom, transparent 0px, black 30px);padding-bottom:4px;border-bottom:0.5px solid rgba(201,107,60,0.08);"></div>
     <div style="position:relative;display:flex;gap:8px;align-items:center;">
       <input id="av-chat-input" type="text" placeholder="say something…" autocomplete="off" style="flex:1;background:rgba(255,255,255,0.04);border:0.5px solid rgba(201,107,60,0.2);border-radius:20px;padding:8px 14px;color:rgba(200,196,191,0.9);font-size:16px;font-family:Cormorant Garamond,Georgia,serif;font-style:italic;outline:none;">
-      <button id="av-share-btn" onclick="toggleScreenShare()" title="Share your screen with him" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🖥</button>
-      <button id="av-screenshot-btn" onclick="_avTakeScreenshot()" title="Send him a photo of himself" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📷</button>
+      <button id="av-screenshot-btn" onclick="_avCameraMenu()" title="Camera: a photo of him, or share your desktop" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">📷</button>
       <button id="av-photo-btn" onclick="avPickPhoto()" title="Send him a picture" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">🖼</button>
       <button onclick="avSendChat()" style="width:36px;height:36px;border-radius:50%;background:rgba(201,107,60,0.12);border:0.5px solid rgba(201,107,60,0.25);color:rgba(201,107,60,0.8);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">→</button>
     </div>
@@ -4607,12 +4616,33 @@ async function loadMischief() {
     loadHumorProfile();
 }
 
-// ── Screen share: she shares her screen, Gemma describes it on the server, he reads the description ──
-// Toggle in the chat bar and the avatar drawer; the status line shows her what he is being told he sees.
+// ── Camera button: a photo of him (phone) or the desktop (share on/off) ──
+// Desktop sharing runs on the server: Gemma describes the screen and his avatar and voice turns read the
+// description. The status line under the drawer shows her exactly what he is being told he sees.
 let _shareOn = false, _sharePoll = null;
 function _shareButtons(on){
-  ['share-btn','av-share-btn'].forEach(function(id){ var b=document.getElementById(id); if(!b) return;
-    b.style.background = on ? 'var(--accent)' : ''; b.style.color = on ? '#fff' : ''; b.title = on ? 'Stop sharing your screen' : 'Share your screen with him'; });
+  var b=document.getElementById('av-screenshot-btn'); if(!b) return;
+  b.style.background = on ? 'var(--accent)' : 'rgba(201,107,60,0.12)'; b.style.color = on ? '#fff' : 'rgba(201,107,60,0.8)';
+  b.title = on ? 'Camera (desktop sharing is ON)' : 'Camera: a photo of him, or share your desktop';
+}
+function _avCameraMenu(){
+  var old=document.getElementById('av-cam-menu'); if(old){ old.remove(); return; }
+  var host=document.getElementById('av-drawer-body'); if(!host) return;
+  var m=document.createElement('div'); m.id='av-cam-menu';
+  m.style.cssText='display:flex;flex-direction:column;gap:6px;width:100%;';
+  function item(label, fn){ var x=document.createElement('button'); x.textContent=label; x.onclick=function(){ m.remove(); fn(); };
+    x.style.cssText='padding:7px 10px;border-radius:10px;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.35);color:rgba(235,200,175,0.95);font-size:12px;letter-spacing:0.04em;cursor:pointer;text-align:left;'; return x; }
+  m.appendChild(item('📱  Phone: a photo of him (sent with your next message)', _avTakeScreenshot));
+  m.appendChild(item(_shareOn ? '🖥  Desktop: stop sharing your screen' : '🖥  Desktop: share your screen with him', toggleScreenShare));
+  host.insertBefore(m, host.firstChild);
+}
+function _shareStatusEl(){
+  var el=document.getElementById('share-status');
+  if(!el){ var host=document.getElementById('av-drawer-body'); if(!host) return null;
+    el=document.createElement('div'); el.id='share-status';
+    el.style.cssText='display:none;font-size:10.5px;color:rgba(235,200,175,0.85);font-family:JetBrains Mono,monospace;line-height:1.35;max-width:260px;white-space:pre-wrap;border-top:0.5px solid rgba(201,107,60,0.25);padding-top:6px;';
+    host.appendChild(el); }
+  return el;
 }
 async function toggleScreenShare(){
   try{
@@ -4624,7 +4654,7 @@ async function toggleScreenShare(){
   if(!_shareOn && _sharePoll){ clearInterval(_sharePoll); _sharePoll = null; }
 }
 async function pollShareStatus(){
-  const el = document.getElementById('share-status'); if(!el) return;
+  const el = _shareStatusEl(); if(!el) return;
   try{
     const d = await (await fetch(`${API}/api/desktop/share/status`, {headers:{'X-Vintos-Secret': CONFIG.secret}})).json();
     _shareOn = !!d.active; _shareButtons(_shareOn);
