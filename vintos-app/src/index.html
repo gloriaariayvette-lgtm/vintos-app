@@ -3577,18 +3577,30 @@ var _avStage = {
   },
   _show: async function(url, opts){
     var next=1-this.front, L=this._el(next), old=this.layers[this.front];
+    var self=this, seq=(this._seq=(this._seq||0)+1), settled=false;
+    this.front=next;                      // claim the layer now: a second _show while this one loads takes the other layer
+    var prev=L.url; L.url=url;
     L.fg.loop=!!opts.loop; L.fg.muted=!!opts.muted;
-    L.fg.src=url; L.bg.src=url;
-    var self=this;
+    L.fg.oncanplay=null; L.fg.onerror=null; L.fg.onended=null;
+    var fail=function(why){
+      if(settled) return; settled=true;
+      try{ console.log('[stage] clip did not start: '+why); }catch(e){}
+      if(opts.onfail) try{ opts.onfail(); }catch(e){}
+    };
     L.fg.oncanplay=function(){
+      if(settled || seq!==self._seq) return; settled=true;
       L.fg.oncanplay=null;
-      L.fg.play().catch(function(){}); L.bg.play().catch(function(){});
+      var p=L.fg.play(); L.bg.play().catch(function(){});
+      if(p && p.catch) p.catch(function(){ if(!opts.muted){ L.fg.muted=true; L.fg.play().catch(function(){}); if(opts.onfail) setTimeout(opts.onfail, 300); } });
       L.wrap.style.opacity='1';
-      if(old){ old.wrap.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.fg.pause();old.bg.pause();}catch(e){} }, 1000); }
-      self.front=next;
+      if(old && old!==L){ old.wrap.style.opacity='0'; setTimeout(function(){ if(old!==self.layers[self.front]) try{old.fg.pause();old.bg.pause();}catch(e){} }, 1000); }
       self._hideCanvas();
     };
-    if(opts.onended) L.fg.onended=opts.onended; else L.fg.onended=null;
+    L.fg.onerror=function(){ fail('error'); };
+    setTimeout(function(){ if(!settled && seq===self._seq) fail('timeout'); }, 12000);
+    if(opts.onended) L.fg.onended=function(){ if(seq===self._seq) opts.onended(); };
+    L.fg.src=url; L.bg.src=url;
+    if(prev && prev!==url) setTimeout(function(){ try{ URL.revokeObjectURL(prev); }catch(e){} }, 1500);
   },
   resolve: function(name){
     if(!this.man) return null;
@@ -3600,16 +3612,24 @@ var _avStage = {
     hit=keys.filter(k=>k.split('-').some(w=>want.split('-').indexOf(w)>=0));
     return hit.length?hit.sort((a,b)=>a.length-b.length)[0]:null;
   },
-  setRoom: async function(name){
+  setRoom: async function(name, _retry){
     name=this.resolve(name);
     if(!name || !this.man || !this.man.rooms[name] || !(this.man.rooms[name].clips||[]).length) return;
-    if(name===this.room && !this.speaking) return;
-    this.room=name;
-    var clips=this.man.rooms[name].clips;
+    if(name===this.room && !this.speaking && !_retry) return;
+    this.room=name; this.speaking=false;
+    var clips=this.man.rooms[name].clips, self=this;
     try{
       var url=await this._fetchBlob('/avatar/stage/clip/'+clips[Math.floor(Math.random()*clips.length)]);
-      this._show(url,{loop:true,muted:true});
-    }catch(e){}
+      this._show(url,{loop:true,muted:true, onfail:function(){ if(!_retry) self.setRoom(name,true); else self._unfreeze(); }});
+    }catch(e){
+      // the clip did not arrive (server busy rendering speech, network): try once more, then at least
+      // keep whatever is on screen moving instead of a frozen last frame (Gloria, 2026-09-05)
+      if(!_retry) setTimeout(function(){ self.setRoom(name,true); }, 1500); else this._unfreeze();
+    }
+  },
+  _unfreeze: function(){
+    var L=this.layers[this.front]; if(!L||!L.fg||!L.fg.src) return;
+    try{ L.fg.loop=true; L.fg.muted=true; L.fg.play().catch(function(){}); }catch(e){}
   },
   speak: async function(text){
     if(!this.active() || !text) return false;
@@ -3621,7 +3641,8 @@ var _avStage = {
       var d=await r.json(); if(!d.url) return false;
       var url=await this._fetchBlob(d.url);
       var self=this; this.speaking=true;
-      this._show(url,{loop:false,muted:false,onended:function(){ self.speaking=false; var rm=self.room; self.room=null; self.setRoom(rm); }});
+      var back=function(){ self.speaking=false; var rm=self.room; self.room=null; self.setRoom(rm); };
+      this._show(url,{loop:false,muted:false,onended:back,onfail:back});
       return true;
     }catch(e){ this.speaking=false; return false; }
   }
