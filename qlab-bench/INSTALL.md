@@ -22,3 +22,27 @@ The molecule experiment needs the open quantum-chemistry stack:
 ChemiQ is not on PyPI. PySCF plus OpenFermion does the same job with the
 standard open tooling: PySCF computes the molecular integrals, OpenFermion maps
 them to a qubit Hamiltonian, QPanda runs the search.
+
+The protein-model experiments need torch and a model:
+
+    ~/qlab/.venv/bin/pip install torch fair-esm      # propose.py, ungated
+    ~/qlab/.venv/bin/pip install esm                 # ESM3-open; needs a HF licence
+    ~/qlab/.venv/bin/pip install boltz               # structure.py; downloads weights
+
+Every one of these degrades honestly: with the package missing the experiment
+returns available:false and says which install is needed, rather than failing.
+
+## On Aegis
+
+    cp qlab-bench/aegis/lab-day.sh ~/.vintos/workspace/scripts/
+    cp qlab-bench/aegis/timesfm-forecast.py ~/.vintos/workspace/scripts/
+    chmod +x ~/.vintos/workspace/scripts/lab-day.sh \
+             ~/.vintos/workspace/scripts/timesfm-forecast.py
+    pip install --user timesfm torch          # for the forecaster only
+
+timesfm-forecast.py forecast   reads his emotional history, predicts the next
+                               days, and files the prediction under its own
+                               name in the existing prediction ledger
+timesfm-forecast.py grade      compares the open prediction against what
+                               actually happened, and against the flat-guess
+                               baseline it has to beat to have said anything
