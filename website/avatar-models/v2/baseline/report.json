@@ -1,0 +1,21 @@
+{
+ "served": {
+  "skins": 1,
+  "bones": 65,
+  "tris": 32762,
+  "height": 1.1664491565095934,
+  "textures": []
+ },
+ "repo": {
+  "skins": 1,
+  "bones": 65,
+  "tris": 46108,
+  "height": 189.7718742918797,
+  "textures": [
+   "map",
+   "normalMap",
+   "specularMap",
+   "emissiveMap"
+  ]
+ }
+}
