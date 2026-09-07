@@ -100,19 +100,24 @@ def experiment(p, shots):
 
     run = run_circuit(ansatz(tuned, nq, layers), list(range(nq)), shots)
 
+    # Every state the machine put weight on, not the 60 likeliest. Ranking a
+    # truncated list by energy answers a different question than the one asked:
+    # the lowest-energy fold is routinely not among the most probable, so
+    # cutting at 60 reported a stuck search when the search had not stuck.
     folds = []
     for raw, prob in sorted(run["probabilities"].items(),
-                            key=lambda kv: kv[1], reverse=True)[:60]:
+                            key=lambda kv: kv[1], reverse=True):
         bits = raw[::-1]
         e, coords, contacts, overlaps, turns = fold_energy(bits, sequence, charges, hp, cw, tw, overlap_penalty)
         folds.append({"state": raw, "probability": round(prob, 6), "energy": round(e, 4),
                       "overlaps": overlaps, "turns": turns,
                       "contacts": [c["kind"] for c in contacts],
                       "coords": coords, "bits": bits})
+    likeliest_first = folds[:]
     valid = [f for f in folds if f["overlaps"] == 0]
     ranked = sorted(valid or folds, key=lambda f: (f["energy"], -f["probability"]))
     best = ranked[0]
-    likeliest = folds[0]
+    likeliest = likeliest_first[0]
 
     picture = draw(best["coords"], sequence)
     directions = [DIR_NAMES[int(best["bits"][2*i:2*i+2], 2)] for i in range((n - 2))]
@@ -142,7 +147,8 @@ def experiment(p, shots):
                            ("state", "probability", "energy", "overlaps")},
         "valid_fold_count": len(valid),
         "top_folds": [{k: f[k] for k in ("state", "probability", "energy", "overlaps", "turns")}
-                      for f in folds[:8]],
+                      for f in likeliest_first[:8]],
+        "states_considered": len(folds),
         "distribution": run,
         "display": ["A CHAIN LOOKS FOR ITS SHAPE", "",
                     f"sequence {sequence}   charges {''.join('+' if c>0 else ('-' if c<0 else '0') for c in charges)}",

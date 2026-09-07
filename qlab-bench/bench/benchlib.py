@@ -115,3 +115,34 @@ def parse_charges(raw, n):
         c = s[i] if i < len(s) else "0"
         out.append(1 if c == "+" else (-1 if c == "-" else 0))
     return out
+
+
+def exact_best(sequence, charges, hp_weight, charge_weight, torsion_weight,
+               overlap_penalty=12.0, cap=1 << 20):
+    """The true lowest-energy fold, by looking at every one of them.
+
+    Eight residues is 4096 folds. A machine that cannot beat exhaustion on 4096
+    possibilities is not doing anything yet — but the point of the bench is not
+    to be impressive, it is to be honest, and a search cannot be called stuck
+    unless there is something to be stuck relative to. So every sweep carries
+    the exact answer beside it, and the gap between them is a measurement.
+
+    Returns None when the space is too large to enumerate.
+    """
+    n = len(sequence)
+    nq = 2 * (n - 2)
+    total = 1 << nq
+    if total > cap:
+        return None
+    best = None
+    for value in range(total):
+        bits = format(value, "0%db" % nq)
+        e, coords, contacts, overlaps, turns = fold_energy(
+            bits, sequence, charges, hp_weight, charge_weight,
+            torsion_weight, overlap_penalty)
+        if overlaps:
+            continue
+        if best is None or e < best["energy"]:
+            best = {"bits": bits, "energy": round(float(e), 4), "coords": coords,
+                    "turns": turns, "contacts": contacts, "overlaps": overlaps}
+    return best
