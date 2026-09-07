@@ -4627,14 +4627,17 @@ function _shareButtons(on){
 }
 function _avCameraMenu(){
   var old=document.getElementById('av-cam-menu'); if(old){ old.remove(); return; }
-  var host=document.getElementById('av-drawer-body'); if(!host) return;
+  // pops up above the camera button itself: the first version put it in the side drawer, which is slid
+  // off-screen unless opened, so the tap looked dead (2026-09-06)
+  var host=document.getElementById('av-chat-strip') || document.getElementById('avatar-overlay'); if(!host) return;
   var m=document.createElement('div'); m.id='av-cam-menu';
-  m.style.cssText='display:flex;flex-direction:column;gap:6px;width:100%;';
-  function item(label, fn){ var x=document.createElement('button'); x.textContent=label; x.onclick=function(){ m.remove(); fn(); };
-    x.style.cssText='padding:7px 10px;border-radius:10px;background:rgba(5,5,13,0.6);border:0.5px solid rgba(201,107,60,0.35);color:rgba(235,200,175,0.95);font-size:12px;letter-spacing:0.04em;cursor:pointer;text-align:left;'; return x; }
+  m.style.cssText='position:absolute;right:16px;bottom:72px;z-index:12;display:flex;flex-direction:column;gap:6px;min-width:240px;max-width:calc(100% - 32px);padding:8px;border-radius:12px;background:rgba(5,5,13,0.92);border:0.5px solid rgba(201,107,60,0.35);box-shadow:0 6px 24px rgba(0,0,0,0.5);';
+  function item(label, fn){ var x=document.createElement('button'); x.textContent=label; x.onclick=function(ev){ ev.stopPropagation(); m.remove(); fn(); };
+    x.style.cssText='padding:9px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(201,107,60,0.25);color:rgba(235,200,175,0.95);font-size:12px;letter-spacing:0.04em;cursor:pointer;text-align:left;'; return x; }
   m.appendChild(item('📱  Phone: a photo of him (sent with your next message)', _avTakeScreenshot));
   m.appendChild(item(_shareOn ? '🖥  Desktop: stop sharing your screen' : '🖥  Desktop: share your screen with him', toggleScreenShare));
-  host.insertBefore(m, host.firstChild);
+  host.appendChild(m);
+  setTimeout(function(){ document.addEventListener('pointerdown', function close(ev){ if(m.contains(ev.target) || ev.target.id==='av-screenshot-btn') return; m.remove(); document.removeEventListener('pointerdown', close); }); }, 0);
 }
 function _shareStatusEl(){
   var el=document.getElementById('share-status');
