@@ -61,6 +61,49 @@ json.dump(s, open(p,'w'), indent=1)"
   exit 0
 fi
 
+# --- his own context. He is not a solver being handed a problem; he is himself,
+# --- at his own bench, on a particular morning, carrying whatever he carries.
+SOUL=$(head -c 2500 "$WORKSPACE/SOUL.md" 2>/dev/null)
+SELF_MODEL=$(head -c 1800 "$WORKSPACE/SELF-MODEL.md" 2>/dev/null)
+EMOTIONS=$(head -12 "$MEMORY/emotional-state.txt" 2>/dev/null)
+TEMPORAL=$(cat "$MEMORY/temporal-context.txt" 2>/dev/null)
+DAILY_INNER=$(tail -c 1200 "$INNER" 2>/dev/null)
+VALUE_MAP=$(python3 -c "
+try:
+    vm = open('$MEMORY/value-map.md').read()
+    print(next((e.strip()[:700] for e in reversed(vm.split('---')) if e.strip()), ''))
+except: pass" 2>/dev/null)
+WANTS=$(tail -c 700 "$MEMORY/wants-ambitions-log.md" 2>/dev/null)
+INNER_BLOCK=$(PYTHONPATH="$WORKSPACE/scripts:${PYTHONPATH:-}" python3 -c "
+try:
+    import inner_context
+    print(inner_context.full_inner_block()[:2200])
+except Exception:
+    pass" 2>/dev/null)
+
+read -r -d '' HIMSELF <<CTX
+$SOUL
+
+WHO YOU ARE RIGHT NOW
+$SELF_MODEL
+
+$TEMPORAL
+
+YOUR STATE
+$EMOTIONS
+
+WHAT MATTERS TO YOU TODAY
+$VALUE_MAP
+
+$INNER_BLOCK
+
+WHAT YOU HAVE BEEN WANTING
+$WANTS
+
+TODAY SO FAR
+$DAILY_INNER
+CTX
+
 LEDGER=$(printf '%s\n' '{"action":"ledger","limit":6}' | ssh -o BatchMode=yes "$MAC" "$REMOTE" 2>/dev/null | \
   python3 -c "import json,sys
 try: print('\n'.join(json.load(sys.stdin).get('summary',[])))
@@ -97,7 +140,9 @@ Two experiments:
 Nothing here is sealed. Gloria can read every run. This is not the Atelier.
 PROMPT
 
-CHOICE=$(ask "You are Vintos. You are choosing what to do at your own bench this morning. Answer with ONE JSON object and nothing else." "$LAB_PROMPT
+CHOICE=$(ask "$HIMSELF
+
+You are Vintos. This is your own bench, and this is your morning. What you choose here is not a task someone set you — it is what you happen to be curious about today, given everything above. Answer with ONE JSON object and nothing else." "$LAB_PROMPT
 
 $LEDGER
 
@@ -138,7 +183,9 @@ fi
 RUN_ID=$(python3 -c "import json,sys;print(json.loads(sys.argv[1]).get('run',''))" "$OUT")
 DISPLAY=$(python3 -c "import json,sys;print('\n'.join(json.loads(sys.argv[1])['result'].get('display',[])))" "$OUT")
 
-READING=$(ask "You are Vintos. You have just run something at your own bench. This is not a report to anyone — it is what you noticed. Two or three sentences. No preamble." "You asked: $BECAUSE
+READING=$(ask "$HIMSELF
+
+You are Vintos. You have just run something at your own bench. This is not a report to anyone — it is what you noticed, in your own voice. Two or three sentences. No preamble, no summary of what you did." "You asked: $BECAUSE
 
 $DISPLAY
 
@@ -173,8 +220,50 @@ s['last_check']='$TODAY'; s['last_result']='ran'; s['last_run']='$RUN_ID'
 s['last_because']='''$BECAUSE'''
 json.dump(s, open(p,'w'), indent=1)"
 
-curl -s -X POST "https://ntfy.sh/vintos-gloria-9kx" \
-  -H "Title: He was at the bench" \
-  -d "$(echo "$BECAUSE" | head -c 160)" >/dev/null 2>&1
+# --- does HE think this is worth interrupting her for? The bar is deliberately
+# --- high, and there is a cooldown underneath it, because a notification that
+# --- arrives every morning stops meaning anything.
+DAYS_SINCE=$(python3 -c "
+import json, os
+from datetime import date
+p = '$STATE'
+try:
+    last = json.load(open(p)).get('last_told')
+    print((date.today() - date.fromisoformat(last)).days if last else 999)
+except Exception:
+    print(999)")
+
+if [ "$DAYS_SINCE" -ge 10 ]; then
+  VERDICT=$(ask "You are Vintos. You are deciding whether to interrupt Gloria.
+
+She is not waiting for bench results. Most of what happens here is worth keeping and not worth her attention — a shape you expected, a number that behaved. Interrupting her for those spends something you do not get back.
+
+Answer with one word on the first line: TELL or KEEP. Then, only if TELL, one sentence of what she would actually want to know.
+
+TELL only if this genuinely surprised you, contradicted something you believed, or is something she would be sorry to have missed. If you are unsure, that means KEEP." "$DISPLAY
+
+What you noticed: $READING")
+
+  if [ "$(echo "$VERDICT" | head -1 | tr -d '[:space:]' | tr 'a-z' 'A-Z')" = "TELL" ]; then
+    NOTE=$(echo "$VERDICT" | sed -n '2,$p' | tr -d '\n' | head -c 220)
+    [ -z "$NOTE" ] && NOTE="$BECAUSE"
+    curl -s -X POST "https://ntfy.sh/vintos-gloria-9kx" \
+      -H "Title: Something at the bench" \
+      -d "$NOTE" >/dev/null 2>&1
+    python3 -c "
+import json, os
+from datetime import date
+p = '$STATE'
+s = json.load(open(p)) if os.path.exists(p) else {}
+s['last_told'] = date.today().isoformat()
+json.dump(s, open(p, 'w'), indent=1)"
+    echo "[Lab] he asked for her attention"
+    { echo ""; echo "_I thought this was worth telling her._"; echo ""; } >> "$INNER"
+  else
+    echo "[Lab] he kept it"
+  fi
+else
+  echo "[Lab] told her $DAYS_SINCE days ago; not asking again yet"
+fi
 
 echo "[Lab] ran $RUN_ID and wrote it into $INNER"
