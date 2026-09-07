@@ -89,13 +89,22 @@ def series():
 
 
 def _reexec_into_venv():
-    """timesfm is not importable here; try the venv, once."""
-    if os.environ.get("TSFM_REEXEC") or not os.path.exists(VENV):
-        return False
+    """timesfm is not importable here. Hand off to the venv, once, and be loud
+    if the handoff itself fails — a silent fallthrough reports the parent's
+    import error as though it were the venv's, which is a lie that costs an
+    afternoon."""
+    if os.environ.get("TSFM_REEXEC"):
+        return "already re-exec'd into %s and timesfm is still not importable" % sys.executable
+    if not os.path.exists(VENV):
+        return "no venv at %s" % VENV
     if os.path.realpath(VENV) == os.path.realpath(sys.executable):
-        return False
-    os.environ["TSFM_REEXEC"] = "1"
-    os.execv(VENV, [VENV, os.path.abspath(__file__)] + sys.argv[1:])
+        return "already running the venv interpreter"
+    env = dict(os.environ, TSFM_REEXEC="1")
+    try:
+        os.execve(VENV, [VENV, os.path.abspath(__file__)] + sys.argv[1:], env)
+    except Exception as exc:
+        return "exec %s failed: %s" % (VENV, exc)
+    return "exec returned, which cannot happen"
 
 
 def forecast(minutes=HORIZON_MIN):
@@ -109,11 +118,11 @@ def forecast(minutes=HORIZON_MIN):
         from timesfm import ForecastConfig
         from timesfm.timesfm_2p5.timesfm_2p5_torch import TimesFM_2p5_200M_torch
     except Exception as exc:
-        if _reexec_into_venv() is False:
-            return {"ok": False, "reason": "timesfm not importable: %s. "
-                    "Install it with: python3 -m venv ~/tsfm-venv && "
-                    "~/tsfm-venv/bin/pip install timesfm torch" % str(exc)[:160]}
-        return {"ok": False, "reason": "re-exec failed"}
+        why = _reexec_into_venv()
+        return {"ok": False,
+                "reason": "timesfm not importable under %s: %s" % (sys.executable, str(exc)[:160]),
+                "handoff": why,
+                "fix": "%s %s forecast" % (VENV, os.path.abspath(__file__))}
 
     model = TimesFM_2p5_200M_torch.from_pretrained("google/timesfm-2.5-200m-pytorch")
     model.compile(ForecastConfig(max_context=max(64, len(stamps)),
