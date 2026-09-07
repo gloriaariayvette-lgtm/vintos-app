@@ -19,6 +19,7 @@ RUNS = BENCH / "runs"
 EXPERIMENTS = BENCH / "experiments"
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(BENCH))
+sys.path.insert(0, str(EXPERIMENTS))
 
 
 def response(body):
