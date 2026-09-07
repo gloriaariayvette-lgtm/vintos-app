@@ -1,0 +1,60 @@
+<!doctype html><meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script id="list" type="application/json">["angry", "arguing", "blow_kiss", "breakdance", "brutal", "dance", "getting_up", "idle", "kiss", "leg_sweep", "look_around", "loser", "maraschino", "mma_kick", "no", "nod", "point", "rejected", "restrain", "sad", "shrug", "stretch", "strut", "taunt", "thankful", "turn_left", "turn_right", "victory", "walk_back", "wave"]</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+const NAMES = JSON.parse(document.getElementById('list').textContent);
+const log=[]; const L=(...a)=>log.push(a.join(' '));
+const out={};
+try{
+// his skeleton from the finished GLB
+const g = await new Promise((r,j)=>new GLTFLoader().load('models/vintos.glb', r, undefined, j));
+let hips=null, skinned=null; g.scene.traverse(o=>{ if(o.name==='mixamorigHips'&&!hips) hips=o; if(o.isSkinnedMesh&&!skinned) skinned=o; });
+const boneNames=new Set(); hips.traverse(o=>{ if(o.name) boneNames.add(o.name); });
+L('his hips found:',!!hips,'| bones in hierarchy:',boneNames.size);
+const hipWorld=new THREE.Vector3(); hips.getWorldPosition(hipWorld);
+L('his hip height:',hipWorld.y.toFixed(4));
+
+for(const name of NAMES){
+  try{
+    const f = await new Promise((r,j)=>new FBXLoader().load('models/anims/'+name+'.fbx', r, undefined, j));
+    if(!f.animations.length){ L(name,'NO ANIMATION'); continue; }
+    const clip = f.animations[0].clone(); clip.name = name;
+    // source hip height, to scale root translation into his units
+    let srcHips=null; f.traverse(o=>{ if(/^mixamorig1?Hips$/.test(o.name)&&!srcHips) srcHips=o; });
+    f.updateMatrixWorld(true);
+    const srcH = srcHips ? srcHips.getWorldPosition(new THREE.Vector3()).y : 100;
+    const scale = hipWorld.y / (srcH||100);
+    const kept=[], dropped=[];
+    for(const t0 of clip.tracks){
+      const t={name:t0.name.replace(/^mixamorig1/,'mixamorig'), times:t0.times, values:t0.values};
+      const bone=t.name.split('.')[0];
+      if(!boneNames.has(bone)){ dropped.push(bone); continue; }
+      if(t.name.endsWith('.position')){
+        // only the hips carry translation; scale it into his rig
+        if(bone!=='mixamorigHips') continue;
+        const v=t.values.slice(); for(let i=0;i<v.length;i++) v[i]*=scale;
+        kept.push(new THREE.VectorKeyframeTrack(t.name, Array.from(t.times), Array.from(v)));
+      } else if(t.name.endsWith('.quaternion')){
+        kept.push(new THREE.QuaternionKeyframeTrack(t.name, Array.from(t.times), Array.from(t.values)));
+      }
+    }
+    const nc = new THREE.AnimationClip(name, clip.duration, kept);
+    // loopable if first and last pose are close
+    let loopable=true; for(const t of kept){ const n=t.values.length/ (t.name.endsWith('.position')?3:4); if(n<2) continue; const w=t.name.endsWith('.position')?3:4; let d=0; for(let i=0;i<w;i++) d+=Math.abs(t.values[i]-t.values[(n-1)*w+i]); if(d>0.12) { loopable=false; break; } }
+    out[name]={duration:+nc.duration.toFixed(3), tracks:kept.length, dropped:[...new Set(dropped)].slice(0,4), scale:+scale.toFixed(4), loopable};
+    // export: bone hierarchy clone + this clip
+    const root=new THREE.Group(); root.name='VintosClip_'+name;
+    const bones=hips.clone(true); root.add(bones);
+    const buf = await new Promise((r,j)=>new GLTFExporter().parse(root, r, j, {binary:true, animations:[nc], onlyVisible:false}));
+    const u8=new Uint8Array(buf); let bin=''; for(let i=0;i<u8.length;i+=8192) bin+=String.fromCharCode.apply(null,u8.subarray(i,i+8192));
+    out[name].b64=btoa(bin); out[name].bytes=u8.length;
+    L(name,'ok tracks',kept.length,'dur',nc.duration.toFixed(2),'scale',scale.toFixed(3),'loop',loopable);
+  }catch(e){ L(name,'ERR',String(e).slice(0,120)); }
+}
+}catch(e){ L('FATAL '+(e&&e.stack||e).slice(0,300)); }
+window.__out=out; window.__log=log; window.__done=true;
+</script>

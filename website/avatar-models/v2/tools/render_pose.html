@@ -1,0 +1,20 @@
+<!doctype html><meta charset="utf-8"><style>body{margin:0;background:#2a2a2e}</style>
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three'; import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+const q=new URLSearchParams(location.search), clip=q.get('clip'), t=parseFloat(q.get('t')||'0.5');
+const W=600,H=800; const r=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true}); r.setSize(W,H); r.outputColorSpace=THREE.SRGBColorSpace; document.body.appendChild(r.domElement);
+const s=new THREE.Scene(); s.background=new THREE.Color(0x2a2a2e);
+s.add(new THREE.HemisphereLight(0xffffff,0x444455,1.3)); const k=new THREE.DirectionalLight(0xffffff,2.0); k.position.set(2,4,3); s.add(k);
+const cam=new THREE.PerspectiveCamera(32,W/H,0.01,100);
+const L=new GLTFLoader();
+const g=await new Promise((res,j)=>L.load('models/vintos.glb',res,undefined,j));
+const c=await new Promise((res,j)=>L.load('clips/'+clip+'.glb',res,undefined,j));
+const mixer=new THREE.AnimationMixer(g.scene);
+const a=c.animations[0]; const act=mixer.clipAction(a); act.play(); mixer.setTime(Math.min(t*a.duration, a.duration-0.01));
+g.scene.updateMatrixWorld(true);
+s.add(g.scene);
+const bb=new THREE.Box3().setFromObject(g.scene); const sz=bb.getSize(new THREE.Vector3()); const ctr=bb.getCenter(new THREE.Vector3());
+cam.position.set(ctr.x, ctr.y, ctr.z + Math.max(sz.y,sz.x)*1.9); cam.lookAt(ctr);
+setTimeout(()=>{ r.render(s,cam); window.__info={dur:+a.duration.toFixed(2), tracks:a.tracks.length, box:[+sz.x.toFixed(2),+sz.y.toFixed(2)]}; window.__done=true; },1200);
+</script>

@@ -1,0 +1,264 @@
+{
+ "note": "Animation-only glTF clips on the Mixamo skeleton of vintos.glb. Bone prefix normalised to mixamorig. Hip translation scaled by 0.006556 from the source cm rig into his metres. Play by loading vintos.glb for the mesh and a clip file for the animation, matching bones by name.",
+ "source": "Existing Mixamo FBX downloads in v2/mixamo-anims/, converted with tools/convert_mixamo_clips.html",
+ "missing_for_house": [
+  "sit_sofa",
+  "sit_desk",
+  "stand_from_desk",
+  "open_door",
+  "close_door",
+  "pick_up_mug",
+  "set_down_mug",
+  "drink",
+  "stir_pot",
+  "turn_stove_knob",
+  "chop",
+  "pour_kettle",
+  "light_candle",
+  "crouch_pet_cat",
+  "lean_on_counter",
+  "idle_lean"
+ ],
+ "clips": {
+  "angry": {
+   "file": "clips/angry.glb",
+   "duration": 19.167,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 705184
+  },
+  "arguing": {
+   "file": "clips/arguing.glb",
+   "duration": 20.8,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 763800
+  },
+  "blow_kiss": {
+   "file": "clips/blow_kiss.glb",
+   "duration": 4.567,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 226040
+  },
+  "breakdance": {
+   "file": "clips/breakdance.glb",
+   "duration": 3.5,
+   "tracks": 53,
+   "loopable": false,
+   "role": "emote",
+   "bytes": 215236
+  },
+  "brutal": {
+   "file": "clips/brutal.glb",
+   "duration": 6.6,
+   "tracks": 53,
+   "loopable": false,
+   "role": "combat",
+   "bytes": 295112
+  },
+  "dance": {
+   "file": "clips/dance.glb",
+   "duration": 28.1,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 991108
+  },
+  "getting_up": {
+   "file": "clips/getting_up.glb",
+   "duration": 7.6,
+   "tracks": 53,
+   "loopable": false,
+   "role": "stand_from_sofa",
+   "bytes": 338668
+  },
+  "idle": {
+   "file": "clips/idle.glb",
+   "duration": 8.867,
+   "tracks": 53,
+   "loopable": true,
+   "role": "idle_stand",
+   "bytes": 378896
+  },
+  "kiss": {
+   "file": "clips/kiss.glb",
+   "duration": 7.833,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 346144
+  },
+  "leg_sweep": {
+   "file": "clips/leg_sweep.glb",
+   "duration": 3.167,
+   "tracks": 53,
+   "loopable": false,
+   "role": "combat",
+   "bytes": 199752
+  },
+  "look_around": {
+   "file": "clips/look_around.glb",
+   "duration": 6.333,
+   "tracks": 53,
+   "loopable": true,
+   "role": "look_out_window",
+   "bytes": 298616
+  },
+  "loser": {
+   "file": "clips/loser.glb",
+   "duration": 3.267,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 195360
+  },
+  "maraschino": {
+   "file": "clips/maraschino.glb",
+   "duration": 3.233,
+   "tracks": 53,
+   "loopable": false,
+   "role": "emote",
+   "bytes": 201380
+  },
+  "mma_kick": {
+   "file": "clips/mma_kick.glb",
+   "duration": 1.6,
+   "tracks": 53,
+   "loopable": true,
+   "role": "combat",
+   "bytes": 148364
+  },
+  "no": {
+   "file": "clips/no.glb",
+   "duration": 5.867,
+   "tracks": 53,
+   "loopable": true,
+   "role": "gesture",
+   "bytes": 283788
+  },
+  "nod": {
+   "file": "clips/nod.glb",
+   "duration": 2.6,
+   "tracks": 53,
+   "loopable": true,
+   "role": "gesture",
+   "bytes": 180232
+  },
+  "point": {
+   "file": "clips/point.glb",
+   "duration": 4.7,
+   "tracks": 53,
+   "loopable": true,
+   "role": "gesture",
+   "bytes": 246824
+  },
+  "rejected": {
+   "file": "clips/rejected.glb",
+   "duration": 4.8,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 162848
+  },
+  "restrain": {
+   "file": "clips/restrain.glb",
+   "duration": 7.567,
+   "tracks": 53,
+   "loopable": true,
+   "role": "combat",
+   "bytes": 215768
+  },
+  "sad": {
+   "file": "clips/sad.glb",
+   "duration": 2.8,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 157536
+  },
+  "shrug": {
+   "file": "clips/shrug.glb",
+   "duration": 2,
+   "tracks": 53,
+   "loopable": true,
+   "role": "gesture",
+   "bytes": 121736
+  },
+  "stretch": {
+   "file": "clips/stretch.glb",
+   "duration": 8.867,
+   "tracks": 53,
+   "loopable": true,
+   "role": "stretch",
+   "bytes": 378900
+  },
+  "strut": {
+   "file": "clips/strut.glb",
+   "duration": 1.433,
+   "tracks": 53,
+   "loopable": false,
+   "role": "walk",
+   "bytes": 116736
+  },
+  "taunt": {
+   "file": "clips/taunt.glb",
+   "duration": 2.833,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 187564
+  },
+  "thankful": {
+   "file": "clips/thankful.glb",
+   "duration": 3,
+   "tracks": 53,
+   "loopable": true,
+   "role": "gesture",
+   "bytes": 192016
+  },
+  "turn_left": {
+   "file": "clips/turn_left.glb",
+   "duration": 0.933,
+   "tracks": 53,
+   "loopable": false,
+   "role": "turn_left",
+   "bytes": 126724
+  },
+  "turn_right": {
+   "file": "clips/turn_right.glb",
+   "duration": 1.167,
+   "tracks": 53,
+   "loopable": false,
+   "role": "turn_right",
+   "bytes": 134740
+  },
+  "victory": {
+   "file": "clips/victory.glb",
+   "duration": 8.533,
+   "tracks": 53,
+   "loopable": true,
+   "role": "emote",
+   "bytes": 363144
+  },
+  "walk_back": {
+   "file": "clips/walk_back.glb",
+   "duration": 1.233,
+   "tracks": 53,
+   "loopable": false,
+   "role": "walk_back",
+   "bytes": 135336
+  },
+  "wave": {
+   "file": "clips/wave.glb",
+   "duration": 0.9,
+   "tracks": 53,
+   "loopable": true,
+   "role": "gesture",
+   "bytes": 109396
+  }
+ }
+}
