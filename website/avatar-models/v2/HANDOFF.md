@@ -1,20 +1,23 @@
-# Phase 1 handoff — local refinement review
+# Phase 1 complete — local refinement and verified exports
 
-Branch: `astra/avatar-house` in `gloriaariayvette-lgtm/vintos-app`. All writes remain under `website/avatar-models/v2/`. Never touch live assets.
+Branch: `astra/avatar-house`, repository `gloriaariayvette-lgtm/vintos-app`. Work only under `website/avatar-models/v2/`; never overwrite live assets or commit to eve.
 
-## Current state
+## Delivered
 
-- Baseline, glove removal and anatomical hand graft were already complete; do not redo them.
-- `vintos-barehands.glb` remains the untouched source/proportion/rig reference.
-- `vintos-refined.glb` is the new local review result: two head subdivision passes, selectively transferred face detail from the reference, darker hair and olive cloth tint. No generation or re-rigging; no money spent.
-- Review `baseline/refined-comparison-face.png`, `refined-comparison-front.png`, and `refined-comparison-side.png`. Before and after are actual CPU model renders under identical conditions.
-- `tex/atlas-refined.png` is in embedded/glTF orientation, vertically flipped from the legacy standalone PNG convention. The completed hand tile remains pixel-identical to the source GLB.
-- All 65 named Mixamo bones and the embedded animation are preserved. Details and sampled deformation checks are in `baseline/refinement-verification.json` and `NOTES.md`.
+- `vintos.glb`: final phone asset, about 12.4 MB; original embedded animation retained.
+- `vintos.vrm`: final VRM 1.0, about 12.4 MB; 52 humanoid roles verified through the actual three-vrm loader.
+- `source-v2.fbx`: final skinned, textured FBX in the preserved Mixamo rest/T-pose, about 11.3 MB. Embedded PNG; no animation takes. Use this for mocap.
+- `baseline/v2-exports-{front,side,face}.png` and individual format renders compare independently reloaded exports.
+- `baseline/exports-verification.json`, validator reports, and `NOTES.md` record verification and limitations.
 
-## Pending
+All 65 original named Mixamo nodes remain present. The source FBX namespace `mixamorig:` is preserved; Three.js normalizes punctuation when loading, as with the original. Neither re-rigging nor paid services were used. No Blender was used. Local subdivision and texture work came from `vintos-barehands.glb` and `refs/vintos/vintos-1.jpg`. The finished hand graft was retained. Earlier baseline/glove/hand work must not be redone.
 
-The local result is awaiting likeness review. Phase 1 is not declared finished. Do not launch paid generation based merely on this handoff. If the local result is accepted, finish the agreed GLB/VRM 1.0/FBX packaging and verification using the preserved rig, without re-rigging. Current review files are not yet a verified VRM or updated FBX; `source.fbx` remains original.
+## Next chat: Phase 2 only
 
-If local refinement proves insufficient, the user permits Tripo or Rodin through their HTTP API, not a web canvas. Establish and disclose the actual cost before any paid call. No API generation has been attempted.
+1. Connect to Aegis as `gloria@100.72.225.119`. Install `github.com/squall01337/mixamo-llm-mocap` per its README. Blender 5.1+, CUDA and approximately 8 GB VRAM. Aegis runs Linux under WSL, while the documented install is Windows. Report the install result before generating anything; report exact errors before workarounds.
+2. Confirm `source-v2.fbx` rest/T-pose again in the pipeline importer. Generate the user's 24 individual 6–10 second locked-camera action videos, with T-pose at start and end, through the established house-video service. Disclose cost before any paid batch. The video service has not been identified or invoked in this chat.
+3. After qa_clip.py passes, export each animation from the same Blender on Aegis as `clips/<name>.glb` (+Y up, no Draco), write clips.json with duration/loopability/planted feet, and deliver `baseline/clips-contact.mp4`.
 
-Do not start mocap/house/cat in this chat. Each later phase gets its own chat. Aegis SSH is `gloria@100.72.225.119`; the mocap install must be reported before generation. See the user's task for the full remaining phase requirements.
+Do not perform Phase 2 in the Phase 1 chat. Full action names, later 12-room house requirements, object conventions and cat requirements remain in the user's goal. House-map.json is the room/door ground truth. The cat must use an animal-rig service or rig pack, not this human mocap pipeline.
+
+No client deployment has occurred. eve still loads `/models/default.vrm`; changing the client is a separate job. The packaged avatar retains its inherited height/proportions and has no new facial expression morphs; see NOTES.md for integration details.

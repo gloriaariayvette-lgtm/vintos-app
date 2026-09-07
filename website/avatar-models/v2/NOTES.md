@@ -1,3 +1,44 @@
+# Phase 1 — packaged local refinement
+
+The user asked to continue after the local comparison. Final assets are `vintos.glb`, `vintos.vrm` (VRM 1.0), and `source-v2.fbx`. All retain the chosen local appearance and existing Mixamo rig. No service generation, re-rigging, paid calls, or Blender was used.
+
+## Deliverables and verification
+
+- GLB: about 12.4 MB, including the existing `mixamo.com` animation.
+- VRM 1.0: about 12.4 MB, the same mesh/material/animation plus 52 humanoid role mappings to existing nodes. All required roles are present.
+- FBX: about 11.3 MB, embedded atlas, skinned subdivided mesh, original Mixamo skeleton, original rest/bind pose, and no animation takes. Use this file for Phase 2.
+- `baseline/v2-{glb,vrm,fbx}-{front,side,face}.png`: exports independently reloaded by the real Three.js GLTFLoader, VRMLoaderPlugin, and FBXLoader before CPU rendering. Exact duplicate GLB/VRM render inputs share a rasterization only after equality checks.
+- `baseline/v2-exports-{front,side,face}.png`: three-format comparison sheets.
+- `baseline/exports-verification.json`: loader versions, bone/role mapping, texture decoding, triangle counts, bind-pose error, T-pose arm angles, render provenance and bounds.
+- `baseline/vintos.{glb,vrm}.validation.json`: Khronos glTF validation reports. GLB has zero errors/warnings. VRM has zero glTF errors/warnings; the generic validator marks VRMC_vrm unsupported as informational, so the actual three-vrm loader separately verifies that extension.
+
+The exporter corrects inherited glTF skin-root metadata to point to Hips, makes the skinned mesh a scene root beneath no transform, and sets joint indices for zero-weight slots to zero. Bone names, bone transforms, effective weights and animation channels retain their meaning. The FBX preserves its original `mixamorig:` namespace; Three.js normalizes the colon just as it does for the original FBX. It does not invent a new skeleton naming scheme. FBX units are explicitly meters (`UnitScaleFactor=100`); the source metadata incorrectly declared centimeters for meter-valued coordinates.
+
+Only v2 files are written. Original `source.fbx`, `default.glb`, `vintos-barehands.glb`, and the app/client code are untouched. The current mesh still has the original hair/eye geometry and no new facial expression morphs. No claim is made that mouth/blink expressions were added. Existing height and proportions are preserved; exact stored bounds are in the verification report.
+
+VRM metadata uses the required VRM 1.0 license URL and restricts avatar use to separately licensed people; it grants no public redistribution permission. Existing source ownership/license terms remain relevant. Metadata authors distinguish the local refinement from the user-supplied original model.
+
+## Reproduce packaging
+
+```sh
+python tools/package_avatar.py
+npm ci --prefix tools/runtime
+node tools/runtime/check_exports.mjs
+python tools/render_exports.py
+```
+
+`tools/fbx_binary.py` preserves binary FBX property types while writing the original skeleton/template. `tools/runtime/check_exports.mjs` uses Node only for genuine model loaders and Sharp for PNG decoding; it does not simulate parsing or substitute mock geometry. No WebGL canvas is needed. Temporary decoded geometry is under ignored `tools/runtime/qa/`.
+
+## Client observations (read-only)
+
+Read `eve/client/src/scene/environment.ts`, `client/src/main.ts`, and `client/src/avatar/loader.ts` through the repository's default branch. The three environment entry points are `addEnvironment`, `updateEnvironmentColor`, and `updateEnvironmentFrame`. The avatar loader registers `VRMLoaderPlugin` with GLTFLoader, which is the same loader combination tested here. The client currently requests `/models/default.vrm` and rotates the resulting scene by pi. Changing that URL, confirming camera-facing orientation, and connecting future room assets remain a separate client job. No changes were made to eve.
+
+Specification references: https://github.com/vrm-c/vrm-specification/tree/master/specification/VRMC_vrm-1.0 and https://github.com/pixiv/three-vrm .
+
+---
+
+# Earlier local refinement record
+
 # Current Phase 1: local avatar refinement
 
 The latest direction supersedes the earlier service-generation plan: improve `vintos-barehands.glb` locally first. No Meshy, Tripo, Rodin, re-rigging, paid calls, or Blender were used.
