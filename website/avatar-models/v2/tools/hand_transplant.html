@@ -1,0 +1,123 @@
+<!doctype html><meta charset="utf-8">
+<script type="importmap">{"imports":{"three":"./node_modules/three/build/three.module.js","three/addons/":"./node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
+import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
+import * as BGU from 'three/addons/utils/BufferGeometryUtils.js';
+const log=[]; const L=(...a)=>{log.push(a.join(' '))};
+const HAND_LEN=0.135;            // target hand length in his units (wrist joint to middle fingertip)
+const CUT_FROM_TIP=0.80;         // base-mesh units: include a little forearm so it tucks into the cuff
+const WRIST_FROM_TIP=0.70;
+const TILE=[1100,1100,1900,1900];// atlas pixel region for the hand skin tile
+try {
+const LOG_ONLY=false; const [gl, fb] = await Promise.all([
+  new Promise((r,j)=>new GLTFLoader().load('models/default.glb',r,undefined,j)),
+  new Promise((r,j)=>new FBXLoader().load('models/source.fbx',r,undefined,j)) ]);
+gl.scene.updateMatrixWorld(true); fb.updateMatrixWorld(true);
+let his=null; fb.traverse(o=>{if(o.isSkinnedMesh)his=o;}); const G=his.geometry; const sk=his.skeleton;
+const bone=n=>sk.bones.find(b=>b.name===n); const wp=b=>b.getWorldPosition(new THREE.Vector3());
+const LH=wp(bone('mixamorigLeftHand')), LT=wp(bone('mixamorigLeftHandMiddle4')||bone('mixamorigLeftHandMiddle3'));
+// cuff ring: body verts (not glove-weighted) within a thin x-slab near the cuff mouth
+{ const pos=G.attributes.position, si=G.attributes.skinIndex, sw=G.attributes.skinWeight; const isHandV=v=>{let best=0,bi=0;for(let k=0;k<4;k++){const w=sw.getComponent(v,k); if(w>best){best=w;bi=si.getComponent(v,k)}} return /Hand/.test(sk.bones[bi].name)};
+  let cuffMax=0, cuffX=0, n=0, rs=[]; for(let v=0;v<pos.count;v++){ if(isHandV(v)) continue; const x=pos.getX(v),y=pos.getY(v),z=pos.getZ(v); if(x>0.40 && Math.abs(y-0.871)<0.09 && Math.abs(z+0.013)<0.09){ if(x>cuffX) cuffX=x; rs.push([x,Math.hypot(y-0.871,z+0.013)]); } }
+  for(let x0=0.40;x0<0.49;x0+=0.01){ const b=rs.filter(r=>r[0]>=x0&&r[0]<x0+0.01).map(r=>r[1]).sort((a,b)=>a-b); if(b.length) L('slice x',x0.toFixed(2),'n',b.length,'r min/med/max',b[0].toFixed(3),b[Math.floor(b.length/2)].toFixed(3),b[b.length-1].toFixed(3)); }
+  const mouth=rs.filter(r=>r[0]>cuffX-0.012).map(r=>r[1]).sort((a,b)=>a-b); window.__cuff={x:cuffX, rMin:mouth[0], rMed:mouth[Math.floor(mouth.length/2)], rMax:mouth[mouth.length-1], n:mouth.length}; L('cuff mouth x',cuffX.toFixed(3),'radius min/med/max',mouth[0].toFixed(3),mouth[Math.floor(mouth.length/2)].toFixed(3),mouth[mouth.length-1].toFixed(3)); }
+L('his left hand bone',LH.toArray().map(v=>v.toFixed(3)),'middle tip',LT.toArray().map(v=>v.toFixed(3)));
+
+// ---- 1. base-mesh LEFT hand (x>0): gather triangles in world space
+const tris=[]; // arrays of 3 Vector3
+gl.scene.traverse(o=>{ if(!o.isMesh) return; const p=o.geometry.attributes.position, idx=o.geometry.index; const M=o.matrixWorld;
+  const V=i=>new THREE.Vector3().fromBufferAttribute(p,i).applyMatrix4(M);
+  const n=idx?idx.count:p.count; const at=i=>idx?idx.getX(i):i;
+  for(let i=0;i<n;i+=3){ const a=V(at(i)); if(a.x<1.2) continue; const b=V(at(i+1)), c=V(at(i+2)); if(b.x<1.2||c.x<1.2) continue; tris.push([a,b,c]); } });
+L('candidate arm tris',tris.length);
+// axis from PCA of points with y<-0.2 ; tip = lowest point
+const P=[]; for(const t of tris) for(const v of t) if(v.y<-0.2) P.push(v);
+const cen=P.reduce((s,v)=>s.add(v),new THREE.Vector3()).multiplyScalar(1/P.length);
+// power iteration for principal axis
+let ax=new THREE.Vector3(0,-1,0); for(let it=0;it<30;it++){ const acc=new THREE.Vector3(); for(const v of P){ const d=v.clone().sub(cen); acc.addScaledVector(d,d.dot(ax)); } ax=acc.normalize(); }
+const tip=P.reduce((m,v)=>v.dot(ax)>m.dot(ax)?v:m,P[0]); if(tip.y>cen.y){ ax.negate(); }
+const tip2=P.reduce((m,v)=>v.dot(ax)>m.dot(ax)?v:m,P[0]); const tmax=tip2.dot(ax);
+L('arm axis',ax.toArray().map(v=>v.toFixed(3)),'tip',tip2.toArray().map(v=>v.toFixed(2)));
+const along=v=>tmax-v.dot(ax); // distance from tip along axis
+const handTris=tris.filter(t=>t.every(v=>along(v)<CUT_FROM_TIP)); // CUT_FROM_TIP re-evaluated below after scale is known
+const HP=[]; for(const t of handTris) for(const v of t) HP.push(v);
+L('hand tris',handTris.length);
+// refine hand frame on hand points only: f = finger dir, thickness axis = min variance
+const hc=HP.reduce((s,v)=>s.add(v),new THREE.Vector3()).multiplyScalar(1/HP.length);
+let f=ax.clone(); for(let it=0;it<30;it++){ const acc=new THREE.Vector3(); for(const v of HP){ const d=v.clone().sub(hc); acc.addScaledVector(d,d.dot(f)); } f=acc.normalize(); } if(f.dot(ax)<0) f.negate();
+// second axis: maximize variance orthogonal to f
+let e2=new THREE.Vector3(0,0,1).sub(f.clone().multiplyScalar(f.z)).normalize();
+for(let it=0;it<30;it++){ const acc=new THREE.Vector3(); for(const v of HP){ const d=v.clone().sub(hc); d.sub(f.clone().multiplyScalar(d.dot(f))); acc.addScaledVector(d,d.dot(e2)); } e2=acc.sub(f.clone().multiplyScalar(acc.dot(f))).normalize(); }
+const e3=new THREE.Vector3().crossVectors(f,e2).normalize();
+// profile along f (hand frame) to find the wrist: palm bulge first, then the narrowest station behind it
+const fmax=Math.max(...HP.map(v=>v.dot(f))); const alongF=v=>fmax-v.dot(f);
+const ALL=[]; for(const tr of tris) for(const v of tr) ALL.push(v);
+const prof=[]; for(let d=0.02; d<1.3; d+=0.02){ const st=ALL.filter(v=>Math.abs(alongF(v)-d)<0.01); if(st.length<10) continue; const cpt=st.reduce((s,v)=>s.add(v),new THREE.Vector3()).multiplyScalar(1/st.length); const r=Math.max(...st.map(v=>{const q=v.clone().sub(cpt); return Math.hypot(q.dot(e2),q.dot(e3));})); prof.push([d,r,cpt]); }
+L('profile', prof.map(p=>p[0].toFixed(2)+':'+p[1].toFixed(2)).join(' '));
+let iPalm=0; for(let i=0;i<prof.length&&prof[i][0]<0.6;i++) if(prof[i][1]>prof[iPalm][1]) iPalm=i;
+let iW=iPalm; for(let i=iPalm;i<prof.length&&prof[i][0]<prof[iPalm][0]+0.5;i++) if(prof[i][1]<prof[iW][1]) iW=i;
+const wristD=prof[iW][0], wristR=prof[iW][1], wristC=prof[iW][2]; L('palm at',prof[iPalm][0].toFixed(2),'r',prof[iPalm][1].toFixed(3),' wrist at',wristD.toFixed(2),'r',wristR.toFixed(3));
+// thumb side: in the band between palm station and wrist, compare extents along e2 relative to the finger-band centre
+const band=(lo,hi)=>ALL.filter(v=>{const d=alongF(v); return d>lo&&d<hi;});
+const fingers=band(0.0,prof[iPalm][0]*0.5), prox=band(prof[iPalm][0]*0.6, wristD);
+const c2=fingers.reduce((s,v)=>s+v.dot(e2),0)/fingers.length;
+let pos=0,neg=0; for(const v of prox){ const d=v.dot(e2)-c2; pos=Math.max(pos,d); neg=Math.max(neg,-d); }
+const t=e2.clone().multiplyScalar(pos>neg?1:-1); L('thumb extents',pos.toFixed(2),neg.toFixed(2),'thumb dir',t.toArray().map(v=>v.toFixed(2)));
+const n=new THREE.Vector3().crossVectors(f,t).normalize();
+L('frame f',f.toArray().map(v=>v.toFixed(2)),'t',t.toArray().map(v=>v.toFixed(2)),'n',n.toArray().map(v=>v.toFixed(2)));
+const wristPt=wristC.clone(); const handLenBase=wristD; const scale=HAND_LEN/handLenBase;
+const cuff=window.__cuff; L('scale',scale.toFixed(4),'scaled wrist radius',(wristR*scale).toFixed(3),'cuff outer radius ~',cuff.rMax.toFixed(3));
+const seat=new THREE.Vector3(cuff.x-0.008, 0.871, -0.013); // wrist plane just inside the cuff mouth L('base hand length',handLenBase.toFixed(3),'scale',scale.toFixed(4));
+// target frame for HIS left hand: fingers +x, thumb +z, palm-out -y ; origin at his left hand bone
+const R=new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,1),new THREE.Vector3(0,-1,0)); // columns = images of f,t,n
+const B=new THREE.Matrix4().makeBasis(f,t,n); const Binv=B.clone().invert();
+const xf=v=>{ const d=v.clone().sub(wristPt).applyMatrix4(Binv); /* now (f,t,n) coords */ d.multiplyScalar(scale); return d.applyMatrix4(R).add(seat); };
+const cutBase=wristD+0.02/scale; const handTris2=tris.filter(tr=>tr.every(v=>alongF(v)<cutBase)); L('cut from tip (base units)',cutBase.toFixed(3),'tris',handTris2.length); const leftHand=handTris2.map(tr=>tr.map(xf));
+const rightHand=leftHand.map(tr=>[tr[0],tr[2],tr[1]].map(v=>new THREE.Vector3(-v.x,v.y,v.z)));
+L('left hand bbox', new THREE.Box3().setFromPoints(leftHand.flat()).min.toArray().map(v=>v.toFixed(3)), new THREE.Box3().setFromPoints(leftHand.flat()).max.toArray().map(v=>v.toFixed(3)));
+
+// ---- 2. his body minus glove pieces
+const pos0=G.attributes.position, uv0=G.attributes.uv, si0=G.attributes.skinIndex, sw0=G.attributes.skinWeight;
+const idx0=G.index?Array.from(G.index.array):[...Array(pos0.count).keys()];
+const domHand=v=>{let best=0,bi=0;for(let k=0;k<4;k++){const w=sw0.getComponent(v,k); if(w>best){best=w;bi=si0.getComponent(v,k)}} return /Hand/.test(sk.bones[bi].name)};
+const gloveVerts=[]; const P_=[],U_=[],SI_=[],SW_=[];
+for(let i=0;i<idx0.length;i+=3){ const a=idx0[i],b=idx0[i+1],c=idx0[i+2]; const isG=domHand(a)&&domHand(b)&&domHand(c);
+  for(const v of [a,b,c]){ if(isG){ gloveVerts.push({p:new THREE.Vector3().fromBufferAttribute(pos0,v), si:[0,1,2,3].map(k=>si0.getComponent(v,k)), sw:[0,1,2,3].map(k=>sw0.getComponent(v,k))}); continue; }
+    P_.push(pos0.getX(v),pos0.getY(v),pos0.getZ(v)); U_.push(uv0.getX(v),uv0.getY(v)); for(let k=0;k<4;k++){SI_.push(si0.getComponent(v,k)); SW_.push(sw0.getComponent(v,k));} } }
+L('glove verts',gloveVerts.length,'body tris kept',P_.length/9);
+// ---- 3. skin weights for new hands: nearest glove vertex (uniform grid)
+const cell=0.01, grid=new Map(); const key=p=>Math.floor(p.x/cell)+','+Math.floor(p.y/cell)+','+Math.floor(p.z/cell);
+for(const g of gloveVerts){ const k=key(g.p); (grid.get(k)||grid.set(k,[]).get(k)).push(g); }
+const nearest=p=>{ const cx=Math.floor(p.x/cell),cy=Math.floor(p.y/cell),cz=Math.floor(p.z/cell); for(let r=0;r<40;r++){ let best=null,bd=1e9; for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++)for(let dz=-r;dz<=r;dz++){ if(Math.max(Math.abs(dx),Math.abs(dy),Math.abs(dz))!==r) continue; const l=grid.get((cx+dx)+','+(cy+dy)+','+(cz+dz)); if(!l) continue; for(const g of l){const d=g.p.distanceToSquared(p); if(d<bd){bd=d;best=g}} } if(best&&Math.sqrt(bd)<=(r+1)*cell) return best; if(best&&r>2) return best; } return gloveVerts[0]; };
+const [u0,v0,u1,v1]=[TILE[0]/2048, 1-TILE[3]/2048, TILE[2]/2048, 1-TILE[1]/2048];
+const addHand=(hand, sign)=>{ const bb=new THREE.Box3().setFromPoints(hand.flat()); const sx=bb.max.x-bb.min.x, sz=bb.max.z-bb.min.z;
+  for(const tr of hand) for(const v of tr){ P_.push(v.x,v.y,v.z); U_.push(u0+(u1-u0)*((v.x-bb.min.x)/sx*0.94+0.03), v0+(v1-v0)*((v.z-bb.min.z)/sz*0.94+0.03)); const g=nearest(v); for(let k=0;k<4;k++){SI_.push(g.si[k]); SW_.push(g.sw[k]);} } };
+addHand(leftHand,1); addHand(rightHand,-1);
+let geo=new THREE.BufferGeometry();
+geo.setAttribute('position',new THREE.Float32BufferAttribute(P_,3)); geo.setAttribute('uv',new THREE.Float32BufferAttribute(U_,2));
+geo.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(SI_,4)); geo.setAttribute('skinWeight',new THREE.Float32BufferAttribute(SW_,4));
+geo=BGU.mergeVertices(geo,1e-5); geo.computeVertexNormals(); geo.normalizeSkinWeights?.();
+L('final verts',geo.attributes.position.count,'tris',geo.index.count/3);
+// ---- 4. atlas with a skin tile painted in the free region
+const img=await new Promise((r,j)=>{const i=new Image(); i.onload=()=>r(i); i.onerror=j; i.src='models/tex/atlas-original.png';});
+const cv=document.createElement('canvas'); cv.width=cv.height=2048; const cx=cv.getContext('2d'); cx.drawImage(img,0,0);
+// sample forearm skin colour from the known skin island (rolled sleeve forearm), ~ x 780-930, y 420-700
+const sd=cx.getImageData(790,430,140,260).data; const px=[]; for(let i=0;i<sd.length;i+=4){ const lum=sd[i]*0.3+sd[i+1]*0.59+sd[i+2]*0.11; if(lum>60) px.push([sd[i],sd[i+1],sd[i+2],lum]); } px.sort((a,b)=>a[3]-b[3]); const hi=px.slice(Math.floor(px.length*0.55),Math.floor(px.length*0.9)); let r=0,g=0,b=0; for(const q of hi){r+=q[0];g+=q[1];b+=q[2];} r/=hi.length;g/=hi.length;b/=hi.length; r*=1.04; g*=1.02; L('skin rgb',r.toFixed(0),g.toFixed(0),b.toFixed(0));
+const tw=TILE[2]-TILE[0], th=TILE[3]-TILE[1]; const tile=cx.createImageData(tw,th); const rnd=()=>Math.random();
+for(let y=0;y<th;y++)for(let x=0;x<tw;x++){ const i=(y*tw+x)*4; const nse=(rnd()-0.5)*14; const vig=1-0.10*Math.pow(Math.hypot((x/tw-0.5)*2,(y/th-0.5)*2),2); const knuck=0.96+0.04*Math.sin(x/tw*Math.PI*9)*Math.sin(y/th*Math.PI*3); const m=vig*knuck; tile.data[i]=Math.min(255,r*m+nse); tile.data[i+1]=Math.min(255,g*m+nse*0.8); tile.data[i+2]=Math.min(255,b*m+nse*0.7); tile.data[i+3]=255; }
+cx.putImageData(tile,TILE[0],TILE[1]);
+const atlasURL=cv.toDataURL('image/png');
+const tex=new THREE.TextureLoader().load(atlasURL); tex.colorSpace=THREE.SRGBColorSpace; tex.flipY=true; await new Promise(r=>setTimeout(r,800));
+const mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.8,metalness:0,name:'vintos_atlas'});
+const mesh=new THREE.SkinnedMesh(geo,mat); mesh.name='Vintos'; mesh.frustumCulled=false;
+// rebuild the scene: root with bones + mesh, same bind
+const root=new THREE.Group(); root.name='VintosRoot'; const armature=sk.bones.find(b=>!b.parent||!b.parent.isBone); let top=armature; while(top.parent&&top.parent!==fb) top=top.parent; root.add(top); root.add(mesh); mesh.bind(sk, his.bindMatrix);
+const anims=fb.animations||[];
+const exp=new GLTFExporter(); const buf=await new Promise((r,j)=>exp.parse(root,r,j,{binary:true,animations:anims,onlyVisible:false}));
+const u8=new Uint8Array(buf); let bin=''; for(let i=0;i<u8.length;i+=8192) bin+=String.fromCharCode.apply(null,u8.subarray(i,i+8192)); window.__glb=btoa(bin);
+window.__atlas=atlasURL.split(',')[1]; window.__log=log; window.__done=true;
+} catch(e){ log.push('ERR '+(e&&e.stack||e)); window.__log=log; window.__done=true; }
+</script>
