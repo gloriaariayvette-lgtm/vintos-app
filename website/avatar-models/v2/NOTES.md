@@ -108,3 +108,8 @@ python tools/render_gloves_off.py
 ```
 
 The compositing script reads the original hand maps from the pinned pre-edit Git commit (the commit must be available locally); the original atlas is retained as a PNG. All output writes stay inside v2.
+
+
+## Phase 3: two-room house checkpoint
+
+Livingroom and kitchen assets, source materials, GLB validation, NAV/portal checks and photo comparison renders are under `house/` and `baseline/`. See `house/README.md` for all scale assumptions, material sources, bake limits and pending partner portals. Avatar exports and previous baselines were preserved. Phase 2 remains parked. Stop for Gloria before building the other ten rooms.

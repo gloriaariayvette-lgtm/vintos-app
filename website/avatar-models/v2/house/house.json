@@ -1,0 +1,392 @@
+{
+  "schemaVersion": 1,
+  "status": "Two-room review; ten rooms pending",
+  "units": "meters",
+  "up": "+Y",
+  "forward": "+Z into room from main doorway",
+  "avatarHeightMeters": 1.166,
+  "scaleBasis": "Estimated household proportions scaled by 1.166/1.75; no measured survey available",
+  "source": "https://github.com/gloriaariayvette-lgtm/Vintos-main/blob/main/scripts/house-map.json",
+  "portalContract": {
+    "trigger": "Transparent box with alpha=0; use geometry bounds for collision",
+    "spawn": "Use target portal spawn and inwardNormal, with re-entry cooldown until clear of trigger",
+    "pending": "Do not activate a portal whose partnerStatus is pending-review. Reciprocal node names are reserved for later room files.",
+    "rotation": "Room-local +Z faces inward. Rotate avatar to target inwardNormal; do not copy source-room coordinates."
+  },
+  "rooms": [
+    {
+      "id": "livingroom",
+      "file": "livingroom.glb",
+      "status": "review",
+      "photographed": true,
+      "dimensionsEstimated": true,
+      "portals": [
+        {
+          "name": "PORTAL_livingroom_kitchen",
+          "targetRoom": "kitchen",
+          "partner": "PORTAL_kitchen_livingroom",
+          "position": [
+            0,
+            0.68,
+            0
+          ],
+          "floorCenter": [
+            0,
+            0,
+            0
+          ],
+          "inwardNormal": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            0.68,
+            1.36,
+            0.16
+          ],
+          "width": 0.68,
+          "height": 1.36,
+          "type": "doorway",
+          "partnerStatus": "built",
+          "spawn": [
+            0,
+            0,
+            0.22
+          ]
+        }
+      ],
+      "emo": [
+        "EMO_livingroom_cove"
+      ],
+      "mainDoorway": "kitchen",
+      "origin": "floor center of main doorway; local +Z points into room",
+      "windows": [
+        "front",
+        "left"
+      ],
+      "nav": "NAV_livingroom",
+      "obstacleFootprints": [
+        [
+          -0.19,
+          2.18,
+          1.39,
+          2.82
+        ],
+        [
+          -0.84,
+          1.55,
+          -0.06,
+          2.32
+        ],
+        [
+          1.2,
+          1.4,
+          1.97,
+          2.2
+        ],
+        [
+          0.2,
+          1.12,
+          1.04,
+          1.94
+        ],
+        [
+          -1.86,
+          1.18,
+          -1,
+          2.48
+        ],
+        [
+          1.85,
+          0.75,
+          2.16,
+          1.45
+        ],
+        [
+          1.35,
+          2.24,
+          1.69,
+          2.58
+        ]
+      ],
+      "dimensionsMeters": {
+        "width": 4.4,
+        "depth": 3.15,
+        "height": 1.67
+      }
+    },
+    {
+      "id": "kitchen",
+      "file": "kitchen.glb",
+      "status": "review",
+      "photographed": true,
+      "dimensionsEstimated": true,
+      "portals": [
+        {
+          "name": "PORTAL_kitchen_livingroom",
+          "targetRoom": "livingroom",
+          "partner": "PORTAL_livingroom_kitchen",
+          "position": [
+            0,
+            0.68,
+            0
+          ],
+          "floorCenter": [
+            0,
+            0,
+            0
+          ],
+          "inwardNormal": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            0.68,
+            1.36,
+            0.16
+          ],
+          "width": 0.68,
+          "height": 1.36,
+          "type": "doorway",
+          "partnerStatus": "built",
+          "spawn": [
+            0,
+            0,
+            0.22
+          ]
+        },
+        {
+          "name": "PORTAL_kitchen_office",
+          "targetRoom": "office",
+          "partner": "PORTAL_office_kitchen",
+          "position": [
+            -0.7,
+            0.68,
+            2.25
+          ],
+          "floorCenter": [
+            -0.7,
+            0,
+            2.25
+          ],
+          "inwardNormal": [
+            0,
+            0,
+            -1
+          ],
+          "size": [
+            0.62,
+            1.36,
+            0.16
+          ],
+          "width": 0.62,
+          "height": 1.36,
+          "type": "doorway",
+          "partnerStatus": "pending-review",
+          "spawn": [
+            -0.7,
+            0,
+            2.03
+          ]
+        },
+        {
+          "name": "PORTAL_kitchen_laundry",
+          "targetRoom": "laundry",
+          "partner": "PORTAL_laundry_kitchen",
+          "position": [
+            -1.25,
+            0.68,
+            0.52
+          ],
+          "floorCenter": [
+            -1.25,
+            0,
+            0.52
+          ],
+          "inwardNormal": [
+            1,
+            0,
+            0
+          ],
+          "size": [
+            0.16,
+            1.36,
+            0.62
+          ],
+          "width": 0.62,
+          "height": 1.36,
+          "type": "curtains",
+          "partnerStatus": "pending-review",
+          "spawn": [
+            -1.03,
+            0,
+            0.52
+          ]
+        },
+        {
+          "name": "PORTAL_kitchen_hall",
+          "targetRoom": "hall",
+          "partner": "PORTAL_hall_kitchen",
+          "position": [
+            -1.25,
+            0.68,
+            1.48
+          ],
+          "floorCenter": [
+            -1.25,
+            0,
+            1.48
+          ],
+          "inwardNormal": [
+            1,
+            0,
+            0
+          ],
+          "size": [
+            0.16,
+            1.36,
+            0.6
+          ],
+          "width": 0.6,
+          "height": 1.36,
+          "type": "doorway",
+          "partnerStatus": "pending-review",
+          "spawn": [
+            -1.03,
+            0,
+            1.48
+          ]
+        }
+      ],
+      "emo": [
+        "EMO_kitchen_under_counter"
+      ],
+      "mainDoorway": "livingroom",
+      "origin": "floor center of main doorway; local +Z points into room",
+      "windows": [
+        "left"
+      ],
+      "nav": "NAV_kitchen",
+      "obstacleFootprints": [
+        [
+          0.82,
+          0.08,
+          1.25,
+          2.25
+        ],
+        [
+          -0.31,
+          1.7,
+          1.25,
+          2.25
+        ],
+        [
+          0.69,
+          0.08,
+          1.22,
+          0.62
+        ]
+      ],
+      "dimensionsMeters": {
+        "width": 2.5,
+        "depth": 2.25,
+        "height": 1.67
+      }
+    }
+  ],
+  "plannedRooms": [
+    {
+      "id": "laundry",
+      "status": "not-built",
+      "photographed": false,
+      "adjacent": [
+        "kitchen",
+        "outside"
+      ]
+    },
+    {
+      "id": "office",
+      "status": "not-built",
+      "photographed": true,
+      "adjacent": [
+        "kitchen",
+        "vanity"
+      ]
+    },
+    {
+      "id": "hall",
+      "status": "not-built",
+      "photographed": false,
+      "adjacent": [
+        "kitchen",
+        "bedroom",
+        "bathroom",
+        "closet",
+        "stairs"
+      ]
+    },
+    {
+      "id": "bedroom",
+      "status": "not-built",
+      "photographed": true,
+      "adjacent": [
+        "hall"
+      ]
+    },
+    {
+      "id": "bathroom",
+      "status": "not-built",
+      "photographed": false,
+      "adjacent": [
+        "hall"
+      ]
+    },
+    {
+      "id": "closet",
+      "status": "not-built",
+      "photographed": false,
+      "adjacent": [
+        "hall"
+      ]
+    },
+    {
+      "id": "stairs",
+      "status": "not-built",
+      "photographed": false,
+      "adjacent": [
+        "hall",
+        "vanity",
+        "catsroom",
+        "outside"
+      ]
+    },
+    {
+      "id": "catsroom",
+      "status": "not-built",
+      "photographed": false,
+      "adjacent": [
+        "stairs"
+      ]
+    },
+    {
+      "id": "vanity",
+      "status": "not-built",
+      "photographed": true,
+      "adjacent": [
+        "stairs",
+        "balcony",
+        "office"
+      ]
+    },
+    {
+      "id": "balcony",
+      "status": "not-built",
+      "photographed": true,
+      "adjacent": [
+        "vanity"
+      ]
+    }
+  ]
+}

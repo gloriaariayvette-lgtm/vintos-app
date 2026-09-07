@@ -1,3 +1,17 @@
+# Active checkpoint — Phase 3: first two house rooms
+
+Phase 1 is complete. Phase 2 is deliberately parked and does not block this work. Do not access Aegis or redo avatars, gloves, grafts, or old baselines.
+
+Livingroom and kitchen are the first house review pair: `house/livingroom.glb`, `house/kitchen.glb`, `house/house.json`. Read `house/README.md` for scale, render reproduction, approximations, and portal integration. Compare `baseline/house-livingroom-comparison.png` and `baseline/house-kitchen-comparison.png`; scale and overhead renders are alongside them. `baseline/house-verification.json` records exported-asset checks.
+
+STOP for Gloria's review before the other ten rooms. The shared livingroom/kitchen portal pair is present. Kitchen links to hall, office and laundry are deliberately pending their matching files. No solid doorway leaves or interactive objects were added. Concurrent branch commits through 00394bd added Mixamo clip exports, pose renders, a locomotion controller, a v2 house-map copy, and a wrist update; these were fast-forwarded and preserved without modification. All tracked changes are inside v2 on astra/avatar-house. No paid services or client deployment.
+
+The map and photos provide no metric survey: dimensions, exact opening positions, unphotographed TV placement, and fine ornament are estimates. Floor contact lighting is baked; a full room lightmap is not. These are locally modeled review reconstructions, not photogrammetry.
+
+After approval, continue Phase 3 with laundry, office, hall, bedroom, bathroom, closet, vanity, stairs, catsroom and balcony. Map ground truth is preserved in `house/source-house-map.json`. Six no-photo rooms must be marked guessed. Keep Phase 4 doors, manipulable objects and cat separate.
+
+---
+
 # Phase 1 complete — local refinement and verified exports
 
 Branch: `astra/avatar-house`, repository `gloriaariayvette-lgtm/vintos-app`. Work only under `website/avatar-models/v2/`; never overwrite live assets or commit to eve.
