@@ -1,0 +1,52 @@
+{
+  "photo_transfer": "manually landmarked piecewise affine skin-detail transfer; eyes/lips excluded; hair and cloth selectively recolored",
+  "hand_tile_unchanged": true,
+  "original_vertices": 47838,
+  "refined_vertices": 138696,
+  "original_triangles": 90923,
+  "refined_triangles": 266579,
+  "mixamo_bones": 65,
+  "skin_joints": 52,
+  "animations": [
+    "mixamo.com"
+  ],
+  "nodes_skins_animations_unchanged": true,
+  "original_vertices_unchanged": true,
+  "original_buffer_bytes_unchanged": true,
+  "normalized_weights": true,
+  "bytes": 12406712,
+  "subdivision": "two passes, curved edge midpoint above y=.985m; conforming transition triangles; merged top-four skin influences",
+  "source_sha256": "ad0b44fd647ceb51e3855415a358f0a195a1cde47c5f81bc103e9bb85e8575e7",
+  "animation_deformation_samples": [
+    {
+      "time_seconds": 0,
+      "original_vertex_deformation_max_error_m": 0.0,
+      "all_refined_positions_finite": true
+    },
+    {
+      "time_seconds": 2.5,
+      "original_vertex_deformation_max_error_m": 0.0,
+      "all_refined_positions_finite": true
+    },
+    {
+      "time_seconds": 5,
+      "original_vertex_deformation_max_error_m": 0.0,
+      "all_refined_positions_finite": true
+    },
+    {
+      "time_seconds": 10.1,
+      "original_vertex_deformation_max_error_m": 0.0,
+      "all_refined_positions_finite": true
+    }
+  ],
+  "gltf_buffer_bounds_valid": true,
+  "no_draco": true,
+  "lossless_packing": {
+    "draw_groups": 3,
+    "draw_vertices_including_group_boundaries": 142294,
+    "every_triangle_corner_attribute_verified_exact": true,
+    "joint_component_type": "UNSIGNED_BYTE",
+    "index_component_type": "UNSIGNED_SHORT",
+    "unused_buffer_views_removed": true
+  }
+}

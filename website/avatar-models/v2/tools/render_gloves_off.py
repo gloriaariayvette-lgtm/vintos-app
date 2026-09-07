@@ -22,20 +22,21 @@ def mesh():
  norm/=np.maximum(np.linalg.norm(norm,axis=1,keepdims=True),1e-12)
  return v,ids,tuv,norm
 
-def render(v,ids,tuv,norm,path,center,span,size,view=(0,0,1)):
+def render(v,ids,tuv,norm,path,center,span,size,view=(0,0,1),texture=None):
  w,h=size;forward=np.array(view,dtype=float);forward/=np.linalg.norm(forward)
  right=np.cross([0.,1.,0.],forward);right/=np.linalg.norm(right);up=np.cross(forward,right)
  basis=np.array([right,up,forward]);vv=(v-np.array(center))@basis.T
  scale=h/span;scr=np.stack([vv[:,0]*scale+w/2,-vv[:,1]*scale+h/2],axis=1)
  depth=np.full((h,w),-np.inf);img=np.empty((h,w,3),dtype=np.uint8);img[:]=[40,41,46]
- tex=np.asarray(Image.open(ROOT/'tex/atlas.png').convert('RGB'),dtype=float)/255
+ tex=np.asarray(Image.open(ROOT/'tex/atlas.png').convert('RGB') if texture is None else texture.convert('RGB'),dtype=float)/255
  # Lighting in linear space; textures are color data in sRGB.
  tex=np.where(tex<=.04045,tex/12.92,((tex+.055)/1.055)**2.4)
  lights=[(np.array([-.4,.7,1.]),.65),(np.array([.6,.15,.8]),.2)]
  shade=np.full(len(v),.55)
  for direction,power in lights:
   direction/=np.linalg.norm(direction);shade+=power*np.maximum(0,norm@direction)
- for tri,uv in zip(ids,tuv):
+ ts=scr[ids];visible=(ts[:,:,0].max(1)>=0)&(ts[:,:,0].min(1)<w)&(ts[:,:,1].max(1)>=0)&(ts[:,:,1].min(1)<h)
+ for tri,uv in zip(ids[visible],tuv[visible]):
   a,b,c=scr[tri];lo=np.maximum(np.floor(np.min([a,b,c],0)).astype(int),0);hi=np.minimum(np.ceil(np.max([a,b,c],0)).astype(int),[w-1,h-1])
   if np.any(hi<lo):continue
   den=(b[1]-c[1])*(a[0]-c[0])+(c[0]-b[0])*(a[1]-c[1])
