@@ -52,8 +52,16 @@ def handle(request):
                 "runs_kept_at": str(RUNS)}
     if action == "list":
         return {"ok": True, "experiments": experiment_names()}
+    if action == "ledger":
+        import ledger
+        limit = int(request.get("limit", 8))
+        return {"ok": True, "summary": ledger.summary(limit),
+                "entries": ledger.entries(limit)}
+    if action == "reading":
+        import ledger
+        return ledger.attach_reading(request.get("run", ""), request.get("text", ""))
     if action not in ("run", "code"):
-        raise ValueError("action must be status, list, run, or code")
+        raise ValueError("action must be status, list, ledger, reading, run, or code")
 
     if action == "code":
         name = save_free_experiment(request.get("name", "untitled"),
@@ -80,7 +88,7 @@ def handle(request):
     (RUNS / f"{stamp}-{name}.txt").write_text(
         "\n".join(result.get("display", [])) + "\n", encoding="utf-8")
     return {"ok": True, "experiment": name, "seconds": elapsed,
-            "run_file": str(path), "result": result}
+            "run": path.stem, "run_file": str(path), "result": result}
 
 
 def main():
