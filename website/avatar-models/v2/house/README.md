@@ -1,3 +1,25 @@
+# Kitchen rebuild after rejection
+
+The previous two-room submission was rejected. Livingroom geometry is still rejected and must be rebuilt; technical validation was never approval. This kitchen revision replaces the mirrored layout and cabinet geometry. Nothing here authorizes building the other ten rooms.
+
+Current kitchen: `kitchen.glb`; comparisons: `../baseline/house-kitchen-comparison.png`; individual main/reverse/overhead/avatar-scale views are adjacent. `../baseline/kitchen-rebuild-verification.json` checks the actual exported anchor transforms against BOTH photographed left-to-right orders and rejects reflected transforms. The glTF validator and existing NAV checks are also run.
+
+Photo 1 order: stacked ovens, FOUR-drawer stack, range/hood, corner, sink/window. Local X decreases in that order when viewed toward the range wall. The sink window is on local -X. Photo 2: countertop oven on the left of the coffee machine, followed by the serving opening into livingroom. The previous +X-window convention was wrong and is superseded.
+
+This is newly built geometry: raised arched panels with extruded beveled rebates, door/frame/hinge/pull depth, horizontal drawer rows, a dedicated oven tower, separate fascia and raised handles, a range shell/cooktop, folded hood, cabinet carcasses, inset two-bowl sink and plumbing, dishwasher, and static countertop-appliance shells. It is not a horizontal flip of the old GLB. Static details carry no Phase 4 interactions or state machine.
+
+Source surface processing: `../tools/kitchen_materials.py` creates `kitchen-materials/` from both photos. Oven/dishwasher/range fascia photographs are mapped onto modeled surfaces; cabinet grain, stone, cotton, runner and wallpaper use local crops. Grain/cloth/stone relief uses normal maps with exported MikkTSpace tangents. Identical geometry is shared, without Draco. Floor contact shadows and warm range-wall lighting are baked diffuse maps. Preview environment and directional lighting remain part of the renderer, not a complete path-traced room bake.
+
+Current ESTIMATED dimensions: 3.4 m wide, 2.65 m deep, 1.67 m ceiling; countertop 0.609 m. The avatar stays 1.166 m tall. Origin is the livingroom doorway floor center, +Z inward. All four map neighbors remain: livingroom, office, laundry and hall. The kitchen/laundry connection remains curtains. No swinging room doors are added. Doorway coordinates apart from the shared origin remain estimates because the photos do not show them. The serving opening is not an additional walkable portal. Its view into the adjoining livingroom will remain absent until that rejected room has been rebuilt.
+
+`house.json` marks livingroom rejected and its kitchen partner `rejected-partner`; all unapproved/rejected/pending destinations must remain disabled. NAV covers the walkable floor with cabinet/cooker footprints removed and was resampled after the rebuild. This update is a correction checkpoint, not approval of either room or a claim of photogrammetric fidelity.
+
+Reproduce from `../tools/runtime`: `python ../kitchen_materials.py`, then `TMPDIR="$PWD/qa/tmp" node build_house.mjs --kitchen-only`, then `python ../verify_house.py` and `python ../verify_kitchen_revision.py`. The old livingroom build is disabled until its furniture is rebuilt. No paid service, GPU, Aegis, avatar edit, or client change was used.
+
+---
+
+## Historical rejected submission (superseded)
+
 # House: livingroom and kitchen review
 
 This is the first two-room checkpoint of Phase 3. Do not build the other ten rooms until Gloria reviews these exports and renders. Phase 2 is deliberately parked. No Aegis access, paid service, avatar changes, or client changes were used.

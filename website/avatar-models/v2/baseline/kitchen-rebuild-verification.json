@@ -1,0 +1,49 @@
+{
+  "status": "kitchen rebuilt, awaiting visual review; livingroom rejected",
+  "anchorWorldPositions": {
+    "Oven tower": [
+      0.51,
+      0.0,
+      2.205
+    ],
+    "Four-drawer stack": [
+      0.09,
+      0.31,
+      2.205
+    ],
+    "Range": [
+      -0.34,
+      0.0,
+      2.18
+    ],
+    "Window above sink": [
+      -1.66,
+      1.175,
+      1.39
+    ]
+  },
+  "projectedHorizontalOrder": {
+    "Oven tower": -0.5068196833724775,
+    "Four-drawer stack": -0.26212608126666453,
+    "Range": -0.051285321124518925,
+    "Window above sink": 0.7109985232554287
+  },
+  "orderMatchesPhoto1": true,
+  "counterApplianceOrderMatchesPhoto2": true,
+  "photo2ProjectedOrder": [
+    -0.3050701563475147,
+    -0.22230747406620446
+  ],
+  "allNodeTransformsPositiveDeterminant": true,
+  "nodesChecked": 550,
+  "windowWall": "-X",
+  "mapAdjacenciesPreserved": true,
+  "kitchenLaundryCurtains": true,
+  "validatorErrors": 0,
+  "validatorWarnings": 0,
+  "visualLimitations": [
+    "Dimensions and unphotographed doorway coordinates estimated",
+    "Adjacent livingroom is not represented through the pass-through until rebuilt",
+    "No claim of photogrammetry or full path-traced room bake"
+  ]
+}

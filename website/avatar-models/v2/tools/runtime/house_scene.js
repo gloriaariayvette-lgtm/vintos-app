@@ -1,3 +1,6 @@
+import {computeMikkTSpaceTangents, mergeVertices} from 'three/addons/utils/BufferGeometryUtils.js';
+import * as MikkTSpace from 'three/addons/libs/mikktspace.module.js';
+import {completeKitchen} from './kitchen_rebuild.js';
 import * as T from 'three';
 import {RoundedBoxGeometry} from 'three/addons/geometries/RoundedBoxGeometry.js';
 import {GLTFExporter} from 'three/addons/exporters/GLTFExporter.js';
@@ -118,16 +121,22 @@ function kitchen(){const W=2.5,D=2.25,H=1.67;floor(W,D);ceiling(W,D,H);
  emo('EMO_kitchen_under_counter',[.52,.91,2.17],[1.32,.012,.02]);portal('livingroom',[0,0],[0,1],.68);portal('office',[-.70,D],[0,-1]);portal('laundry',[-W/2,.52],[1,0],.62,'curtains');portal('hall',[-W/2,1.48],[1,0],.60);nav(W,D);return {W,D,H};}
 // Build uses only standard static glTF meshes/materials, no Draco/extensions required for geometry.
 window.buildHouse=async id=>{
+ if(id==='kitchen'){
+ const rebuilt=await completeKitchen();const room=rebuilt.room;await MikkTSpace.ready;const cache=new Map();
+ room.traverse(o=>{if(!o.isMesh)return;let geo=o.geometry;if(!o.material.map&&!o.material.normalMap)geo.deleteAttribute('uv');if(o.material.normalMap)geo=computeMikkTSpaceTangents(geo,MikkTSpace);geo=mergeVertices(geo,1e-6);const arrays=[...Object.entries(geo.attributes).sort().map(([k,a])=>a.array),...(geo.index?[geo.index.array]:[])];let hash=2166136261;for(const a of arrays)for(const b of new Uint8Array(a.buffer,a.byteOffset,a.byteLength))hash=Math.imul(hash^b,16777619);const key=hash+':'+arrays.map(a=>a.length).join(',');const prior=cache.get(key);if(prior&&arrays.every((a,i)=>a.every((v,k)=>v===prior.arrays[i][k])))o.geometry=prior.geo;else{cache.set(key,{geo,arrays});o.geometry=geo;}});
+ const bytes=await new GLTFExporter().parseAsync(room,{binary:true,onlyVisible:false,maxTextureSize:4096});return {bytes:btoa(new Uint8Array(bytes).reduce((s,b)=>s+String.fromCharCode(b),'')),manifest:rebuilt.manifest};
+ }
+
  roomId=id;room=new T.Group();room.name=id;manifest={id,file:id+'.glb',status:'review',photographed:true,dimensionsEstimated:true,portals:[],emo:[],mainDoorway:id==='livingroom'?'kitchen':'livingroom',origin:'floor center of main doorway; local +Z points into room',windows:id==='livingroom'?['front','left']:['left']};console.log("GEOMETRY start");const dims=id==='livingroom'?living():kitchen();manifest.dimensionsMeters={width:dims.W,depth:dims.D,height:dims.H};room.userData={...manifest,meters:true,avatarHeight:1.166};window.currentRoom=room;window.roomManifest=manifest;
  console.log("GEOMETRY complete",room.children.length);room.traverse(o=>{if(o.isMesh&&!o.material.map)o.geometry.deleteAttribute('uv');});const exporter=new GLTFExporter();const bytes=await exporter.parseAsync(room,{binary:true,onlyVisible:false,maxTextureSize:4096});console.log("EXPORT complete",bytes.byteLength);return {bytes:btoa(new Uint8Array(bytes).reduce((s,b)=>s+String.fromCharCode(b),"")),manifest};
 };
 const renderer=new T.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setSize(1200,900);renderer.setPixelRatio(1);renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;document.body.append(renderer.domElement);
 window.renderHouse=async(id,view='main')=>{
- const gltf=await new GLTFLoader().loadAsync(root+'house/'+id+'.glb?v='+Date.now());const s=new T.Scene();s.background=new T.Color(0xb4bcae);s.add(gltf.scene);const pmrem=new T.PMREMGenerator(renderer);s.environment=pmrem.fromScene(new RoomEnvironment(),.04).texture;s.environmentIntensity=.65;gltf.scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=!o.name.startsWith('PORTAL_')&&!o.name.startsWith('NAV_');}});
- s.add(new T.HemisphereLight(0xe1ebee,0x6c5b40,1.6));const sun=new T.DirectionalLight(0xffe3b6,1.7);sun.position.set(id==='livingroom'?-3:3,3,4);sun.target.position.set(0,0,1);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-4,right:4,top:4,bottom:-4,near:.1,far:12});sun.shadow.bias=-.0004;sun.shadow.normalBias=.008;s.add(sun,sun.target);
+ const gltf=await new GLTFLoader().loadAsync(root+'house/'+id+'.glb?v='+Date.now());const s=new T.Scene();s.background=new T.Color(0xb4bcae);s.add(gltf.scene);const pmrem=new T.PMREMGenerator(renderer);s.environment=pmrem.fromScene(new RoomEnvironment(),.04).texture;s.environmentIntensity=.30;gltf.scene.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=!o.name.startsWith('PORTAL_')&&!o.name.startsWith('NAV_')&&o.name!=='Ceiling';}});
+ s.add(new T.HemisphereLight(0xe1ebee,0x6c5b40,0.80));const sun=new T.DirectionalLight(0xffe3b6,1.7);sun.position.set(-3,3,4);sun.target.position.set(0,0,1);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-4,right:4,top:4,bottom:-4,near:.1,far:12});sun.shadow.bias=-.0004;sun.shadow.normalBias=.008;s.add(sun,sun.target);
  const fill=new T.DirectionalLight(0xd5e5ff,.7);fill.position.set(0,2,-2);s.add(fill);
  const camera=new T.PerspectiveCamera(65,4/3,.025,30);
- const poses=id==='livingroom'?{main:[[-.37,1.10,.58],[.63,.55,2.42]],dining:[[-.35,1.09,.57],[-1.43,.55,2.03]],overview:[[0,3.9,1.58],[0,0,1.58]],scale:[[0,1.2,.16],[.1,.65,2.15]]}:{main:[[-.84,1.12,.28],[.60,.71,1.78]],reverse:[[-.65,1.10,1.79],[.89,.68,.57]],overview:[[0,3.4,1.13],[0,0,1.13]],scale:[[-.85,1.2,.12],[.3,.65,1.65]]};let [p,t]=poses[view]||poses.main;
+ const poses=id==='livingroom'?{main:[[-.37,1.10,.58],[.63,.55,2.42]],dining:[[-.35,1.09,.57],[-1.43,.55,2.03]],overview:[[0,3.9,1.58],[0,0,1.58]],scale:[[0,1.2,.16],[.1,.65,2.15]]}:{main:[[0.68,1.12,0.54],[-0.54,0.80,2.28]],reverse:[[-0.50,1.07,2.17],[-1.05,0.83,0.30]],overview:[[0,3.5,1.325],[0,0,1.325]],scale:[[0.70,1.18,0.45],[-0.40,0.65,1.9]]};let [p,t]=poses[view]||poses.main;
  if(view==='scale'){const a=await new GLTFLoader().loadAsync(root+'vintos.glb');a.scene.position.set(id==='livingroom'?-.45:-.35,0,id==='livingroom'?1.0:1.05);a.scene.rotation.y=Math.PI;s.add(a.scene);}
  if(view==='overview'){gltf.scene.traverse(o=>{if(o.name==='Ceiling'||o.name==='Wall'||o.name.startsWith('Wall_above')||o.name==='Doorway_lintel')o.visible=false;});camera.up.set(0,0,-1);}
  camera.position.set(...p);camera.lookAt(...t);renderer.render(s,camera);return {url:renderer.domElement.toDataURL('image/png'),renderer:renderer.getContext().getParameter(renderer.getContext().RENDERER)};

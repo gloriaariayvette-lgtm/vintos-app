@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "Two-room review; ten rooms pending",
+  "status": "Previous pair rejected; kitchen rebuilt for review; livingroom still rejected",
   "units": "meters",
   "up": "+Y",
   "forward": "+Z into room from main doorway",
@@ -10,14 +10,222 @@
   "portalContract": {
     "trigger": "Transparent box with alpha=0; use geometry bounds for collision",
     "spawn": "Use target portal spawn and inwardNormal, with re-entry cooldown until clear of trigger",
-    "pending": "Do not activate a portal whose partnerStatus is pending-review. Reciprocal node names are reserved for later room files.",
+    "pending": "Do not activate pending-review, rejected-partner, or any transition involving an unapproved room.",
     "rotation": "Room-local +Z faces inward. Rotate avatar to target inwardNormal; do not copy source-room coordinates."
   },
   "rooms": [
     {
+      "id": "kitchen",
+      "file": "kitchen.glb",
+      "status": "rebuilt-awaiting-review",
+      "photographed": true,
+      "dimensionsEstimated": true,
+      "dimensionsMeters": {
+        "width": 3.4,
+        "depth": 2.65,
+        "height": 1.67
+      },
+      "mainDoorway": "livingroom",
+      "origin": "floor center of livingroom doorway; +Z inward",
+      "windows": [
+        "left"
+      ],
+      "portals": [
+        {
+          "name": "PORTAL_kitchen_livingroom",
+          "targetRoom": "livingroom",
+          "partner": "PORTAL_livingroom_kitchen",
+          "position": [
+            0,
+            0.68,
+            0
+          ],
+          "floorCenter": [
+            0,
+            0,
+            0
+          ],
+          "inwardNormal": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            0.68,
+            1.36,
+            0.16
+          ],
+          "width": 0.68,
+          "height": 1.36,
+          "type": "doorway",
+          "partnerStatus": "rejected-partner",
+          "spawn": [
+            0,
+            0,
+            0.22
+          ],
+          "placement": "Main shared origin fixed; other doorway coordinates are estimates, adjacency from house map"
+        },
+        {
+          "name": "PORTAL_kitchen_office",
+          "targetRoom": "office",
+          "partner": "PORTAL_office_kitchen",
+          "position": [
+            1.28,
+            0.68,
+            2.65
+          ],
+          "floorCenter": [
+            1.28,
+            0,
+            2.65
+          ],
+          "inwardNormal": [
+            0,
+            0,
+            -1
+          ],
+          "size": [
+            0.62,
+            1.36,
+            0.16
+          ],
+          "width": 0.62,
+          "height": 1.36,
+          "type": "doorway",
+          "partnerStatus": "pending-review",
+          "spawn": [
+            1.28,
+            0,
+            2.43
+          ],
+          "placement": "Main shared origin fixed; other doorway coordinates are estimates, adjacency from house map"
+        },
+        {
+          "name": "PORTAL_kitchen_laundry",
+          "targetRoom": "laundry",
+          "partner": "PORTAL_laundry_kitchen",
+          "position": [
+            1.7,
+            0.68,
+            0.55
+          ],
+          "floorCenter": [
+            1.7,
+            0,
+            0.55
+          ],
+          "inwardNormal": [
+            -1,
+            0,
+            0
+          ],
+          "size": [
+            0.16,
+            1.36,
+            0.62
+          ],
+          "width": 0.62,
+          "height": 1.36,
+          "type": "curtains",
+          "partnerStatus": "pending-review",
+          "spawn": [
+            1.48,
+            0,
+            0.55
+          ],
+          "placement": "Main shared origin fixed; other doorway coordinates are estimates, adjacency from house map"
+        },
+        {
+          "name": "PORTAL_kitchen_hall",
+          "targetRoom": "hall",
+          "partner": "PORTAL_hall_kitchen",
+          "position": [
+            1.7,
+            0.68,
+            1.57
+          ],
+          "floorCenter": [
+            1.7,
+            0,
+            1.57
+          ],
+          "inwardNormal": [
+            -1,
+            0,
+            0
+          ],
+          "size": [
+            0.16,
+            1.36,
+            0.62
+          ],
+          "width": 0.62,
+          "height": 1.36,
+          "type": "doorway",
+          "partnerStatus": "pending-review",
+          "spawn": [
+            1.48,
+            0,
+            1.57
+          ],
+          "placement": "Main shared origin fixed; other doorway coordinates are estimates, adjacency from house map"
+        }
+      ],
+      "emo": [
+        "EMO_kitchen_under_hood"
+      ],
+      "nav": "NAV_kitchen",
+      "obstacleFootprints": [
+        [
+          -1.7,
+          0.1,
+          -1.22,
+          2.65
+        ],
+        [
+          -1.7,
+          2.13,
+          0.76,
+          2.65
+        ],
+        [
+          -1.7,
+          0,
+          -0.37,
+          0.48
+        ]
+      ],
+      "handedness": {
+        "photo1LeftToRight": [
+          "stacked ovens",
+          "drawer stack",
+          "range and hood",
+          "corner",
+          "sink"
+        ],
+        "localXDescending": [
+          0.51,
+          0.09,
+          -0.34,
+          -1.08,
+          -1.48
+        ],
+        "windowWall": "-X",
+        "passThroughWall": "Z=0",
+        "negativeScale": false
+      },
+      "limitations": [
+        "No metric survey; exact other door coordinates estimated",
+        "Livingroom partner remains rejected",
+        "Static appliance shells; no Phase 4 interactions",
+        "Photo textures retain some source lighting"
+      ]
+    },
+    {
       "id": "livingroom",
       "file": "livingroom.glb",
-      "status": "review",
+      "status": "rejected",
       "photographed": true,
       "dimensionsEstimated": true,
       "portals": [
@@ -113,185 +321,6 @@
       "dimensionsMeters": {
         "width": 4.4,
         "depth": 3.15,
-        "height": 1.67
-      }
-    },
-    {
-      "id": "kitchen",
-      "file": "kitchen.glb",
-      "status": "review",
-      "photographed": true,
-      "dimensionsEstimated": true,
-      "portals": [
-        {
-          "name": "PORTAL_kitchen_livingroom",
-          "targetRoom": "livingroom",
-          "partner": "PORTAL_livingroom_kitchen",
-          "position": [
-            0,
-            0.68,
-            0
-          ],
-          "floorCenter": [
-            0,
-            0,
-            0
-          ],
-          "inwardNormal": [
-            0,
-            0,
-            1
-          ],
-          "size": [
-            0.68,
-            1.36,
-            0.16
-          ],
-          "width": 0.68,
-          "height": 1.36,
-          "type": "doorway",
-          "partnerStatus": "built",
-          "spawn": [
-            0,
-            0,
-            0.22
-          ]
-        },
-        {
-          "name": "PORTAL_kitchen_office",
-          "targetRoom": "office",
-          "partner": "PORTAL_office_kitchen",
-          "position": [
-            -0.7,
-            0.68,
-            2.25
-          ],
-          "floorCenter": [
-            -0.7,
-            0,
-            2.25
-          ],
-          "inwardNormal": [
-            0,
-            0,
-            -1
-          ],
-          "size": [
-            0.62,
-            1.36,
-            0.16
-          ],
-          "width": 0.62,
-          "height": 1.36,
-          "type": "doorway",
-          "partnerStatus": "pending-review",
-          "spawn": [
-            -0.7,
-            0,
-            2.03
-          ]
-        },
-        {
-          "name": "PORTAL_kitchen_laundry",
-          "targetRoom": "laundry",
-          "partner": "PORTAL_laundry_kitchen",
-          "position": [
-            -1.25,
-            0.68,
-            0.52
-          ],
-          "floorCenter": [
-            -1.25,
-            0,
-            0.52
-          ],
-          "inwardNormal": [
-            1,
-            0,
-            0
-          ],
-          "size": [
-            0.16,
-            1.36,
-            0.62
-          ],
-          "width": 0.62,
-          "height": 1.36,
-          "type": "curtains",
-          "partnerStatus": "pending-review",
-          "spawn": [
-            -1.03,
-            0,
-            0.52
-          ]
-        },
-        {
-          "name": "PORTAL_kitchen_hall",
-          "targetRoom": "hall",
-          "partner": "PORTAL_hall_kitchen",
-          "position": [
-            -1.25,
-            0.68,
-            1.48
-          ],
-          "floorCenter": [
-            -1.25,
-            0,
-            1.48
-          ],
-          "inwardNormal": [
-            1,
-            0,
-            0
-          ],
-          "size": [
-            0.16,
-            1.36,
-            0.6
-          ],
-          "width": 0.6,
-          "height": 1.36,
-          "type": "doorway",
-          "partnerStatus": "pending-review",
-          "spawn": [
-            -1.03,
-            0,
-            1.48
-          ]
-        }
-      ],
-      "emo": [
-        "EMO_kitchen_under_counter"
-      ],
-      "mainDoorway": "livingroom",
-      "origin": "floor center of main doorway; local +Z points into room",
-      "windows": [
-        "left"
-      ],
-      "nav": "NAV_kitchen",
-      "obstacleFootprints": [
-        [
-          0.82,
-          0.08,
-          1.25,
-          2.25
-        ],
-        [
-          -0.31,
-          1.7,
-          1.25,
-          2.25
-        ],
-        [
-          0.69,
-          0.08,
-          1.22,
-          0.62
-        ]
-      ],
-      "dimensionsMeters": {
-        "width": 2.5,
-        "depth": 2.25,
         "height": 1.67
       }
     }

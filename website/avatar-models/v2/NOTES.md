@@ -113,3 +113,8 @@ The compositing script reads the original hand maps from the pinned pre-edit Git
 ## Phase 3: two-room house checkpoint
 
 Livingroom and kitchen assets, source materials, GLB validation, NAV/portal checks and photo comparison renders are under `house/` and `baseline/`. See `house/README.md` for all scale assumptions, material sources, bake limits and pending partner portals. Avatar exports and previous baselines were preserved. Phase 2 remains parked. Stop for Gloria before building the other ten rooms.
+
+
+## Kitchen correction after user rejection
+
+The original house pair was rejected for crude geometry and a mirrored kitchen. Kitchen was rebuilt with photo-correct handedness and cabinet/appliance/sink geometry; livingroom remains rejected. See the current `house/README.md`, `baseline/house-kitchen-comparison.png`, and `baseline/kitchen-rebuild-verification.json`. Current kitchen dimensions and hidden doors remain estimates. No other rooms, avatar assets, motion pipeline, or client files were changed.

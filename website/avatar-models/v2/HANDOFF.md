@@ -1,3 +1,17 @@
+# Active correction checkpoint — kitchen rebuilt; livingroom rejected
+
+Continue from the rebuilt `house/kitchen.glb`, NOT the original mirrored kitchen. Read the current section of `house/README.md`, `baseline/house-kitchen-comparison.png`, and `baseline/kitchen-rebuild-verification.json`. Both photographed object orders were checked against actual exported coordinates; no reflected transforms. The kitchen now has shaped cabinet panels, four drawers beside the ovens, modeled appliance fascias, recessed sink bowls, a serving opening, and revised materials. All four map links and NAV holes remain.
+
+The livingroom model remains REJECTED: its furniture is too crude. Do not treat old renders, dimensions or portal placements as approved. Do not advance the other ten rooms from this foundation. The next geometry correction is the livingroom seating/tables after this kitchen correction is reviewed. Phase 1 and existing separate motion work remain untouched; no Aegis or paid services.
+
+Use `node build_house.mjs --kitchen-only` for this revision. The old livingroom generator is disabled. The kitchen is still an estimated photo reconstruction; fine appliance detail, lighting, and exact hidden opening locations have limits documented in house/README.md. Do not claim that structural validation establishes visual fidelity.
+
+---
+
+# REJECTED — house review pair from 3fd3756
+
+Gloria rejected these room reconstructions: the seating geometry is too crude and the kitchen is mirrored/wrong. Do not treat either room, its dimensions, or portal placement as approved. Kitchen is being rebuilt from both photographs first. The previous technical validation does not establish visual or layout correctness. No other rooms may proceed from this rejected foundation.
+
 # Active checkpoint — Phase 3: first two house rooms
 
 Phase 1 is complete. Phase 2 is deliberately parked and does not block this work. Do not access Aegis or redo avatars, gloves, grafts, or old baselines.
