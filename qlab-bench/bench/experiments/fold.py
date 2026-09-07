@@ -60,13 +60,32 @@ def experiment(p, shots):
     nq = 2 * (n - 2)
     loop_shots = max(256, min(1024, shots // 4))
 
+    overlap_penalty = float(p.get("overlap_penalty", 3.0))
+
     def energy_of(bits):
-        return fold_energy(bits, sequence, charges, hp, cw, tw)[0]
+        return fold_energy(bits, sequence, charges, hp, cw, tw, overlap_penalty)[0]
+
+    # CVaR: score a circuit by the BEST tail of what it produces, not the
+    # average. Minimising the mean rewards playing safe — an unfolded chain
+    # never overlaps, so the optimiser learns to keep it straight. We only
+    # care whether good folds appear at all.
+    alpha = float(p.get("tail", 0.15))
 
     def expected(theta):
         counts = _sample(ansatz(theta, nq, layers), nq, loop_shots)
         total = sum(counts.values()) or 1
-        return sum(energy_of(raw[::-1]) * c for raw, c in counts.items()) / total
+        rows = sorted(((energy_of(raw[::-1]), c) for raw, c in counts.items()),
+                      key=lambda r: r[0])
+        cut = max(1.0, alpha * total)
+        taken = 0.0
+        acc = 0.0
+        for e, c in rows:
+            take = min(c, cut - taken)
+            if take <= 0:
+                break
+            acc += e * take
+            taken += take
+        return acc / max(taken, 1.0)
 
     rng = np.random.default_rng(int(p.get("seed", 7)))
     theta0 = rng.uniform(0, pi, (layers + 1) * nq)
@@ -85,7 +104,7 @@ def experiment(p, shots):
     for raw, prob in sorted(run["probabilities"].items(),
                             key=lambda kv: kv[1], reverse=True)[:60]:
         bits = raw[::-1]
-        e, coords, contacts, overlaps, turns = fold_energy(bits, sequence, charges, hp, cw, tw)
+        e, coords, contacts, overlaps, turns = fold_energy(bits, sequence, charges, hp, cw, tw, overlap_penalty)
         folds.append({"state": raw, "probability": round(prob, 6), "energy": round(e, 4),
                       "overlaps": overlaps, "turns": turns,
                       "contacts": [c["kind"] for c in contacts],
@@ -110,7 +129,9 @@ def experiment(p, shots):
         "charges": "".join("+" if c > 0 else ("-" if c < 0 else "0") for c in charges),
         "dials": {"hydrophobic_pull": hp, "charge_pull": cw, "chain_stiffness": tw},
         "qubits": nq,
-        "search": {"start_energy": round(float(start_energy), 4),
+        "search": {"objective": f"CVaR over the best {int(alpha*100)}% of samples",
+                   "overlap_penalty": overlap_penalty,
+                   "start_energy": round(float(start_energy), 4),
                    "final_energy": round(float(result.fun), 4),
                    "steps_taken": int(getattr(result, "nfev", steps)),
                    "trace": trace[-12:]},
@@ -126,7 +147,8 @@ def experiment(p, shots):
         "display": ["A CHAIN LOOKS FOR ITS SHAPE", "",
                     f"sequence {sequence}   charges {''.join('+' if c>0 else ('-' if c<0 else '0') for c in charges)}",
                     f"pulls  hydrophobic {hp}   charge {cw}   stiffness {tw}",
-                    f"search {round(float(start_energy),3)} -> {round(float(result.fun),3)}"
+                    f"search (best {int(alpha*100)}% of samples) "
+                    f"{round(float(start_energy),3)} -> {round(float(result.fun),3)}"
                     f"   on {nq} qubits", ""] + picture + ["",
                     f"lowest energy found {best['energy']}  "
                     f"({len(best['contacts'])} contacts, {best['turns']} turns)",
