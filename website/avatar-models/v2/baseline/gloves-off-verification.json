@@ -1,0 +1,58 @@
+{
+  "atlas.png": {
+    "size": [
+      2048,
+      2048
+    ],
+    "masked_pixels": 335595,
+    "changed_pixels_outside_mask": 0,
+    "sha256": "b6333519eb212c36c607da57099ba4bb252fbfa424a195593601b2564ca85290"
+  },
+  "HAND.png": {
+    "size": [
+      4096,
+      4096
+    ],
+    "masked_pixels": 5242050,
+    "changed_pixels_outside_mask": 0,
+    "sha256": "fef8cdd274fafa1ec8cba6e0ec8028cf16a690d0fced6714ecefef11093f6e11"
+  },
+  "HAND_metallic.png": {
+    "size": [
+      4096,
+      4096
+    ],
+    "masked_pixels": 5242050,
+    "changed_pixels_outside_mask": 0,
+    "sha256": "7dc32ac2be7c7d67de884984b17e39cb1a94acf4e14e1a4bf9024e9329e039fd"
+  },
+  "HAND_roughness.png": {
+    "size": [
+      4096,
+      4096
+    ],
+    "masked_pixels": 5242050,
+    "changed_pixels_outside_mask": 0,
+    "sha256": "840d0fa6a33487eb811dbac0287152e7bab6f9312e8bd464d402a5421720ad70"
+  },
+  "mask": {
+    "source": "original color-map luminance > 0 within original FBX glove UV island, palm-seeded connected component; enclosed holes filled",
+    "bleed": "2 pixels of 8-connected dilation at each target resolution",
+    "atlas_original_sha256": "07585219dde4f6f1fe09a222bfe7b781095c438e9e83517a7af87ab5fa3493fe",
+    "normal_map": "unchanged; requested verification uses only the atlas color map"
+  },
+  "render": {
+    "method": "CPU z-buffer rasterizer, original FBX geometry and per-polygon UVs, computed vertex normals, orthographic cameras, atlas-only color map",
+    "triangles": 32762,
+    "source_fbx_sha256": "6923ce377ef375cc8b650256f0015cb3ab8e17f004585a7844bcfcdb050a94ca",
+    "hand_center": [
+      0.553429845,
+      0.86088997,
+      0.0025559799999999994
+    ],
+    "outputs": [
+      "gloves-off-front.png",
+      "gloves-off-hand.png"
+    ]
+  }
+}
