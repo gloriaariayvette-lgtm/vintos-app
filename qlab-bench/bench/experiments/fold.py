@@ -100,20 +100,27 @@ def experiment(p, shots):
 
     run = run_circuit(ansatz(tuned, nq, layers), list(range(nq)), shots)
 
-    # Every state the machine put weight on, not the 60 likeliest. Ranking a
-    # truncated list by energy answers a different question than the one asked:
-    # the lowest-energy fold is routinely not among the most probable, so
-    # cutting at 60 reported a stuck search when the search had not stuck.
+    # Rank over the state vector, not the shot counts. "probabilities" holds
+    # only the states that happened to be MEASURED — 4096 shots over 4096
+    # states leaves most of them absent — so the lowest-energy fold was usually
+    # missing from the list before it was ever ranked. That is not a stuck
+    # search, it is a search whose answer was thrown away before being read.
+    # The sampled counts still say what the machine is likeliest to hand you.
+    sampled = run["probabilities"]
+    amplitudes = run.get("exact_full_state_probabilities") or sampled
+    if len(next(iter(amplitudes)).strip("|>")) != nq:
+        amplitudes = sampled                      # unexpected key shape; be safe
     folds = []
-    for raw, prob in sorted(run["probabilities"].items(),
-                            key=lambda kv: kv[1], reverse=True):
+    for raw, prob in sorted(amplitudes.items(), key=lambda kv: kv[1], reverse=True):
+        raw = raw.strip("|>")
         bits = raw[::-1]
         e, coords, contacts, overlaps, turns = fold_energy(bits, sequence, charges, hp, cw, tw, overlap_penalty)
-        folds.append({"state": raw, "probability": round(prob, 6), "energy": round(e, 4),
+        folds.append({"state": raw, "probability": round(sampled.get(raw, prob), 6),
+                      "amplitude": round(prob, 6), "energy": round(e, 4),
                       "overlaps": overlaps, "turns": turns,
                       "contacts": [c["kind"] for c in contacts],
                       "coords": coords, "bits": bits})
-    likeliest_first = folds[:]
+    likeliest_first = sorted(folds, key=lambda f: -f["probability"])
     valid = [f for f in folds if f["overlaps"] == 0]
     ranked = sorted(valid or folds, key=lambda f: (f["energy"], -f["probability"]))
     best = ranked[0]
@@ -149,6 +156,7 @@ def experiment(p, shots):
         "top_folds": [{k: f[k] for k in ("state", "probability", "energy", "overlaps", "turns")}
                       for f in likeliest_first[:8]],
         "states_considered": len(folds),
+        "ranked_over": ("state vector" if amplitudes is not sampled else "shot counts"),
         "distribution": run,
         "display": ["A CHAIN LOOKS FOR ITS SHAPE", "",
                     f"sequence {sequence}   charges {''.join('+' if c>0 else ('-' if c<0 else '0') for c in charges)}",
