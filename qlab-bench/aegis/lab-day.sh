@@ -19,83 +19,13 @@ mkdir -p "$MEMORY"
 
 # The shim at 8599 ignores the model field and answers as Gemma whatever is
 # asked for. Astra is reached the way his code review already reaches her:
-# gpt-6-astra on OpenAI's Responses API, background + poll so no HTTP timeout
-# can cut her off, key from ~/.vintos/vintos.env. LAB_PROVIDER picks the road.
+# gpt-6-astra on the Responses API. LAB_PROVIDER=shim falls back to Gemma.
 LAB_PROVIDER="${LAB_PROVIDER:-astra}"
 LAB_MODEL="${LAB_MODEL:-gpt-6-astra}"
 export LAB_PROVIDER LAB_MODEL
 
-ask() {  # ask(system, user) -> text
-  python3 - "$1" "$2" <<'PY'
-import json, os, sys, time, requests
-
-system, user = sys.argv[1], sys.argv[2]
-provider = os.environ.get("LAB_PROVIDER", "astra")
-model = os.environ.get("LAB_MODEL", "gpt-6-astra")
-
-
-def _openai_key():
-    k = os.environ.get("OPENAI_API_KEY", "")
-    if k:
-        return k
-    try:
-        return next(l.strip().split("=", 1)[1].strip()
-                    for l in open(os.path.expanduser("~/.vintos/vintos.env"))
-                    if l.strip().startswith("OPENAI_API_KEY="))
-    except Exception:
-        return ""
-
-
-def astra():
-    key = _openai_key()
-    if not key:
-        raise RuntimeError("no OpenAI key (OPENAI_API_KEY= in ~/.vintos/vintos.env)")
-    H = {"Content-Type": "application/json", "Authorization": "Bearer " + key}
-    body = {"model": model, "background": True, "store": True,
-            "input": [{"role": "system", "content": system},
-                      {"role": "user", "content": user}],
-            "max_output_tokens": 2000, "reasoning": {"effort": "medium"}}
-    r = requests.post("https://api.openai.com/v1/responses", headers=H, json=body, timeout=120)
-    if r.status_code >= 300:
-        raise RuntimeError("openai %s: %s" % (r.status_code, r.text[:300]))
-    d = r.json()
-    rid = d["id"]
-    while d.get("status") in ("queued", "in_progress"):
-        time.sleep(10)
-        d = requests.get("https://api.openai.com/v1/responses/" + rid,
-                         headers=H, timeout=60).json()
-    if d.get("status") != "completed":
-        raise RuntimeError("Astra %s: %s" % (d.get("status"),
-                           json.dumps(d.get("error") or d.get("incomplete_details"))[:200]))
-    text = d.get("output_text")
-    if not text:
-        text = "".join(c.get("text", "")
-                       for it in d.get("output", []) if it.get("type") == "message"
-                       for c in it.get("content", []) if c.get("type") == "output_text")
-    return text
-
-
-def shim():
-    r = requests.post("http://127.0.0.1:8599/v1/chat/completions",
-        headers={"Authorization": "Bearer " + os.environ.get("XAI_API_KEY", ""),
-                 "Content-Type": "application/json"},
-        json={"model": model,
-              "messages": [{"role": "system", "content": system},
-                           {"role": "user", "content": user}],
-              "temperature": 0.7, "max_tokens": 900}, timeout=600)
-    d = r.json()
-    served = d.get("model")
-    if served and served != model:
-        print("[Lab] asked for %s, answered by %s" % (model, served), file=sys.stderr)
-    return d["choices"][0]["message"]["content"]
-
-
-try:
-    out = (astra() if provider == "astra" else shim()).strip()
-    print(out)
-except Exception as e:
-    print("[Lab] ask failed (%s): %s" % (provider, str(e)[:300]), file=sys.stderr)
-PY
+ask() {  # ask(system, user) -> text.  See lab-ask.py: Astra by default.
+  python3 "$HOME/.vintos/deploy/lab-ask.py" "$1" "$2"
 }
 
 # --- is the bench even awake? a sleeping Mac is not him declining
