@@ -21,3 +21,7 @@ All 65 original named Mixamo nodes remain present. The source FBX namespace `mix
 Do not perform Phase 2 in the Phase 1 chat. Full action names, later 12-room house requirements, object conventions and cat requirements remain in the user's goal. House-map.json is the room/door ground truth. The cat must use an animal-rig service or rig pack, not this human mocap pipeline.
 
 No client deployment has occurred. eve still loads `/models/default.vrm`; changing the client is a separate job. The packaged avatar retains its inherited height/proportions and has no new facial expression morphs; see NOTES.md for integration details.
+
+## Current Phase 2 checkpoint: Step 1 blocked by network access
+
+Phase 2 is now authorized, but this execution workspace cannot route SSH to Aegis. The first connection exited 255 with `ssh: connect to host 100.72.225.119 port 22: Network is unreachable`. No Aegis changes or generation occurred. See `mocap/INSTALL-STATUS.md` for the exact command, upstream-only documentation findings and resume requirements. Need a reachable execution connection and the user's path to the already-downloaded `SMPLX_NEUTRAL.npz`. Do not redo Phase 1; do not advance to rig profiling until installation is completed and reported.
