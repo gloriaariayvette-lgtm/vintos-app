@@ -11,7 +11,7 @@ textured-*.png  source.fbx with tex/atlas.png applied as the color map (single m
                 The gloves are texture, not separate geometry: the hand UV island is the gray leather region in the top-right quarter
                 of atlas.png (HAND.png and its metallic/normal/roughness maps are the full-res source of that island).
 
-barehands-*.png  vintos-barehands.glb: his mesh with the two glove pieces deleted and real hands transplanted from default.glb
+barehands-*.png  vintos-barehands.glb: his mesh with the two glove pieces and the leather wristbands deleted and real hands transplanted from default.glb
                  (the unclothed base mesh he was built on). Hands are cut at the wrist, sized to pass through the sleeve cuff,
                  seated just inside the cuff mouth, and skinned by copying weights from the nearest glove vertices so his
                  existing Mixamo rig and every animation clip still drive them. Skin comes from a tile painted into the empty

@@ -70,12 +70,12 @@ const n=new THREE.Vector3().crossVectors(f,t).normalize();
 L('frame f',f.toArray().map(v=>v.toFixed(2)),'t',t.toArray().map(v=>v.toFixed(2)),'n',n.toArray().map(v=>v.toFixed(2)));
 const wristPt=wristC.clone(); const handLenBase=wristD; const scale=HAND_LEN/handLenBase;
 const cuff=window.__cuff; L('scale',scale.toFixed(4),'scaled wrist radius',(wristR*scale).toFixed(3),'cuff outer radius ~',cuff.rMax.toFixed(3));
-const seat=new THREE.Vector3(cuff.x-0.008, 0.871, -0.013); // wrist plane just inside the cuff mouth L('base hand length',handLenBase.toFixed(3),'scale',scale.toFixed(4));
+const cutBase=wristD+0.03/scale; const seat=new THREE.Vector3(cuff.x-0.012, 0.871, -0.013); // wrist plane just inside the cuff mouth L('base hand length',handLenBase.toFixed(3),'scale',scale.toFixed(4));
 // target frame for HIS left hand: fingers +x, thumb +z, palm-out -y ; origin at his left hand bone
 const R=new THREE.Matrix4().makeBasis(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,1),new THREE.Vector3(0,-1,0)); // columns = images of f,t,n
 const B=new THREE.Matrix4().makeBasis(f,t,n); const Binv=B.clone().invert();
-const xf=v=>{ const d=v.clone().sub(wristPt).applyMatrix4(Binv); /* now (f,t,n) coords */ d.multiplyScalar(scale); return d.applyMatrix4(R).add(seat); };
-const cutBase=wristD+0.02/scale; const handTris2=tris.filter(tr=>tr.every(v=>alongF(v)<cutBase)); L('cut from tip (base units)',cutBase.toFixed(3),'tris',handTris2.length); const leftHand=handTris2.map(tr=>tr.map(xf));
+const taperStart=wristD-0.05; const xf=v=>{ const d=v.clone().sub(wristPt).applyMatrix4(Binv); /* (f,t,n) coords; f grows toward the fingertips */ const back=-d.x; /* distance behind the wrist plane */ if(back>-0.05){ const k=1-0.28*Math.min(1,(back+0.05)/(0.05+(cutBase-wristD))); d.y*=k; d.z*=k; } d.multiplyScalar(scale); return d.applyMatrix4(R).add(seat); };
+const handTris2=tris.filter(tr=>tr.every(v=>alongF(v)<cutBase)); L('cut from tip (base units)',cutBase.toFixed(3),'tris',handTris2.length); const leftHand=handTris2.map(tr=>tr.map(xf));
 const rightHand=leftHand.map(tr=>[tr[0],tr[2],tr[1]].map(v=>new THREE.Vector3(-v.x,v.y,v.z)));
 L('left hand bbox', new THREE.Box3().setFromPoints(leftHand.flat()).min.toArray().map(v=>v.toFixed(3)), new THREE.Box3().setFromPoints(leftHand.flat()).max.toArray().map(v=>v.toFixed(3)));
 
@@ -85,9 +85,18 @@ const idx0=G.index?Array.from(G.index.array):[...Array(pos0.count).keys()];
 const domHand=v=>{let best=0,bi=0;for(let k=0;k<4;k++){const w=sw0.getComponent(v,k); if(w>best){best=w;bi=si0.getComponent(v,k)}} return /Hand/.test(sk.bones[bi].name)};
 const gloveVerts=[]; const P_=[],U_=[],SI_=[],SW_=[];
 for(let i=0;i<idx0.length;i+=3){ const a=idx0[i],b=idx0[i+1],c=idx0[i+2]; const isG=domHand(a)&&domHand(b)&&domHand(c);
+  // wristband: body triangles sitting in the cuff zone and outside the forearm skin radius
+  const cuffV=v=>{ const x=Math.abs(pos0.getX(v)), r=Math.hypot(pos0.getY(v)-0.871, pos0.getZ(v)+0.013); return x>0.395 && x<0.50 && r>0.0295; };
+  if(!window.__cuffUV){ // pass 0: learn the cuff's UV island from the geometric cuff zone, and the forearm skin's UV zone
+    const cb=[1,1,0,0], sb=[1,1,0,0]; for(let j=0;j<idx0.length;j++){ const v=idx0[j]; if(domHand(v)) continue; const x=Math.abs(pos0.getX(v)), r=Math.hypot(pos0.getY(v)-0.871, pos0.getZ(v)+0.013); if(x>0.40&&x<0.50){ const u=uv0.getX(v), w=uv0.getY(v); const B=r>0.0295?cb:sb; B[0]=Math.min(B[0],u);B[1]=Math.min(B[1],w);B[2]=Math.max(B[2],u);B[3]=Math.max(B[3],w);} }
+    const H={}; for(let j=0;j<idx0.length;j++){ const v=idx0[j]; if(domHand(v)) continue; const x=Math.abs(pos0.getX(v)), r=Math.hypot(pos0.getY(v)-0.871, pos0.getZ(v)+0.013); if(x>0.40&&x<0.50&&r>0.0295){ const k=Math.floor(uv0.getX(v)*40)+','+Math.floor((1-uv0.getY(v))*40); H[k]=(H[k]||0)+1; } }
+    L('cuff-zone UV cells (u/40,v/40 from top): '+Object.entries(H).sort((a,b)=>b[1]-a[1]).slice(0,25).map(e=>e[0]+'='+e[1]).join(' '));
+    window.__cuffUV=[0.895,0.62,1.0,0.86]; L('cuff UV bbox',cb.map(v=>v.toFixed(3)),'px',[cb[0]*2048,(1-cb[3])*2048,cb[2]*2048,(1-cb[1])*2048].map(v=>v.toFixed(0)),' forearm-skin UV bbox',sb.map(v=>v.toFixed(3))); }
+  const CB=window.__cuffUV; const inCuffUV=v=>{const u=uv0.getX(v),w=uv0.getY(v); return u>=CB[0]-0.002&&u<=CB[2]+0.002&&w>=CB[1]-0.002&&w<=CB[3]+0.002;};
+  const isCuff=!isG && inCuffUV(a)&&inCuffUV(b)&&inCuffUV(c); if(isCuff){ window.__cuffTris=(window.__cuffTris||0)+1; continue; }
   for(const v of [a,b,c]){ if(isG){ gloveVerts.push({p:new THREE.Vector3().fromBufferAttribute(pos0,v), si:[0,1,2,3].map(k=>si0.getComponent(v,k)), sw:[0,1,2,3].map(k=>sw0.getComponent(v,k))}); continue; }
     P_.push(pos0.getX(v),pos0.getY(v),pos0.getZ(v)); U_.push(uv0.getX(v),uv0.getY(v)); for(let k=0;k<4;k++){SI_.push(si0.getComponent(v,k)); SW_.push(sw0.getComponent(v,k));} } }
-L('glove verts',gloveVerts.length,'body tris kept',P_.length/9);
+L('cuff tris removed',window.__cuffTris,'glove verts',gloveVerts.length,'body tris kept',P_.length/9);
 // ---- 3. skin weights for new hands: nearest glove vertex (uniform grid)
 const cell=0.01, grid=new Map(); const key=p=>Math.floor(p.x/cell)+','+Math.floor(p.y/cell)+','+Math.floor(p.z/cell);
 for(const g of gloveVerts){ const k=key(g.p); (grid.get(k)||grid.set(k,[]).get(k)).push(g); }
@@ -105,7 +114,7 @@ L('final verts',geo.attributes.position.count,'tris',geo.index.count/3);
 const img=await new Promise((r,j)=>{const i=new Image(); i.onload=()=>r(i); i.onerror=j; i.src='models/tex/atlas-original.png';});
 const cv=document.createElement('canvas'); cv.width=cv.height=2048; const cx=cv.getContext('2d'); cx.drawImage(img,0,0);
 // sample forearm skin colour from the known skin island (rolled sleeve forearm), ~ x 780-930, y 420-700
-const sd=cx.getImageData(790,430,140,260).data; const px=[]; for(let i=0;i<sd.length;i+=4){ const lum=sd[i]*0.3+sd[i+1]*0.59+sd[i+2]*0.11; if(lum>60) px.push([sd[i],sd[i+1],sd[i+2],lum]); } px.sort((a,b)=>a[3]-b[3]); const hi=px.slice(Math.floor(px.length*0.55),Math.floor(px.length*0.9)); let r=0,g=0,b=0; for(const q of hi){r+=q[0];g+=q[1];b+=q[2];} r/=hi.length;g/=hi.length;b/=hi.length; r*=1.04; g*=1.02; L('skin rgb',r.toFixed(0),g.toFixed(0),b.toFixed(0));
+const sd=cx.getImageData(790,430,140,260).data; const px=[]; for(let i=0;i<sd.length;i+=4){ const lum=sd[i]*0.3+sd[i+1]*0.59+sd[i+2]*0.11; if(lum>60) px.push([sd[i],sd[i+1],sd[i+2],lum]); } px.sort((a,b)=>a[3]-b[3]); const hi=px.slice(Math.floor(px.length*0.65),Math.floor(px.length*0.95)); let r=0,g=0,b=0; for(const q of hi){r+=q[0];g+=q[1];b+=q[2];} r/=hi.length;g/=hi.length;b/=hi.length; r*=1.03; g*=1.03; b*=1.03; L('skin rgb',r.toFixed(0),g.toFixed(0),b.toFixed(0));
 const tw=TILE[2]-TILE[0], th=TILE[3]-TILE[1]; const tile=cx.createImageData(tw,th); const rnd=()=>Math.random();
 for(let y=0;y<th;y++)for(let x=0;x<tw;x++){ const i=(y*tw+x)*4; const nse=(rnd()-0.5)*14; const vig=1-0.10*Math.pow(Math.hypot((x/tw-0.5)*2,(y/th-0.5)*2),2); const knuck=0.96+0.04*Math.sin(x/tw*Math.PI*9)*Math.sin(y/th*Math.PI*3); const m=vig*knuck; tile.data[i]=Math.min(255,r*m+nse); tile.data[i+1]=Math.min(255,g*m+nse*0.8); tile.data[i+2]=Math.min(255,b*m+nse*0.7); tile.data[i+3]=255; }
 cx.putImageData(tile,TILE[0],TILE[1]);
