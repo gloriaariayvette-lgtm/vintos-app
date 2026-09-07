@@ -82,7 +82,36 @@ def _groups(terms):
     return buckets
 
 
-def _measure_group(circuit, basis, nq, shots):
+_ORDER = {}
+
+
+def _bit_order(nq):
+    """Ask the simulator which end of its bitstrings qubit 0 lives at.
+
+    Rather than assume a convention, prepare a state with exactly one qubit
+    flipped and see where the 1 lands. Cached per width.
+    """
+    if nq in _ORDER:
+        return _ORDER[nq]
+    probe = q.QCircuit()
+    probe << q.X(0)
+    prog = q.QProg()
+    prog << probe
+    qvm = q.CPUQVM()
+    qvm.run(prog, 1)
+    probs = qvm.result().get_prob_dict()
+    state = max(probs.items(), key=lambda kv: kv[1])[0]
+    bits = str(state)
+    # trust only an unambiguous answer; otherwise fall back to reversed
+    if bits.count("1") == 1:
+        _ORDER[nq] = "little" if bits.endswith("1") else "big"
+    else:
+        _ORDER[nq] = "little"
+    return _ORDER[nq]
+
+
+def _probabilities(circuit, basis, nq, shots, exact):
+    """Distribution over the computational basis after rotating into `basis`."""
     prog = q.QProg()
     prog << circuit
     rot = q.QCircuit()
@@ -92,28 +121,37 @@ def _measure_group(circuit, basis, nq, shots):
         elif pauli == "Y":
             rot << q.RX(idx, pi / 2)
     prog << rot
+    if exact:
+        qvm = q.CPUQVM()
+        qvm.run(prog, 1)
+        return qvm.result().get_prob_dict()
     for c, qb in enumerate(range(nq)):
         prog << q.measure(qb, c)
     qvm = q.CPUQVM()
     qvm.run(prog, shots)
-    return qvm.result().get_counts()
+    counts = qvm.result().get_counts()
+    n = sum(counts.values()) or 1
+    return {k: v / n for k, v in counts.items()}
 
 
-def _energy(theta, terms, nq, layers, occupied, shots):
-    identity = terms.get((), 0.0)
-    total = identity
+def _energy(theta, terms, nq, layers, occupied, shots, exact=True):
+    """Expectation of the Hamiltonian. Exact by default: for a handful of
+    qubits the statevector is free, and sampling noise wrecks the optimiser
+    long before it teaches us anything about real hardware."""
+    total = terms.get((), 0.0)
     circuit = _ansatz(theta, nq, layers, occupied)
+    order = _bit_order(nq)
     for basis, group in _groups(terms).items():
-        counts = _measure_group(circuit, basis, nq, shots)
-        n = sum(counts.values()) or 1
+        probs = _probabilities(circuit, basis, nq, shots, exact)
         for term, coeff in group:
             idxs = [i for i, _ in term]
-            acc = 0
-            for raw, c in counts.items():
-                bits = raw[::-1]
+            acc = 0.0
+            for raw, prob in probs.items():
+                bits = str(raw)
+                bits = bits[::-1] if order == "little" else bits
                 parity = sum(int(bits[i]) for i in idxs if i < len(bits)) & 1
-                acc += (-1 if parity else 1) * c
-            total += coeff * acc / n
+                acc += (-1.0 if parity else 1.0) * prob
+            total += coeff * acc
     return total
 
 
@@ -124,7 +162,8 @@ def experiment(p, shots):
     spec = MOLECULES[name]
     layers = int(p.get("layers", 2))
     steps = int(p.get("search_steps", 200))
-    vqe_shots = max(512, min(4096, int(p.get("vqe_shots", shots // 2))))
+    exact = bool(p.get("exact", True))
+    vqe_shots = max(2048, int(p.get("vqe_shots", shots)))
     lengths = p.get("bond_lengths")
     if not lengths:
         lengths = [float(p.get("bond_length", spec["default_length"]))]
@@ -142,13 +181,13 @@ def experiment(p, shots):
         occupied = list(range(min(n_elec, nq)))
         rng = np.random.default_rng(int(p.get("seed", 11)))
         best = None
-        for attempt in range(int(p.get("restarts", 2))):
+        for attempt in range(int(p.get("restarts", 4))):
             theta0 = rng.uniform(-pi, pi, (layers + 1) * nq)
             r = minimize(_energy, theta0,
-                         args=(terms, nq, layers, occupied, vqe_shots),
+                         args=(terms, nq, layers, occupied, vqe_shots, exact),
                          method="COBYLA",
                          options={"maxiter": max(steps, (layers + 1) * nq + 4),
-                                  "rhobeg": 0.5})
+                                  "rhobeg": 0.5, "tol": 1e-6})
             if best is None or r.fun < best:
                 best = float(r.fun)
         rows.append({"bond_length": round(length, 4), "qubits": nq,
@@ -164,7 +203,9 @@ def experiment(p, shots):
 
     # a curve worth looking at
     display = [f"{name.upper()} — LOOKING FOR ITS GROUND STATE", "",
-               spec["note"], ""]
+               spec["note"],
+               "expectations: " + ("exact statevector" if exact
+                                   else f"sampled, {vqe_shots} shots per basis"), ""]
     if len(rows) > 1:
         lo = min(r["exact"] for r in rows)
         hi = max(r["exact"] for r in rows)
@@ -199,6 +240,7 @@ def experiment(p, shots):
                               "The gap between what it found and what is true is the "
                               "interesting quantity, not the energy itself."),
         "molecule": name, "basis": "sto-3g", "layers": layers,
+        "expectation": "exact statevector" if exact else f"{vqe_shots} shots per basis",
         "gradeable": True,
         "results": rows,
         "display": display,
