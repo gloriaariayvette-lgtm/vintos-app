@@ -18,21 +18,35 @@ INNER="$MEMORY/daily-inner-life-$TODAY.md"
 STATE="$MEMORY/lab-state.json"
 mkdir -p "$MEMORY"
 
+# The shim at 8599 ignores the model field and always answers as Gemma, so the
+# Lab could never reach a model of his choosing through it. LAB_ENDPOINT and
+# LAB_API_KEY_VAR let the bench be pointed at a real provider; unset, nothing
+# changes and it is the shim as before.
+LAB_ENDPOINT="${LAB_ENDPOINT:-http://127.0.0.1:8599/v1/chat/completions}"
+LAB_API_KEY_VAR="${LAB_API_KEY_VAR:-XAI_API_KEY}"
+export LAB_ENDPOINT LAB_API_KEY_VAR
+
 ask() {  # ask(system, user) -> text
   python3 - "$1" "$2" <<'PY'
 import json, os, sys, requests
 system, user = sys.argv[1], sys.argv[2]
+key = os.environ.get(os.environ.get("LAB_API_KEY_VAR", "XAI_API_KEY"), "")
 try:
-    r = requests.post("http://127.0.0.1:8599/v1/chat/completions",
-        headers={"Authorization": "Bearer " + os.environ.get("XAI_API_KEY",""),
+    r = requests.post(os.environ["LAB_ENDPOINT"],
+        headers={"Authorization": "Bearer " + key,
                  "Content-Type": "application/json"},
-        json={"model": os.environ.get("LAB_MODEL","grok-4.20-0309-non-reasoning"),
-              "messages": [{"role":"system","content":system},
-                           {"role":"user","content":user}],
+        json={"model": os.environ.get("LAB_MODEL", "grok-4.20-0309-non-reasoning"),
+              "messages": [{"role": "system", "content": system},
+                           {"role": "user", "content": user}],
               "temperature": 0.7, "max_tokens": 900}, timeout=600)
-    print(r.json()["choices"][0]["message"]["content"].strip())
+    d = r.json()
+    print(d["choices"][0]["message"]["content"].strip())
+    served = d.get("model")
+    if served and served != os.environ.get("LAB_MODEL"):
+        print("[Lab] asked for %s, answered by %s"
+              % (os.environ.get("LAB_MODEL"), served), file=sys.stderr)
 except Exception as e:
-    print("", file=sys.stderr)
+    print("[Lab] ask failed: %s" % str(e)[:200], file=sys.stderr)
 PY
 }
 export LAB_MODEL
