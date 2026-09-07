@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "Previous pair rejected; kitchen rebuilt for review; livingroom still rejected",
+  "status": "Both room models rebuilt after rejection; awaiting visual review",
   "units": "meters",
   "up": "+Y",
   "forward": "+Z into room from main doorway",
@@ -10,10 +10,118 @@
   "portalContract": {
     "trigger": "Transparent box with alpha=0; use geometry bounds for collision",
     "spawn": "Use target portal spawn and inwardNormal, with re-entry cooldown until clear of trigger",
-    "pending": "Do not activate pending-review, rejected-partner, or any transition involving an unapproved room.",
+    "pending": "Do not activate pending-review, rejected-partner, or any transition involving an unapproved room. Reciprocal node names are reserved for later room files.",
     "rotation": "Room-local +Z faces inward. Rotate avatar to target inwardNormal; do not copy source-room coordinates."
   },
   "rooms": [
+    {
+      "id": "livingroom",
+      "file": "livingroom.glb",
+      "status": "rebuilt-awaiting-review",
+      "photographed": true,
+      "dimensionsEstimated": true,
+      "portals": [
+        {
+          "name": "PORTAL_livingroom_kitchen",
+          "targetRoom": "kitchen",
+          "partner": "PORTAL_kitchen_livingroom",
+          "position": [
+            0,
+            0.68,
+            0
+          ],
+          "floorCenter": [
+            0,
+            0,
+            0
+          ],
+          "inwardNormal": [
+            0,
+            0,
+            1
+          ],
+          "size": [
+            0.68,
+            1.36,
+            0.16
+          ],
+          "width": 0.68,
+          "height": 1.36,
+          "type": "doorway",
+          "partnerStatus": "built",
+          "spawn": [
+            0,
+            0,
+            0.22
+          ]
+        }
+      ],
+      "emo": [
+        "EMO_livingroom_cove"
+      ],
+      "mainDoorway": "kitchen",
+      "origin": "floor center of main doorway; local +Z points into room",
+      "windows": [
+        "front",
+        "left"
+      ],
+      "nav": "NAV_livingroom",
+      "obstacleFootprints": [
+        [
+          -0.17631677150726321,
+          2.160952330827713,
+          1.3763167715072633,
+          2.7749999997019765
+        ],
+        [
+          -0.809136817079146,
+          1.5582319475713156,
+          -0.08518304174231624,
+          2.288696869900276
+        ],
+        [
+          1.2151830417423164,
+          1.4182319475713159,
+          1.939136817079146,
+          2.1486968699002764
+        ],
+        [
+          0.2049999988079071,
+          1.1349999988079071,
+          1.035000001192093,
+          1.965000001192093
+        ],
+        [
+          -1.8000000143051147,
+          1.245000011920929,
+          -1.0599999856948852,
+          2.414999988079071
+        ],
+        [
+          1.3500000035762787,
+          2.240000003576279,
+          1.6899999964237213,
+          2.5799999964237212
+        ],
+        [
+          1.85,
+          0.75,
+          2.16,
+          1.45
+        ]
+      ],
+      "dimensionsMeters": {
+        "width": 4.4,
+        "depth": 3.15,
+        "height": 1.67
+      },
+      "rebuild": {
+        "furnitureRebuilt": true,
+        "reliefSource": "actual photo color segmentation; shallow inferred depth",
+        "centralSofaBack": true,
+        "mirroredWingDetails": "left filigree inferred symmetrically from visible right wing"
+      }
+    },
     {
       "id": "kitchen",
       "file": "kitchen.glb",
@@ -58,7 +166,7 @@
           "width": 0.68,
           "height": 1.36,
           "type": "doorway",
-          "partnerStatus": "rejected-partner",
+          "partnerStatus": "built",
           "spawn": [
             0,
             0,
@@ -221,108 +329,6 @@
         "Static appliance shells; no Phase 4 interactions",
         "Photo textures retain some source lighting"
       ]
-    },
-    {
-      "id": "livingroom",
-      "file": "livingroom.glb",
-      "status": "rejected",
-      "photographed": true,
-      "dimensionsEstimated": true,
-      "portals": [
-        {
-          "name": "PORTAL_livingroom_kitchen",
-          "targetRoom": "kitchen",
-          "partner": "PORTAL_kitchen_livingroom",
-          "position": [
-            0,
-            0.68,
-            0
-          ],
-          "floorCenter": [
-            0,
-            0,
-            0
-          ],
-          "inwardNormal": [
-            0,
-            0,
-            1
-          ],
-          "size": [
-            0.68,
-            1.36,
-            0.16
-          ],
-          "width": 0.68,
-          "height": 1.36,
-          "type": "doorway",
-          "partnerStatus": "built",
-          "spawn": [
-            0,
-            0,
-            0.22
-          ]
-        }
-      ],
-      "emo": [
-        "EMO_livingroom_cove"
-      ],
-      "mainDoorway": "kitchen",
-      "origin": "floor center of main doorway; local +Z points into room",
-      "windows": [
-        "front",
-        "left"
-      ],
-      "nav": "NAV_livingroom",
-      "obstacleFootprints": [
-        [
-          -0.19,
-          2.18,
-          1.39,
-          2.82
-        ],
-        [
-          -0.84,
-          1.55,
-          -0.06,
-          2.32
-        ],
-        [
-          1.2,
-          1.4,
-          1.97,
-          2.2
-        ],
-        [
-          0.2,
-          1.12,
-          1.04,
-          1.94
-        ],
-        [
-          -1.86,
-          1.18,
-          -1,
-          2.48
-        ],
-        [
-          1.85,
-          0.75,
-          2.16,
-          1.45
-        ],
-        [
-          1.35,
-          2.24,
-          1.69,
-          2.58
-        ]
-      ],
-      "dimensionsMeters": {
-        "width": 4.4,
-        "depth": 3.15,
-        "height": 1.67
-      }
     }
   ],
   "plannedRooms": [

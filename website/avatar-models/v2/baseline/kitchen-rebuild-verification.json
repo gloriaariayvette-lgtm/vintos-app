@@ -1,5 +1,5 @@
 {
-  "status": "kitchen rebuilt, awaiting visual review; livingroom rejected",
+  "status": "both rooms rebuilt, awaiting visual review",
   "anchorWorldPositions": {
     "Oven tower": [
       0.51,
@@ -43,7 +43,7 @@
   "validatorWarnings": 0,
   "visualLimitations": [
     "Dimensions and unphotographed doorway coordinates estimated",
-    "Adjacent livingroom is not represented through the pass-through until rebuilt",
+    "Separate room loading does not render the adjoining room through the pass-through",
     "No claim of photogrammetry or full path-traced room bake"
   ]
 }

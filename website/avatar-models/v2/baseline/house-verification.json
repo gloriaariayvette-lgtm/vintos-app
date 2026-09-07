@@ -1,7 +1,101 @@
 {
+  "livingroom": {
+    "bytes": 9741552,
+    "sha256": "a0283874bf651b31cbb69b5bf7d51aea5cef1d7021c4323b2873d8ab2c6117ea",
+    "triangles": 301976,
+    "nodes": 256,
+    "textures": [
+      [
+        2048,
+        2048
+      ],
+      [
+        1024,
+        1024
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        1024,
+        1024
+      ],
+      [
+        512,
+        1024
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        768,
+        768
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        400,
+        90
+      ],
+      [
+        240,
+        140
+      ],
+      [
+        768,
+        512
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        512,
+        512
+      ],
+      [
+        1024,
+        512
+      ],
+      [
+        512,
+        512
+      ]
+    ],
+    "validatorErrors": 0,
+    "validatorWarnings": 0,
+    "navFloorY": 0,
+    "navSamplesPassed": 3599,
+    "portals": [
+      "PORTAL_livingroom_kitchen"
+    ],
+    "pendingPartners": [],
+    "noDraco": true,
+    "embeddedTextures": true
+  },
   "kitchen": {
-    "bytes": 3606536,
-    "sha256": "91164f499376d9c54f4f4de1b34351c4490c360ece2d5efe48cd29d8018fcf65",
+    "bytes": 3606524,
+    "sha256": "f89e2e0d0584ed433cf7d749b36da596e90764e348f8f05ef8acb7aca9d04dd1",
     "triangles": 75370,
     "nodes": 550,
     "textures": [
@@ -81,56 +175,6 @@
       "PORTAL_laundry_kitchen",
       "PORTAL_hall_kitchen"
     ],
-    "noDraco": true,
-    "embeddedTextures": true
-  },
-  "livingroom": {
-    "bytes": 7996620,
-    "sha256": "9e242b929cccf688f4e207326c28f13eca834d4aedf1bccf74418a9171d43e2c",
-    "triangles": 259174,
-    "nodes": 465,
-    "textures": [
-      [
-        2048,
-        2048
-      ],
-      [
-        1024,
-        1024
-      ],
-      [
-        512,
-        512
-      ],
-      [
-        1024,
-        1024
-      ],
-      [
-        1024,
-        1024
-      ],
-      [
-        1024,
-        1024
-      ],
-      [
-        1024,
-        1024
-      ],
-      [
-        512,
-        1024
-      ]
-    ],
-    "validatorErrors": 0,
-    "validatorWarnings": 0,
-    "navFloorY": 0,
-    "navSamplesPassed": 3599,
-    "portals": [
-      "PORTAL_livingroom_kitchen"
-    ],
-    "pendingPartners": [],
     "noDraco": true,
     "embeddedTextures": true
   }

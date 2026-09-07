@@ -145,7 +145,7 @@ export async function completeKitchen(){
  for(const [p,w,h]of [[[ -83,1/5,174],35,86],[[ -39,1/5,191],77,29]]){const a=P('Woven kitchen runner',p,w,h,M.rug);a.rotation.x=-Math.PI/2;}
  const portals=[];
  function portal(next,x,z,nx,nz,w=62,type='doorway'){const name='PORTAL_kitchen_'+next,sz=nx?[16,136,w]:[w,136,16];const a=B(name,[x,68,z],sz,M.portal);a.castShadow=a.receiveShadow=false;
-  const p={name,targetRoom:next,partner:'PORTAL_'+next+'_kitchen',position:V([x,68,z]),floorCenter:V([x,0,z]),inwardNormal:[nx,0,nz],size:V(sz),width:cm(w),height:cm(136),type,partnerStatus:next==='livingroom'?'rejected-partner':'pending-review',spawn:V([x+nx*22,0,z+nz*22]),placement:'Main shared origin fixed; other doorway coordinates are estimates, adjacency from house map'};a.userData={...p,render:false,triggerOnly:true};portals.push(p);
+  const p={name,targetRoom:next,partner:'PORTAL_'+next+'_kitchen',position:V([x,68,z]),floorCenter:V([x,0,z]),inwardNormal:[nx,0,nz],size:V(sz),width:cm(w),height:cm(136),type,partnerStatus:next==='livingroom'?'built':'pending-review',spawn:V([x+nx*22,0,z+nz*22]),placement:'Main shared origin fixed; other doorway coordinates are estimates, adjacency from house map'};a.userData={...p,render:false,triggerOnly:true};portals.push(p);
   for(const s of [-1,1])B('Doorway casing',nx?[x,68,z+s*(w/2+2)]:[x+s*(w/2+2),68,z],nx?[10,136,4]:[4,136,10],M.trim);
   B('Doorway lintel',[x,139,z],nx?[10,6,w+8]:[w+8,6,10],M.trim);
  }

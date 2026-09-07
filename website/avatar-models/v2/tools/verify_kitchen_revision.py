@@ -27,9 +27,9 @@ assert reverseOrder[0]<reverseOrder[1],reverseOrder
 manifest=json.loads((R/'house/house.json').read_text());room=next(r for r in manifest['rooms']if r['id']=='kitchen')
 assert {p['targetRoom']for p in room['portals']}=={'livingroom','office','laundry','hall'}
 assert next(p for p in room['portals']if p['targetRoom']=='laundry')['type']=='curtains'
-assert next(r for r in manifest['rooms']if r['id']=='livingroom')['status']=='rejected'
+assert next(r for r in manifest['rooms']if r['id']=='livingroom')['status']=='rebuilt-awaiting-review'
 val=json.loads((R/'baseline/kitchen-validation.json').read_text());assert val['issues']['numErrors']==val['issues']['numWarnings']==0
-report={'status':'kitchen rebuilt, awaiting visual review; livingroom rejected','anchorWorldPositions':positions,'projectedHorizontalOrder':dict(zip(anchors,screen)),'orderMatchesPhoto1':True,'counterApplianceOrderMatchesPhoto2':True,'photo2ProjectedOrder':reverseOrder,'allNodeTransformsPositiveDeterminant':True,'nodesChecked':len(world),'windowWall':'-X','mapAdjacenciesPreserved':True,'kitchenLaundryCurtains':True,'validatorErrors':0,'validatorWarnings':0,'visualLimitations':['Dimensions and unphotographed doorway coordinates estimated','Adjacent livingroom is not represented through the pass-through until rebuilt','No claim of photogrammetry or full path-traced room bake']}
+report={'status':'both rooms rebuilt, awaiting visual review','anchorWorldPositions':positions,'projectedHorizontalOrder':dict(zip(anchors,screen)),'orderMatchesPhoto1':True,'counterApplianceOrderMatchesPhoto2':True,'photo2ProjectedOrder':reverseOrder,'allNodeTransformsPositiveDeterminant':True,'nodesChecked':len(world),'windowWall':'-X','mapAdjacenciesPreserved':True,'kitchenLaundryCurtains':True,'validatorErrors':0,'validatorWarnings':0,'visualLimitations':['Dimensions and unphotographed doorway coordinates estimated','Separate room loading does not render the adjoining room through the pass-through','No claim of photogrammetry or full path-traced room bake']}
 (R/'baseline/kitchen-rebuild-verification.json').write_text(json.dumps(report,indent=2)+'\n')
 print(json.dumps(report,indent=2))
 

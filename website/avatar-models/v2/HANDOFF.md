@@ -1,28 +1,18 @@
-# Active correction checkpoint — kitchen rebuilt; livingroom rejected
+# Current checkpoint — revised livingroom and kitchen, awaiting Gloria
 
-Continue from the rebuilt `house/kitchen.glb`, NOT the original mirrored kitchen. Read the current section of `house/README.md`, `baseline/house-kitchen-comparison.png`, and `baseline/kitchen-rebuild-verification.json`. Both photographed object orders were checked against actual exported coordinates; no reflected transforms. The kitchen now has shaped cabinet panels, four drawers beside the ovens, modeled appliance fascias, recessed sink bowls, a serving opening, and revised materials. All four map links and NAV holes remain.
+Phase 3 is active. Phase 1 is complete; Phase 2 is parked. Do not access Aegis or redo avatar, glove, hand or baseline work. Work only inside website/avatar-models/v2/ on astra/avatar-house.
 
-The livingroom model remains REJECTED: its furniture is too crude. Do not treat old renders, dimensions or portal placements as approved. Do not advance the other ten rooms from this foundation. The next geometry correction is the livingroom seating/tables after this kitchen correction is reviewed. Phase 1 and existing separate motion work remain untouched; no Aegis or paid services.
+Gloria rejected the original room pair (3fd3756): crude furniture and mirrored kitchen. Kitchen was rebuilt in 5a566be, followed by a livingroom furniture rebuild and refreshed two-room exports. Read house/README.md for the current geometry, scale, naming and known limits. It supersedes all earlier house layout/render claims.
 
-Use `node build_house.mjs --kitchen-only` for this revision. The old livingroom generator is disabled. The kitchen is still an estimated photo reconstruction; fine appliance detail, lighting, and exact hidden opening locations have limits documented in house/README.md. Do not claim that structural validation establishes visual fidelity.
+Review: baseline/house-livingroom-comparison.png and baseline/house-kitchen-comparison.png. These use actual exported GLBs reloaded before rendering. Individual main/reverse/dining, overhead and avatar-scale PNGs sit alongside. baseline/house-verification.json records compatibility, NAV sampling and portal checks; kitchen-rebuild-verification.json checks actual object order against both kitchen photos and rejects reflected transforms. Technical checks do not establish visual fidelity.
 
----
+Livingroom's old furniture has been replaced with a central-backed winged sofa, rounded chairs, puffed cushions, continuous draped throw and turned-leg tables. Gilt reliefs use actual photo contours with inferred depth; chair ornament and hidden left-wing details are approximations. Kitchen has corrected handedness and modeled panel/drawer/appliance/sink geometry. Both remain photo-based estimates, not scans, and still lack a complete room lightmap. Review the renders before claiming the requested fidelity has been reached.
 
-# REJECTED — house review pair from 3fd3756
+STOP for Gloria's review before any of the other ten rooms. house.json marks both rooms rebuilt-awaiting-review. The shared portals exist and are reciprocal; built does not mean approved. Office, hall and laundry partner files are still pending. No Phase 4 doors, INTERACT state machine or cat was added. No paid services, avatar changes, motion work or client deployment occurred.
 
-Gloria rejected these room reconstructions: the seating geometry is too crude and the kitchen is mirrored/wrong. Do not treat either room, its dimensions, or portal placement as approved. Kitchen is being rebuilt from both photographs first. The previous technical validation does not establish visual or layout correctness. No other rooms may proceed from this rejected foundation.
+Reproduce from v2/tools/runtime with the commands in house/README.md. The builder supports both rooms and single-room flags, uses packaged Chromium/SwiftShader, exports and independently reloads GLBs, then renders. Source materials and geometry are preserved under v2. Ground truth is house/source-house-map.json. Six no-photo rooms must be marked guessed when eventually built.
 
-# Active checkpoint — Phase 3: first two house rooms
-
-Phase 1 is complete. Phase 2 is deliberately parked and does not block this work. Do not access Aegis or redo avatars, gloves, grafts, or old baselines.
-
-Livingroom and kitchen are the first house review pair: `house/livingroom.glb`, `house/kitchen.glb`, `house/house.json`. Read `house/README.md` for scale, render reproduction, approximations, and portal integration. Compare `baseline/house-livingroom-comparison.png` and `baseline/house-kitchen-comparison.png`; scale and overhead renders are alongside them. `baseline/house-verification.json` records exported-asset checks.
-
-STOP for Gloria's review before the other ten rooms. The shared livingroom/kitchen portal pair is present. Kitchen links to hall, office and laundry are deliberately pending their matching files. No solid doorway leaves or interactive objects were added. Concurrent branch commits through 00394bd added Mixamo clip exports, pose renders, a locomotion controller, a v2 house-map copy, and a wrist update; these were fast-forwarded and preserved without modification. All tracked changes are inside v2 on astra/avatar-house. No paid services or client deployment.
-
-The map and photos provide no metric survey: dimensions, exact opening positions, unphotographed TV placement, and fine ornament are estimates. Floor contact lighting is baked; a full room lightmap is not. These are locally modeled review reconstructions, not photogrammetry.
-
-After approval, continue Phase 3 with laundry, office, hall, bedroom, bathroom, closet, vanity, stairs, catsroom and balcony. Map ground truth is preserved in `house/source-house-map.json`. Six no-photo rooms must be marked guessed. Keep Phase 4 doors, manipulable objects and cat separate.
+The historical Phase 1/2 notes below are retained as provenance; their next-chat instructions are superseded by the current Phase 3 checkpoint above.
 
 ---
 

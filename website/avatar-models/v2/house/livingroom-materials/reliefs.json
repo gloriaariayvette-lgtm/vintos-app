@@ -1,0 +1,38 @@
+[
+  {
+    "name": "crest",
+    "vertices": 18094,
+    "indices": 108684,
+    "positionsBytes": 217128,
+    "uvBytes": 144752,
+    "sourceCrop": [
+      476,
+      0,
+      964,
+      108
+    ],
+    "resolution": [
+      400,
+      90
+    ],
+    "method": "Color-segmented photographed gilt, solid shallow relief; depth inferred"
+  },
+  {
+    "name": "wing",
+    "vertices": 19950,
+    "indices": 119820,
+    "positionsBytes": 239400,
+    "uvBytes": 159600,
+    "sourceCrop": [
+      900,
+      57,
+      1157,
+      207
+    ],
+    "resolution": [
+      240,
+      140
+    ],
+    "method": "Color-segmented photographed gilt, solid shallow relief; depth inferred"
+  }
+]

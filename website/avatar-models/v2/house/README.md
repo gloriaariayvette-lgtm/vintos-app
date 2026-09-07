@@ -1,71 +1,62 @@
-# Kitchen rebuild after rejection
+# Phase 3: revised livingroom and kitchen for review
 
-The previous two-room submission was rejected. Livingroom geometry is still rejected and must be rebuilt; technical validation was never approval. This kitchen revision replaces the mirrored layout and cabinet geometry. Nothing here authorizes building the other ten rooms.
+Gloria rejected the original pair in commit 3fd3756 for crude furniture and a mirrored kitchen. Both room models have now been revised. This supersedes the original geometry and orientation notes; it is not approval. STOP before building the other ten rooms.
 
-Current kitchen: `kitchen.glb`; comparisons: `../baseline/house-kitchen-comparison.png`; individual main/reverse/overhead/avatar-scale views are adjacent. `../baseline/kitchen-rebuild-verification.json` checks the actual exported anchor transforms against BOTH photographed left-to-right orders and rejects reflected transforms. The glTF validator and existing NAV checks are also run.
+## Review files
 
-Photo 1 order: stacked ovens, FOUR-drawer stack, range/hood, corner, sink/window. Local X decreases in that order when viewed toward the range wall. The sink window is on local -X. Photo 2: countertop oven on the left of the coffee machine, followed by the serving opening into livingroom. The previous +X-window convention was wrong and is superseded.
+- `livingroom.glb`, `kitchen.glb`: independent room assets with embedded textures.
+- `../baseline/house-livingroom-comparison.png`, `../baseline/house-kitchen-comparison.png`: source photos beside actual independently reloaded GLB renders.
+- Individual `livingroom-{main,dining,overview,scale}.png` and `kitchen-{main,reverse,overview,scale}.png` in baseline: detail, plan and unchanged-avatar scale views.
+- `house.json`: dimensions, portals, reciprocal names, spawn positions, inward normals, EMO surfaces, NAV names and pending rooms.
+- `source-house-map.json`: preserved layout ground truth from Vintos-main/scripts/house-map.json.
+- `../baseline/house-verification.json`: actual exported binary checks, sizes and triangle counts. Room validator reports and `kitchen-rebuild-verification.json` record compatibility and handedness checks. These checks do not establish visual fidelity.
 
-This is newly built geometry: raised arched panels with extruded beveled rebates, door/frame/hinge/pull depth, horizontal drawer rows, a dedicated oven tower, separate fascia and raised handles, a range shell/cooktop, folded hood, cabinet carcasses, inset two-bowl sink and plumbing, dishwasher, and static countertop-appliance shells. It is not a horizontal flip of the old GLB. Static details carry no Phase 4 interactions or state machine.
+## Kitchen correction
 
-Source surface processing: `../tools/kitchen_materials.py` creates `kitchen-materials/` from both photos. Oven/dishwasher/range fascia photographs are mapped onto modeled surfaces; cabinet grain, stone, cotton, runner and wallpaper use local crops. Grain/cloth/stone relief uses normal maps with exported MikkTSpace tangents. Identical geometry is shared, without Draco. Floor contact shadows and warm range-wall lighting are baked diffuse maps. Preview environment and directional lighting remain part of the renderer, not a complete path-traced room bake.
+Photo 1, left to right: stacked ovens, four-drawer stack, range/hood, corner, sink/window. Local X decreases in that order when viewed toward the range wall. The sink window is on local -X. Photo 2: countertop oven to the left of the coffee machine, followed by the serving opening. Actual exported anchor transforms are checked against both orders. The old +X-window convention was wrong.
 
-Current ESTIMATED dimensions: 3.4 m wide, 2.65 m deep, 1.67 m ceiling; countertop 0.609 m. The avatar stays 1.166 m tall. Origin is the livingroom doorway floor center, +Z inward. All four map neighbors remain: livingroom, office, laundry and hall. The kitchen/laundry connection remains curtains. No swinging room doors are added. Doorway coordinates apart from the shared origin remain estimates because the photos do not show them. The serving opening is not an additional walkable portal. Its view into the adjoining livingroom will remain absent until that rejected room has been rebuilt.
+The new mesh has arched cabinet panels with extruded beveled rebates, frames, hinges and pulls, horizontal drawer rows, oven tower, appliance fascias and raised handles, range/cooktop, folded hood, cabinet carcasses, inset double sink, dishwasher and countertop-appliance shells. It is newly modeled geometry. Appliance fascia photos cover modeled surfaces; they do not replace entire appliances. Static cabinet details carry no Phase 4 state machine.
 
-`house.json` marks livingroom rejected and its kitchen partner `rejected-partner`; all unapproved/rejected/pending destinations must remain disabled. NAV covers the walkable floor with cabinet/cooker footprints removed and was resampled after the rebuild. This update is a correction checkpoint, not approval of either room or a claim of photogrammetric fidelity.
+## Livingroom correction
 
-Reproduce from `../tools/runtime`: `python ../kitchen_materials.py`, then `TMPDIR="$PWD/qa/tmp" node build_house.mjs --kitchen-only`, then `python ../verify_house.py` and `python ../verify_kitchen_revision.py`. The old livingroom build is disabled until its furniture is rebuilt. No paid service, GPU, Aegis, avatar edit, or client change was used.
+The old seating/table groups were removed. The sofa has a tall central embroidered back, open carved wings, curved upholstered sides, cabriole legs, puffed cushions with edge seams, and a continuous draped brown throw. Chairs have rounded padded backs and oval gilt frames. Coffee and dining tables have modeled edges/aprons and turned legs. The side table has slender curved brass legs.
 
----
+The visible sofa crest and wing were segmented from the actual photo, then made into solid shallow relief geometry with front, back and edge walls. Their depth is inferred, not scanned. The left wing is inferred symmetrically from the photographed right wing. Chair ornament adapts the photographed sofa crest around the oval chair frame; it is an approximation. Gilt arm/leg details and textile relief remain simplified. Seating embroidery, brocade, cushions, throw and inlay use locally processed photo crops and normal maps. Repeating photo crops and inferred hidden surfaces remain visible limitations. This is still a modeled reconstruction, not a claim of photoreal equivalence to the photos.
 
-## Historical rejected submission (superseded)
+## Scale, portals and navigation
 
-# House: livingroom and kitchen review
+Meters, +Y up, floor/NAV at y=0, no Draco. Each main doorway floor center is (0,0,0), local +Z inward. Doorway is 0.68 m wide and 1.36 m high. Livingroom is estimated at 4.4 × 3.15 m; kitchen at 3.4 × 2.65 m; ceiling 1.67 m. Kitchen counter is 0.609 m; dining top 0.54 m including the inlay surface. Vintos remains 1.166 m tall. These are scaled estimates, not measurements of Gloria's house.
 
-This is the first two-room checkpoint of Phase 3. Do not build the other ten rooms until Gloria reviews these exports and renders. Phase 2 is deliberately parked. No Aegis access, paid service, avatar changes, or client changes were used.
+Livingroom window sides are local +Z and -X; kitchen window is local -X. The map has no metric survey or explicit compass axes. Unshown walls, TV appearance/placement, ceiling, opening coordinates and furniture spacing are estimated. Photos constrain appearance and the map constrains connectivity.
 
-## Files
+- `PORTAL_<thisroom>_<nextroom>` is an actual transparent box (alpha-mode BLEND, opacity zero). Use geometry bounds for triggers and exclude it from shadows.
+- `EMO_livingroom_cove` and `EMO_kitchen_under_hood` are emissive surfaces for client tinting. These strips are inferred lighting additions.
+- `NAV_livingroom` and `NAV_kitchen` are flat triangle meshes with furniture/cabinet footprint holes. Weld adjacent cells and erode by the avatar's collision radius if required by the client pathfinder.
 
-- `livingroom.glb`, `kitchen.glb`: independent, embedded-texture room assets.
-- `house.json`: room dimensions, named portals, reciprocal names, spawn positions, inward normals, EMO surfaces, NAV names, and explicitly pending rooms.
-- `source-house-map.json`: verbatim layout ground truth retrieved from Vintos-main/scripts/house-map.json. Its adjacency lists, rather than ambiguous positions in the sketch, determine the portal graph.
-- `materials/`: reproducible source textures and furniture footprints. The GLBs embed their own images and do not request this directory at runtime.
-- `../baseline/house-*-comparison.png`: reference photographs beside renders of independently reloaded GLBs.
-- `../baseline/{livingroom,kitchen}-{main,dining,reverse,overview,scale}.png`: applicable camera views, including the unchanged avatar as a scale reference. Livingroom has dining; kitchen has reverse.
-- `../baseline/house-verification.json` and room validator reports: checks of the actual exported binaries.
+The livingroom/kitchen portal names are reciprocal in both files. `partnerStatus: built` describes presence, not approval. All transitions involving these unapproved rooms should remain disabled. Kitchen's office, hall and laundry partners are `pending-review`: their files intentionally do not exist yet. The laundry connection is `type: curtains`. The serving opening is not an extra walkable portal. Separate room loading does not currently show the adjacent room through that opening.
 
-## Scale and coordinate contract
+For independent room loading, use the destination portal's `spawn` and `inwardNormal` and a re-entry cooldown until clear. Do not copy source-room coordinates to the destination. To assemble the shared main origins physically, rotate one room 180 degrees around Y.
 
-Meters, +Y up, floor and NAV at y=0, no Draco. Both main doorway floor centers are (0,0,0); +Z points inward. Estimated doorway opening: 0.68 m wide, 1.36 m high. Livingroom: 4.4 × 3.15 m; kitchen: 2.5 × 2.25 m; ceiling: 1.67 m. Counter: 0.605 m; dining top: 0.52 m; sofa seat: approximately 0.30 m. These are estimates chosen around Vintos's unchanged 1.166 m height, roughly 1.166/1.75 of ordinary household scale. They are not measurements of Gloria's house.
+## Materials and lighting
 
-The main rooms use opposite inward directions when assembled: rotate one room 180 degrees about Y to join the shared origins. For independent loading, use the destination portal's `spawn` and `inwardNormal`; do not carry room-local source coordinates into the target. Apply a portal cooldown until the avatar clears the destination trigger.
+`materials/` contains the original shell/floor/rug sources; `kitchen-materials/` and `livingroom-materials/` contain replacement surface sources and relief geometry. GLBs embed their own images and do not request these folders at runtime. Source scripts are `../tools/house_textures.py`, `kitchen_materials.py` and `livingroom_materials.py`.
 
-The map names window sides but has no surveyed coordinates or explicit cardinal axes. For this review, livingroom front windows occupy local +Z and its left window local -X. Kitchen's left exterior window occupies local +X, reflecting its opposite entry orientation. Exact window positions, widths, and the relationship between the map's front label and compass directions are estimates requiring review.
-
-## Named meshes
-
-- `PORTAL_<thisroom>_<nextroom>`: actual box mesh, alpha-mode BLEND, opacity zero, depthWrite false in the build. Geometry and metadata remain accessible even though the box is invisible. glTF has no generic visibility flag; clients must exclude these meshes from shadows and use their bounds for triggers.
-- `EMO_livingroom_cove`, `EMO_kitchen_under_counter`: emissive surfaces, named for client color tinting. These small light strips are inferred additions, not photographed fixtures.
-- `NAV_livingroom`, `NAV_kitchen`: flat triangle meshes with furniture rectangles subtracted, not a rectangular floor hidden beneath the furniture. The client must weld adjoining cells if its pathfinder requires shared vertex indices and erode by the avatar's collision radius. Both remain transparent in regular renders.
-
-The livingroom/kitchen pair is reciprocal in the two built files. Kitchen's office, hall, and laundry portals reserve their exact partner names, but those partner files intentionally do not exist before this checkpoint is approved. `partnerStatus: pending-review` means disable that transition. The kitchen/laundry link is `type: curtains`; no solid door has been added.
-
-## What was reconstructed, baked, or estimated
-
-Livingroom geometry follows the photographed gilded sofa/chairs, brown throw, sage cushions and drapes, cream inlaid round and dining tables, turned legs, faded rugs, and painted trim. Kitchen follows warm raised-panel cabinetry, cream worktops, black range and stacked oven shells, hood, sink, window, and the photographed non-walkable serving opening. These are locally modeled approximations, not photogrammetric scans. Fine carving, upholstery motifs, rug repetition, and appliance details are simplified; the renders are the evidence of current visual fidelity.
-
-Material sources: rectified, surface-only crops from the supplied photos for wood, counter, inlay and woven fabric; a foliage crop used beyond windows; a photo-derived rug strip mirrored into a field. Floor wood, brocade motifs and kitchen wallpaper are locally reconstructed patterns. No photo is used as a substitute for a room or furniture mesh.
-
-Baked lighting: 2048-pixel floor diffuse maps contain soft furniture contact shading and a daylight falloff. Source surface crops retain some photographed lighting. A complete path-traced, room-wide lightmap is not baked. Review renders add a neutral environment, hemisphere fill and directional shadows; the client will also need lighting/environment for the PBR materials. Metals have scalar roughness/metalness; textures are JPEGs embedded without geometry compression. Texture resolution ranges from 512 to 2048, within the 4K budget.
-
-Unphotographed TV console appearance/placement, overall room dimensions, unshown walls, ceiling, doorway widths/positions, and exact furniture spacing are estimated. Photos constrain appearance; the map constrains connectivity. The TV anchor is present because the map requires it. Static room furnishings have no INTERACT nodes, state machine, or grab colliders. Real doorway leaves, laundry curtains, movable objects, controls, and the cat belong to Phase 4.
-
-No-photo rooms remain unbuilt: laundry, hall, bathroom, closet, stairs, catsroom. Mark each guessed when built from the map and neighboring photographed materials. Normalize the source ID `cats room` to `catsroom`; do not create an extra room. Preserve laundry's back exit and the stairs' front entrance when extending the graph; `outside` is an external exit, not an invented thirteenth room.
+Floor textures contain soft furniture contact shading and daylight falloff. Kitchen has warm diffuse range-wall shading. Photo crops retain some captured lighting. A full path-traced room lightmap is NOT baked. The preview adds a neutral environment, hemisphere fill and directional shadows; clients still need PBR lighting. Normal-mapped geometry exports MikkTSpace tangents; identical geometry is shared without Draco. All embedded textures are within 4K.
 
 ## Reproduce
 
-From `v2/tools/runtime`, install the locked npm dependencies with `npm ci`. Run `python ../house_textures.py`, then `TMPDIR="$PWD/qa/tmp" node build_house.mjs`. This runs packaged Chromium with SwiftShader, exports GLB, reloads it with GLTFLoader, validates and renders. The archive extraction avoids chown because this managed filesystem rejects archive ownership changes. Browser binaries and temporary profiles stay in ignored `qa/`. No GPU is required.
+From `../tools/runtime`, use the locked npm dependencies, then:
 
-Run `python ../verify_house.py` after export to inspect NAV samples, portal contracts, image sizes, triangle budgets and create the comparison sheets. `node build_house.mjs --render-only` rerenders existing assets.
+```sh
+python ../kitchen_materials.py
+python ../livingroom_materials.py
+TMPDIR="$PWD/qa/tmp" node build_house.mjs
+python ../verify_house.py
+python ../verify_kitchen_revision.py
+```
 
-Next: Gloria reviews scale, materials, geometry and portal convention here. Continue the remaining ten rooms only after approval. Phase 4 and client integration remain separate work.
+`--livingroom-only` or `--kitchen-only` rebuilds one room and merges the manifest; `--render-only` renders existing exports. Packaged Chromium uses SwiftShader without a GPU. Temporary browser files stay in ignored `qa/`. No Blender, Aegis, paid service or client change was used.
+
+## After review
+
+Continue only after Gloria approves this pair: laundry, office, hall, bedroom, bathroom, closet, vanity, stairs, catsroom and balcony. Laundry, hall, bathroom, closet, stairs and catsroom have no photo and must be marked guessed. Normalize source ID `cats room` to `catsroom`. Preserve the laundry back exit and stairs front entrance; `outside` is an external exit, not a thirteenth room. Real doorway leaves, curtain states, INTERACT objects, controls and cat belong to Phase 4. Phase 2 remains parked.

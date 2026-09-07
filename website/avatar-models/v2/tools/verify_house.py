@@ -47,7 +47,7 @@ font=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',22)
 small=ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',17)
 for rid,pairs in [('livingroom',[('livingroom-1.jpg','main','Seating'),('diningtable-1.jpg','dining','Dining area')]),('kitchen',[('kitchen-1.jpg','main','Worktops and cabinetry'),('kitchen-2.jpg','reverse','Reverse angle')])]:
     sheet=Image.new('RGB',(1640,1370),'#e8e5dc');d=ImageDraw.Draw(sheet)
-    d.text((20,16),rid.upper()+' — TWO-ROOM REVIEW',font=font,fill='#28312c');d.text((20,50),'Reference photos left | Exported GLB renders right | Dimensions estimated for Vintos (1.166 m)',font=small,fill='#454d45')
+    d.text((20,16),rid.upper()+' — REBUILT AFTER REJECTION',font=font,fill='#28312c');d.text((20,50),'Reference photos left | Exported GLB renders right | Dimensions estimated for Vintos (1.166 m)',font=small,fill='#454d45')
     for i,(ref,view,label)in enumerate(pairs):
         y=90+i*630;d.text((20,y),label+' — reference',font=small,fill='#454d45');d.text((840,y),'3D reconstruction — '+label,font=small,fill='#454d45')
         for x,p in [(20,R/'refs/rooms'/ref),(840,B/(rid+'-'+view+'.png'))]:

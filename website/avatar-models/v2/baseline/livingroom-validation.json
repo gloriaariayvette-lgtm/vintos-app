@@ -2,13 +2,38 @@
   "uri": "livingroom.glb",
   "mimeType": "model/gltf-binary",
   "validatorVersion": "2.0.0-dev.3.10",
-  "validatedAt": "2026-09-07T04:38:57.120Z",
+  "validatedAt": "2026-09-07T06:02:50.573Z",
   "issues": {
     "numErrors": 0,
     "numWarnings": 0,
-    "numInfos": 0,
+    "numInfos": 4,
     "numHints": 0,
-    "messages": [],
+    "messages": [
+      {
+        "code": "IMAGE_NPOT_DIMENSIONS",
+        "message": "Image has non-power-of-two dimensions: 768x768.",
+        "severity": 2,
+        "pointer": "/images/7"
+      },
+      {
+        "code": "IMAGE_NPOT_DIMENSIONS",
+        "message": "Image has non-power-of-two dimensions: 400x90.",
+        "severity": 2,
+        "pointer": "/images/9"
+      },
+      {
+        "code": "IMAGE_NPOT_DIMENSIONS",
+        "message": "Image has non-power-of-two dimensions: 240x140.",
+        "severity": 2,
+        "pointer": "/images/10"
+      },
+      {
+        "code": "IMAGE_NPOT_DIMENSIONS",
+        "message": "Image has non-power-of-two dimensions: 768x512.",
+        "severity": 2,
+        "pointer": "/images/11"
+      }
+    ],
     "truncated": false
   },
   "info": {
@@ -16,14 +41,15 @@
     "generator": "THREE.GLTFExporter r185",
     "extensionsUsed": [
       "KHR_materials_emissive_strength",
-      "KHR_materials_unlit"
+      "KHR_materials_unlit",
+      "KHR_texture_transform"
     ],
     "resources": [
       {
         "pointer": "/buffers/0",
         "mimeType": "application/gltf-buffer",
         "storage": "glb",
-        "byteLength": 7601840
+        "byteLength": 9609940
       },
       {
         "pointer": "/images/0",
@@ -74,7 +100,7 @@
         "mimeType": "image/jpeg",
         "storage": "buffer-view",
         "image": {
-          "width": 1024,
+          "width": 512,
           "height": 1024,
           "format": "rgb",
           "bits": 8
@@ -85,8 +111,8 @@
         "mimeType": "image/jpeg",
         "storage": "buffer-view",
         "image": {
-          "width": 1024,
-          "height": 1024,
+          "width": 512,
+          "height": 512,
           "format": "rgb",
           "bits": 8
         }
@@ -96,8 +122,8 @@
         "mimeType": "image/jpeg",
         "storage": "buffer-view",
         "image": {
-          "width": 1024,
-          "height": 1024,
+          "width": 512,
+          "height": 512,
           "format": "rgb",
           "bits": 8
         }
@@ -107,24 +133,145 @@
         "mimeType": "image/jpeg",
         "storage": "buffer-view",
         "image": {
+          "width": 768,
+          "height": 768,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/8",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
           "width": 512,
-          "height": 1024,
+          "height": 512,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/9",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 400,
+          "height": 90,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/10",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 240,
+          "height": 140,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/11",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 768,
+          "height": 512,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/12",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 512,
+          "height": 512,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/13",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 512,
+          "height": 512,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/14",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 512,
+          "height": 512,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/15",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 512,
+          "height": 512,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/16",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 512,
+          "height": 512,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/17",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 1024,
+          "height": 512,
+          "format": "rgb",
+          "bits": 8
+        }
+      },
+      {
+        "pointer": "/images/18",
+        "mimeType": "image/jpeg",
+        "storage": "buffer-view",
+        "image": {
+          "width": 512,
+          "height": 512,
           "format": "rgb",
           "bits": 8
         }
       }
     ],
     "animationCount": 0,
-    "materialCount": 23,
+    "materialCount": 32,
     "hasMorphTargets": false,
     "hasSkins": false,
     "hasTextures": true,
     "hasDefaultScene": true,
-    "drawCallCount": 449,
-    "totalVertexCount": 188649,
-    "totalTriangleCount": 259174,
+    "drawCallCount": 114,
+    "totalVertexCount": 205609,
+    "totalTriangleCount": 301976,
     "maxUVs": 1,
     "maxInfluences": 0,
-    "maxAttributes": 3
+    "maxAttributes": 4
   }
 }

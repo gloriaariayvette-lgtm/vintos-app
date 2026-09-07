@@ -118,3 +118,8 @@ Livingroom and kitchen assets, source materials, GLB validation, NAV/portal chec
 ## Kitchen correction after user rejection
 
 The original house pair was rejected for crude geometry and a mirrored kitchen. Kitchen was rebuilt with photo-correct handedness and cabinet/appliance/sink geometry; livingroom remains rejected. See the current `house/README.md`, `baseline/house-kitchen-comparison.png`, and `baseline/kitchen-rebuild-verification.json`. Current kitchen dimensions and hidden doors remain estimates. No other rooms, avatar assets, motion pipeline, or client files were changed.
+
+
+## Livingroom correction and revised pair
+
+The livingroom furniture has now also been rebuilt after the rejected initial pair. Current files are house/livingroom.glb and house/kitchen.glb; inspect the refreshed photo comparisons before approving more rooms. The previous note saying livingroom remains rejected describes the intermediate kitchen-only commit. Both current rooms are marked rebuilt-awaiting-review, with limitations and reproducible steps in house/README.md. Photo contours were used for solid shallow gilt relief; depth, hidden details and some chair ornament are inferred. Continuous throw, padded cushions, curved seating backs and turned table legs replace the original block furniture. No claim of photogrammetric or full photoreal fidelity is made. Stop for Gloria before the remaining ten rooms.
