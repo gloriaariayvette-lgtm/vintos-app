@@ -4570,7 +4570,7 @@ function startVoiceCallWithToken(token, instructions){
         x.style.cssText='padding:9px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(201,107,60,0.25);color:rgba(235,200,175,0.95);font-size:12px;letter-spacing:0.04em;cursor:pointer;text-align:left;'; return x; }
       var last = ''; try{ last = localStorage.getItem('av.callMode')||''; }catch(e){}
       m.appendChild(item('🎙  Grok live' + (last==='grok' ? '  ·  last used' : ''), function(){ try{localStorage.setItem('av.callMode','grok');}catch(e){} _avCallGrok(); }));
-      m.appendChild(item('💬  Chat live (his own mind, his own voice)' + (last==='chat' ? '  ·  last used' : ''), function(){ try{localStorage.setItem('av.callMode','chat');}catch(e){} _avCallChatLive(); }));
+      m.appendChild(item('💬  Chat live' + (last==='chat' ? '  ·  last used' : ''), function(){ try{localStorage.setItem('av.callMode','chat');}catch(e){} _avCallChatLive(); }));
       host.appendChild(m);
       setTimeout(function(){ document.addEventListener('pointerdown', function close(ev){ if(m.contains(ev.target) || ev.target.id==='av-call-btn') return; m.remove(); document.removeEventListener('pointerdown', close); }); }, 0);
     }
