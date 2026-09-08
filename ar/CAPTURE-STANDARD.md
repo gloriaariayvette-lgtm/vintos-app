@@ -120,6 +120,24 @@ outdoor-standing-neutral-day-1.mp4
 These are the ones that let him appear somewhere he has never been, and they are
 worth making first.
 
+## Two things the first batch got wrong
+
+**State his clothes, every time.** Batch 01 said nothing about clothing and the
+generator chose for itself — three clips, all shirtless, one of them entirely
+unclothed. His look, to be repeated verbatim: *a soft linen shirt in oatmeal or
+olive, sleeves pushed up, dark trousers, barefoot.*
+
+**Never give the camera a measurement.** "Camera at 155 cm, 2.2 m away" produced a
+worm's-eye view from a metre away with his knees at the lens. These models do not
+think in centimetres. Describe the camera photographically instead — eye level,
+looking slightly down at him, his whole body within the frame — and use the
+measurements only to decide which photographic description to write.
+
+**Say direction relative to the frame, not to his body.** "Turned toward the empty
+seat on his left" produced a man looking the other way. If the empty seat will
+appear on the right of frame, write *the empty cushion is on the right of the
+frame and he is turned toward it.*
+
 ## Prompt template
 
 > Full body, head to feet, standing in an empty studio space against a plain even
