@@ -12,16 +12,26 @@ If the matte touches the bottom edge of the frame at any point, **refuse the cli
 and say so. Feet cut off means his height cannot be measured, and the guess that
 replaced it produced a two-and-a-half-metre man standing in the kitchen.
 
-## 2. Billboard standing poses; lock seated ones
+## 2. The plane always faces the viewer. His FACING comes from the clip.
 
-- **Standing on open floor** — rotate the plane about the vertical axis to face the
-  viewer. He has no committed orientation, so facing the viewer is always right.
-- **Seated, leaning, or working at a surface** — **do not rotate.** A seated body
-  has a real orientation relative to the furniture. A rotating plane makes him
-  swivel bodily on the cushion as you walk past, like a man on a turntable. His
-  facing is baked into the clip; lock the plane to the anchor's orientation.
+These are two different things and an earlier version of this document
+conflated them, which was wrong.
 
-The clip name says which: `-standing-` billboards, `-seated-` does not.
+- **The display plane** is a billboard carrying an image. It must **always**
+  rotate about the vertical axis to face the viewer. If it does not, walking to
+  his side turns it edge-on and he disappears into a line. Never lock it.
+- **His apparent facing in the room** is not a transform at all. It is *which
+  clip is playing*. He looks away from you because the back-view clip is
+  playing, not because the plane has rotated away.
+
+So "he does not flip to face me" does not mean freezing the plane. It means:
+as the viewer moves, keep the plane facing her, and switch the clip to the view
+that matches her new bearing. He stays put and stays oriented; what changes is
+which side of him she is seeing.
+
+For a single-view pose with no alternates, the plane still faces the viewer —
+there is simply nothing better to show her from the side, and that is the
+flatness the multi-view set exists to fix.
 
 ## 3. Seated clips anchor by hip height, not by feet
 
