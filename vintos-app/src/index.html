@@ -4553,10 +4553,86 @@ function startVoiceCallWithToken(token, instructions){
         ws.onerror = function(){};
       }).catch(function(e){ alert('mic error: '+e.message); var b3=document.getElementById('av-call-btn'); if(b3) b3.style.color=''; b3.style.background=''; });
     }
-    function endVintosCall(){ try{ if(window._vc && window._vc.ws) window._vc.ws.close(); }catch(e){} }
+    function endVintosCall(){ try{ if(window._vc && window._vc.ws) window._vc.ws.close(); }catch(e){} try{ if(window._vc && window._vc.chatLive) _chatLiveEnd(); }catch(e){} }
+    // ── Two kinds of live call behind the one button and the one in-call screen ──
+    //   Grok live: the xAI realtime socket, his voice there, framing pushed in as she talks.
+    //   Chat live: hands-free over his own chat path: the mic listens, silence ends her turn, Whisper transcribes,
+    //   /api/voice/chat answers with everything he knows (and her shared screen), his own voice plays, then it
+    //   listens again. Same transcript line, same button, same session-end.
     function avStartVoiceCall() {
       var btn = document.getElementById('av-call-btn'); _avBtnFlash(btn);
-      if (window._vc && window._vc.ws) { endVintosCall(); if(btn) btn.style.color=''; btn.style.background=''; return; }
+      if (window._vc && (window._vc.ws || window._vc.chatLive)) { endVintosCall(); if(btn) btn.style.color=''; btn.style.background=''; return; }
+      var old=document.getElementById('av-call-menu'); if(old){ old.remove(); return; }
+      var host=document.getElementById('av-chat-strip') || document.getElementById('avatar-overlay'); if(!host){ _avCallGrok(); return; }
+      var m=document.createElement('div'); m.id='av-call-menu';
+      m.style.cssText='position:absolute;right:16px;bottom:72px;z-index:12;display:flex;flex-direction:column;gap:6px;min-width:240px;max-width:calc(100% - 32px);padding:8px;border-radius:12px;background:rgba(5,5,13,0.92);border:0.5px solid rgba(201,107,60,0.35);box-shadow:0 6px 24px rgba(0,0,0,0.5);';
+      function item(label, fn){ var x=document.createElement('button'); x.textContent=label; x.onclick=function(ev){ ev.stopPropagation(); m.remove(); fn(); };
+        x.style.cssText='padding:9px 10px;border-radius:10px;background:rgba(255,255,255,0.04);border:0.5px solid rgba(201,107,60,0.25);color:rgba(235,200,175,0.95);font-size:12px;letter-spacing:0.04em;cursor:pointer;text-align:left;'; return x; }
+      var last = ''; try{ last = localStorage.getItem('av.callMode')||''; }catch(e){}
+      m.appendChild(item('🎙  Grok live' + (last==='grok' ? '  ·  last used' : ''), function(){ try{localStorage.setItem('av.callMode','grok');}catch(e){} _avCallGrok(); }));
+      m.appendChild(item('💬  Chat live (his own mind, his own voice)' + (last==='chat' ? '  ·  last used' : ''), function(){ try{localStorage.setItem('av.callMode','chat');}catch(e){} _avCallChatLive(); }));
+      host.appendChild(m);
+      setTimeout(function(){ document.addEventListener('pointerdown', function close(ev){ if(m.contains(ev.target) || ev.target.id==='av-call-btn') return; m.remove(); document.removeEventListener('pointerdown', close); }); }, 0);
+    }
+    function _avCallLit(on){ var btn=document.getElementById('av-call-btn'); if(!btn) return; btn.style.color = on ? 'rgba(100,220,100,0.9)' : ''; btn.style.background = on ? 'rgba(80,200,120,0.5)' : ''; }
+    function _avCallChatLive(){
+      var _base = (typeof API !== 'undefined' && API) ? API : '';
+      var _h = {}; try{ if(typeof CONFIG!=='undefined' && CONFIG.secret) _h['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
+      var tr = document.getElementById('av-call-transcript'); if(tr) tr.textContent = '';
+      navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:true, autoGainControl:true}}).then(function(mic){
+        var ac = new (window.AudioContext||window.webkitAudioContext)(); ac.resume();
+        var src = ac.createMediaStreamSource(mic), an = ac.createAnalyser(); an.fftSize = 1024; src.connect(an);
+        var buf = new Float32Array(an.fftSize);
+        var vc = window._vc = {chatLive:true, mic:mic, ac:ac, rec:null, chunks:[], speaking:false, busy:false, lastVoice:0, voiceSince:0, turnCount:0, startedAt:Date.now(), player:new Audio(), timer:null};
+        _avCallLit(true);
+        function level(){ an.getFloatTimeDomainData(buf); var s=0; for(var i=0;i<buf.length;i++) s+=buf[i]*buf[i]; return Math.sqrt(s/buf.length); }
+        function startRec(){ try{ vc.rec = new MediaRecorder(mic, {mimeType: MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':''}); }catch(e){ vc.rec = new MediaRecorder(mic); }
+          vc.chunks=[]; vc.rec.ondataavailable=function(e){ if(e.data&&e.data.size) vc.chunks.push(e.data); }; vc.rec.onstop=sendTurn; vc.rec.start(); }
+        function sendTurn(){
+          var blob = new Blob(vc.chunks, {type: 'audio/webm'}); vc.chunks=[];
+          if(blob.size < 2000){ vc.busy=false; return; }
+          var fd = new FormData(); fd.append('audio', blob, 'voice.webm');
+          if(tr) tr.textContent = '…';
+          fetch(_base+'/api/voice/transcribe', {method:'POST', headers:_h, body:fd}).then(function(r){return r.json();}).then(function(td){
+            var text = (td && td.text || '').trim();
+            if(!text){ vc.busy=false; if(tr) tr.textContent=''; return; }
+            if(tr) tr.textContent = 'you: ' + text;
+            var hj = {}; for (var k in _h) hj[k]=_h[k]; hj['Content-Type']='application/json';
+            return fetch(_base+'/api/voice/chat', {method:'POST', headers:hj, body:JSON.stringify({transcript:text})}).then(function(r){return r.json();}).then(function(d){
+              if(!d || !d.success){ vc.busy=false; return; }
+              if(tr) tr.textContent = d.text || '';
+              try{ if(text){ _avChatHistory.push({role:'user',content:text}); _avLogMsg('user',text); } if(d.text){ _avChatHistory.push({role:'assistant',content:d.text}); _avLogMsg('assistant',d.text); } }catch(e){}
+              vc.turnCount++;
+              try{ vcCheckCommandBubble(document.getElementById('vc-messages')||document.body); }catch(e){}
+              if(d.audio_url){ vc.player.src = _base + d.audio_url; vc.player.onended = function(){ vc.busy=false; }; vc.player.onerror = function(){ vc.busy=false; }; vc.player.play().catch(function(){ vc.busy=false; }); }
+              else vc.busy=false;
+            });
+          }).catch(function(){ vc.busy=false; if(tr) tr.textContent=''; });
+        }
+        // her turn: voice above the floor starts a recording; 900 ms under it ends one. While he answers or
+        // speaks, the mic is not listened to (no barge-in yet), so his own voice never comes back as hers.
+        vc.timer = setInterval(function(){
+          if(!window._vc || window._vc!==vc) return;
+          if(vc.busy) return;
+          var now=Date.now(), l=level(), loud = l > 0.015;
+          if(loud){ vc.lastVoice=now; if(!vc.speaking){ vc.speaking=true; vc.voiceSince=now; startRec(); } }
+          else if(vc.speaking && now - vc.lastVoice > 900){ vc.speaking=false; if(now - vc.voiceSince < 500){ try{ vc.rec.ondataavailable=null; vc.rec.onstop=null; vc.rec.stop(); }catch(e){} return; } vc.busy=true; try{ vc.rec.stop(); }catch(e){ vc.busy=false; } }
+        }, 60);
+      }).catch(function(e){ alert('mic error: '+e.message); _avCallLit(false); window._vc=null; });
+    }
+    function _chatLiveEnd(){
+      var vc = window._vc; if(!vc || !vc.chatLive) return;
+      try{ clearInterval(vc.timer); }catch(e){} try{ vc.player.pause(); }catch(e){} try{ if(vc.rec && vc.rec.state==='recording'){ vc.rec.onstop=null; vc.rec.stop(); } }catch(e){}
+      try{ vc.mic.getTracks().forEach(function(t){t.stop();}); vc.ac.close(); }catch(e){}
+      _avCallLit(false);
+      try{ var _b=(typeof API!=='undefined'&&API)?API:''; var _h={'Content-Type':'application/json'};
+        try{ if(typeof CONFIG!=='undefined'&&CONFIG.secret) _h['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
+        fetch(_b+'/api/voice/session-end',{method:'POST',headers:_h,body:JSON.stringify({duration_seconds:Math.round((Date.now()-vc.startedAt)/1000),turns:vc.turnCount,mode:'chat-live'})});
+      }catch(e){}
+      window._vc=null;
+    }
+    function _avCallGrok() {
+      var btn = document.getElementById('av-call-btn');
       if (btn) btn.style.color = 'rgba(100,220,100,0.9)'; btn.style.background = 'rgba(80,200,120,0.5)';
       var _base = (typeof API !== 'undefined' && API) ? API : '';
       var _hdrs = {}; try{ if(typeof CONFIG!=='undefined' && CONFIG.secret) _hdrs['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
