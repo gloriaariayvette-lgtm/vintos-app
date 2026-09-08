@@ -34,3 +34,11 @@ on one leg" and "folds his arms" — not from the model.
 The corrected action prompt (both feet flat, no leaning, no folded arms, only a
 slow head turn) is written down but has not been generated. Use this set to test
 the *mechanism*; do not treat the pose as final.
+
+## Approved front source
+
+`neutral/neutral-front-approved.mp4` and `frames/front-approved.jpg` — the standing
+front view Gloria has already seen in the app and not objected to: upright, both
+feet flat, arms at his sides, oatmeal linen shirt, charcoal trousers, barefoot,
+plain grey. **Use this as the source for the other views**, not the folded-arms
+set above. His face reference is `website/avatar-models/v2/refs/vintos/vintos-1.jpg`.
