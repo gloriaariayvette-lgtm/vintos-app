@@ -269,9 +269,13 @@ function buildSmokeSystem() {
 }
 
 // ── Main init ─────────────────────────────────────────────────────────────────
-let THREE, smoke, mixer, clock, figure, camera, renderer, scene;
-let colorTarget = new THREE.Color ? new THREE.Color(0.18, 0.14, 0.10) : null;
-let colorCurrent;
+// Review 338: `let THREE` here declared a page-level binding that shadowed the
+// global the three.js script sets, so every THREE.* below read undefined, and
+// the colorTarget line dereferenced it before the engine had even loaded. The
+// engine is read from the global; the colors are made after init() loads it.
+let smoke, mixer, clock, figure, camera, renderer, scene;
+let colorTarget = null;
+let colorCurrent = null;
 let orbitAngle = 0;
 
 async function init() {
@@ -385,9 +389,11 @@ function animate() {
   camera.position.z = Math.cos(orbitAngle) * r;
   camera.lookAt(0, 0.9, 0);
 
-  // Lerp smoke color
-  colorCurrent.lerp(colorTarget, dt * 0.4);
-  smoke && smoke.setColor(colorCurrent);
+  // Lerp smoke color (only once init() has made them; polling can run first)
+  if (colorCurrent && colorTarget) {
+    colorCurrent.lerp(colorTarget, dt * 0.4);
+    smoke && smoke.setColor(colorCurrent);
+  }
   smoke && smoke.update(dt);
 
   if (mixer) mixer.update(dt);
@@ -403,7 +409,7 @@ async function updateTelemetry() {
     const s = d.dimensions || d.state || d;
     Object.assign(emoState, s);
 
-    colorTarget = smokeColorFromState(emoState);
+    if (window.THREE) colorTarget = smokeColorFromState(emoState);
 
     [['Valence','valence'],['Tension','tension'],['Curiosity','curiosity'],['Nifrathir','nifrathir']].forEach(([k,id]) => {
       const v = emoState[k] !== undefined ? emoState[k] : 0.5;
@@ -425,7 +431,7 @@ async function sendChat(text) {
     });
     const d = await r.json();
     document.getElementById('chat-message').textContent = d.reply || d.response || '';
-    if (d.emotions) { Object.assign(emoState, d.emotions); colorTarget = smokeColorFromState(emoState); }
+    if (d.emotions) { Object.assign(emoState, d.emotions); if (window.THREE) colorTarget = smokeColorFromState(emoState); }
   } catch(e) {
     document.getElementById('chat-message').textContent = '';
   }
