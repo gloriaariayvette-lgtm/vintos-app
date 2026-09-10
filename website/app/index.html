@@ -346,7 +346,7 @@ body {
     </div>
 
     <!-- Avatar -->
-    <div class="avatar-row" onclick="enterAvatar()">
+    <div class="avatar-row">
         <div class="avatar-orb" id="avatar-orb">
             <svg viewBox="0 0 36 20" id="avatar-eyes">
                 <ellipse class="eye" cx="11" cy="10" rx="3.5" ry="3.5"/>
@@ -739,10 +739,9 @@ async function fetchAvatar() {
     } catch {}
 }
 
-function enterAvatar() {
-    const url = `/avatar.html?api=${encodeURIComponent(API)}`;
-    window.location.href = url;
-}
+// The three.js avatar page is retired (review 338/394, 2026-09-10). The videos
+// replaced it; nothing here opens a 3D stage any more. The row above still shows
+// his colour and expression, and is no longer a door.
 
 // === Tune ===
 let paramDebounce = null;
