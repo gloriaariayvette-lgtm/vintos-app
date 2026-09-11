@@ -3612,9 +3612,30 @@ var _avStage = {
     hit=keys.filter(k=>k.split('-').some(w=>want.split('-').indexOf(w)>=0));
     return hit.length?hit.sort((a,b)=>a.length-b.length)[0]:null;
   },
-  setRoom: async function(name, _retry){
+  refresh: async function(){
+    // The manifest is read ONCE, at open. Everything after that ran against a stale copy:
+    // a room filmed later, a clip added, or the new default his [SCENE:] just wrote were
+    // all invisible until the app was closed and reopened - which is exactly why his scene
+    // changes looked one launch late. This refetches it without disturbing what is playing.
+    try{
+      var r=await fetch(API+'/avatar/stage/manifest',{headers:{'X-Vintos-Secret':CONFIG.secret}});
+      if(!r.ok) return false;
+      var m=await r.json();
+      if(!m || !Object.keys(m.rooms||{}).length) return false;
+      this.man=m; return true;
+    }catch(e){ return false; }
+  },
+  setRoom: async function(name, _retry, _refetched){
+    var want=name;
     name=this.resolve(name);
-    if(!name || !this.man || !this.man.rooms[name] || !(this.man.rooms[name].clips||[]).length) return;
+    if(!name || !this.man || !this.man.rooms[name] || !(this.man.rooms[name].clips||[]).length){
+      // A room he named that this copy of the manifest does not know is the ONE case that
+      // used to return in silence, leaving the old room on screen with nothing said. Refetch
+      // once and try again; only then give up, and say so.
+      if(!_refetched && await this.refresh()) return this.setRoom(want, _retry, true);
+      try{ console.log('[stage] no filmed room for [SCENE: '+want+'] (manifest refreshed)'); }catch(e){}
+      return;
+    }
     if(name===this.room && !this.speaking && !_retry) return;
     this.room=name; this.speaking=false;
     var clips=this.man.rooms[name].clips, self=this;
