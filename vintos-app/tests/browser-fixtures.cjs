@@ -38,6 +38,16 @@ const fs=require('node:fs');const path=require('node:path');
   if(holder.querySelector('img'))throw Error('thread unsafe');checks.push('threads');
   return checks;
  });
+ const screenshot=await page.evaluate(async()=>{
+  const overlay=document.getElementById('avatar-overlay');overlay.style.cssText='display:block;position:fixed;left:0;top:0;width:100px;height:100px;background:black;opacity:1';
+  const previous=_avStage.layers;
+  function layer(color,opacity){const wrap=document.createElement('div');wrap.style.cssText='position:absolute;inset:0;opacity:'+opacity;overlay.appendChild(wrap);function video(){const canvas=document.createElement('canvas');canvas.width=canvas.height=100;canvas.style.cssText='position:absolute;inset:0;width:100px;height:100px;object-fit:cover';const ctx=canvas.getContext('2d');ctx.fillStyle=color;ctx.fillRect(0,0,100,100);Object.defineProperties(canvas,{videoWidth:{value:100},videoHeight:{value:100},readyState:{value:2}});wrap.appendChild(canvas);return canvas;}return {wrap,bg:video(),fg:video()};}
+  const red=layer('red',1),blue=layer('blue',0.5);_avStage.layers=[blue,red];
+  const captured=_avCaptureScreenshot();const image=new Image();image.src='data:image/jpeg;base64,'+captured;await image.decode();const sample=document.createElement('canvas');sample.width=sample.height=100;const ctx=sample.getContext('2d');ctx.drawImage(image,0,0);const pixel=Array.from(ctx.getImageData(50,50,1,1).data);
+  red.wrap.remove();blue.wrap.remove();_avStage.layers=previous;overlay.style.display='none';
+  if(Math.abs(pixel[0]-127)>6||Math.abs(pixel[2]-128)>6)throw Error('screenshot differs from visible group opacity: '+pixel);
+  if(_avCaptureScreenshot()!==null)throw Error('closed stage captured');return pixel;
+ });
  const microphone=await page.evaluate(async()=>{let grant,stopped=0;Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{getUserMedia:()=>new Promise(r=>grant=r)}});const start=vcStartRecord();await vcStopRecord();grant({getTracks:()=>[{stop:()=>stopped++}]});await start;return stopped;});
  if(microphone!==1)throw Error('late microphone grant survived cancellation');
  const playback=await page.evaluate(async()=>{
@@ -59,7 +69,7 @@ const fs=require('node:fs');const path=require('node:path');
   return {before,closed:!window._vc};
  });
  if(playback.before||ledger.length!==1||ledger[0].response_id!=='response-1'||ledger[0].playback_state!=='completed')throw Error(JSON.stringify({playback,ledger}));
- console.log(JSON.stringify({failure:result,success,posts,safe,renderChecks,microphone,playback,ledger,pageErrors:errors},null,2));
+ console.log(JSON.stringify({failure:result,success,posts,safe,renderChecks,screenshot,microphone,playback,ledger,pageErrors:errors},null,2));
  if(errors.length)throw Error('browser page errors');
  await browser.close();
 })().catch(e=>{console.error(e);process.exitCode=1;});
