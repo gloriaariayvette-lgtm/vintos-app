@@ -9,13 +9,13 @@ addEventListener('checkOutreach', async (resolve, reject) => {
     });
 
     if (!response.ok) {
-      resolve();
+      reject(new Error("Outreach request failed: " + response.status));
       return;
     }
 
     const data = await response.json();
 
-    if (data.pending && data.message) {
+    if ((data.has_message || data.pending) && data.message) {
       const emoji = data.emoji || '✦';
 
       await CapacitorNotifications.schedule([{
@@ -29,7 +29,6 @@ addEventListener('checkOutreach', async (resolve, reject) => {
 
     resolve();
   } catch (error) {
-    // Silently fail — Vintos might just be asleep or VPN disconnected
-    resolve();
+    reject(error);
   }
 });

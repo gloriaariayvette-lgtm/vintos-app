@@ -33,6 +33,10 @@
 	<string>Vintos needs your microphone to hear you during voice calls.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Share photos with Vintos</string>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>dev.vintos.outreach-check</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

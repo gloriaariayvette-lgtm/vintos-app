@@ -25,7 +25,7 @@ const config: CapacitorConfig = {
       src: 'runners/outreach.js',
       event: 'checkOutreach',
       repeat: true,
-      interval: 5, // minutes
+      interval: 15, // minutes requested; iOS chooses actual background opportunities
       autoStart: true,
     },
   },
