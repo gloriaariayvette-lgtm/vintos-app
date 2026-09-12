@@ -50,6 +50,16 @@ const fs=require('node:fs');const path=require('node:path');
  });
  const microphone=await page.evaluate(async()=>{let grant,stopped=0;Object.defineProperty(navigator,'mediaDevices',{configurable:true,value:{getUserMedia:()=>new Promise(r=>grant=r)}});const start=vcStartRecord();await vcStopRecord();grant({getTracks:()=>[{stop:()=>stopped++}]});await start;return stopped;});
  if(microphone!==1)throw Error('late microphone grant survived cancellation');
+ const recovery=await page.evaluate(async()=>{
+  vcKeepRecording(new Blob(['fixture'],{type:'audio/webm'}),'retained transcript');vcPendingRecording=new Blob(['fixture']);
+  const panel=document.getElementById('vc-recording-draft');if(!panel.querySelector('audio[controls]'))throw Error('recording unavailable');
+  const input=document.getElementById('chat-input');input.value='existing draft';
+  Array.from(panel.querySelectorAll('button')).find(b=>b.textContent==='Copy transcript to chat').click();
+  if(input.value!=='existing draft\nretained transcript')throw Error('copy lost draft');
+  const prior=vcPendingRecording;await vcStartRecord();if(vcPendingRecording!==prior)throw Error('new recording replaced pending recording');
+  vcClearRecording();if(document.getElementById('vc-recording-draft')||vcDraftURL)throw Error('recording cleanup failed');
+  return {draft:input.value,recordingReleased:true};
+ });
  const playback=await page.evaluate(async()=>{
   const sources=[];const sockets=[];
   window.AudioContext=class {constructor(){this.currentTime=0;this.destination={};}resume(){return Promise.resolve();}close(){return Promise.resolve();}createBuffer(){return {duration:0.01,getChannelData:()=>({set(){}})};}createBufferSource(){const node={connect(){},start(){},stop(){}};sources.push(node);return node;}};
@@ -69,7 +79,7 @@ const fs=require('node:fs');const path=require('node:path');
   return {before,closed:!window._vc};
  });
  if(playback.before||ledger.length!==1||ledger[0].response_id!=='response-1'||ledger[0].playback_state!=='completed')throw Error(JSON.stringify({playback,ledger}));
- console.log(JSON.stringify({failure:result,success,posts,safe,renderChecks,screenshot,microphone,playback,ledger,pageErrors:errors},null,2));
+ console.log(JSON.stringify({failure:result,success,posts,safe,renderChecks,screenshot,microphone,recovery,playback,ledger,pageErrors:errors},null,2));
  if(errors.length)throw Error('browser page errors');
  await browser.close();
 })().catch(e=>{console.error(e);process.exitCode=1;});
