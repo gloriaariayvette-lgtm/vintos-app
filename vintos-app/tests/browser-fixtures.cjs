@@ -23,6 +23,21 @@ const fs=require('node:fs');const path=require('node:path');
  if(success.draft!==''||success.injected||success.images||posts!==2)throw Error(JSON.stringify({success,posts}));
  const safe=await page.evaluate(()=>{const target=document.createElement('div');document.body.appendChild(target);const attack='<img src=x onerror="window.injected=1">';target.innerHTML=_wbCard({id:'fixture',want:attack,source:attack,reasoning:attack,timestamp:new Date().toISOString(),intensity:0},false);const result={images:target.querySelectorAll('img').length,text:target.textContent};target.remove();return result;});
  if(safe.images||!safe.text.includes('<img'))throw Error('want rendering did not preserve text');
+ const fragment=await page.evaluate(async()=>{
+  const original=VintosUI.request;let resolve,calls=0;
+  VintosUI.request=()=>{calls++;return new Promise(r=>resolve=r);};
+  const input=document.getElementById('ledger-fragment-input');input.value='sent fragment';
+  const first=submitFragment();const duplicate=submitFragment();input.value='new fragment';
+  resolve({ok:true});await Promise.all([first,duplicate]);VintosUI.request=original;
+  if(calls!==1||input.value!=='new fragment')throw Error('fragment lost newer draft or duplicated request');
+  return {calls,draft:input.value};
+ });
+ const sharing=await page.evaluate(async()=>{
+  const original=VintosUI.request;VintosUI.request=async()=>{throw Error('fixture failure');};
+  _shareOn=true;await toggleScreenShare();if(!_shareOn)throw Error('unconfirmed stop reported stopped');
+  await pollShareStatus();const status=_shareStatusEl().textContent;VintosUI.request=original;
+  if(!status.includes('unknown'))throw Error('unknown sharing status hidden');return status;
+ });
  const renderChecks=await page.evaluate(()=>{
   const attack='<img src=x onerror="window.injected=1">';
   const checks=[];
@@ -79,7 +94,7 @@ const fs=require('node:fs');const path=require('node:path');
   return {before,closed:!window._vc};
  });
  if(playback.before||ledger.length!==1||ledger[0].response_id!=='response-1'||ledger[0].playback_state!=='completed')throw Error(JSON.stringify({playback,ledger}));
- console.log(JSON.stringify({failure:result,success,posts,safe,renderChecks,screenshot,microphone,recovery,playback,ledger,pageErrors:errors},null,2));
+ console.log(JSON.stringify({failure:result,success,posts,safe,fragment,sharing,renderChecks,screenshot,microphone,recovery,playback,ledger,pageErrors:errors},null,2));
  if(errors.length)throw Error('browser page errors');
  await browser.close();
 })().catch(e=>{console.error(e);process.exitCode=1;});
