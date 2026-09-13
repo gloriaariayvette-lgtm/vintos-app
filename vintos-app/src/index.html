@@ -494,6 +494,7 @@ input[type="range"]::-webkit-slider-thumb {
         <div class="tab" data-tab="atelier">ATELIER</div>
         <div class="tab" data-tab="therapy">THERAPY</div>
         <div class="tab" data-tab="study">STUDY</div>
+        <div class="tab" data-tab="lab">LAB</div>
     </div>
 
     <!-- Tab content -->
@@ -607,6 +608,14 @@ input[type="range"]::-webkit-slider-thumb {
         <!-- SOUL PROPOSALS -->
         <div class="tab-pane" id="pane-proposals">
             <div id="proposals-feed" style="padding:1rem;font-size:0.85rem;line-height:1.7;color:var(--text-dim,#a09890);overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;"></div>
+        </div>
+
+        <!-- Chemistry Lab — operational state and scientific grade remain two marks. -->
+        <div class="tab-pane" id="pane-lab">
+            <div class="gallery-content">
+                <div id="lab-summary" style="font-size:0.62rem;color:var(--text-dim);line-height:1.6;margin-bottom:14px;">loading...</div>
+                <div id="lab-grid" class="gallery-grid"></div>
+            </div>
         </div>
 
         <!-- STUDY: his code, with Gloria's y/n -->
@@ -1242,6 +1251,7 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'blush') loadBlush();
         if (tab.dataset.tab === 'atelier') loadAtelierReveals();
         if (tab.dataset.tab === 'therapy') loadTherapy();
+        if (tab.dataset.tab === 'lab') loadLab();
     });
 });
 
@@ -1479,11 +1489,15 @@ function _setChemistryLabUI(data) {
     const text = document.getElementById('chemistry-lab-status-text');
     if (cb) cb.checked = on;
     if (knob) { knob.style.transform = on ? 'translateX(20px)' : 'translateX(0)'; knob.style.background = on ? 'var(--accent)' : 'var(--text-dim)'; knob.parentElement.querySelector('span').style.background = on ? 'var(--accent-dim)' : 'var(--surface-2)'; }
-    if (text) text.textContent = on ? ((data.effective_state || 'waiting') + ' · ' + (data.phase || 'orient')) : 'off · notebook and artifacts kept';
+    if (text) text.textContent = (on ? 'enabled' : 'disabled') + ' · ' +
+        ((data && data.effective_state) || 'unknown') + ' · ' +
+        ((data && data.last_outcome) || 'no turn yet') + ' · ' +
+        ((data && data.last_turn_at) ? String(data.last_turn_at).slice(0, 16) : 'never');
 }
 async function loadChemistryLabStatus() {
     try {
-        const res = await VintosUI.request(`${API}/api/lab/chemistry/status`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
+        const res = await fetch(`${API}/api/lab/chemistry/status`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
+        if (!res.ok) throw new Error('status refused');
         _setChemistryLabUI(await res.json());
     } catch(e) {
         const text = document.getElementById('chemistry-lab-status-text'); if (text) text.textContent = 'unreachable';
@@ -1492,12 +1506,82 @@ async function loadChemistryLabStatus() {
 async function toggleChemistryLab() {
     const cb = document.getElementById('chemistry-lab-toggle');
     try {
-        const res = await VintosUI.request(`${API}/api/lab/chemistry/toggle`, { method: 'POST',
+        const res = await fetch(`${API}/api/lab/chemistry/toggle`, { method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
             body: JSON.stringify({ on: !!cb.checked }) });
         if (!res.ok) throw new Error('toggle refused');
         _setChemistryLabUI(await res.json()); haptic('light');
     } catch(e) { cb.checked = !cb.checked; loadChemistryLabStatus(); }
+}
+function _labNumber(value) {
+    const n = typeof value === 'number' ? value : parseFloat(value);
+    return Number.isFinite(n) ? n : null;
+}
+function _labVerdict(accuracy) {
+    const marks = {
+        ALL_BETTER_THAN_HARTREE_FOCK: ['better than Hartree-Fock', 'var(--accent)'],
+        MIXED: ['mixed against Hartree-Fock', 'var(--text)'],
+        ALL_AT_HARTREE_FOCK: ['at Hartree-Fock', 'var(--text-dim)'],
+        ALL_WORSE_THAN_HARTREE_FOCK: ['worse than Hartree-Fock', '#c46a5a'],
+        ANY_INVALID_BELOW_EXACT: ['below exact — invalid', '#c46a5a'],
+        NO_GRADEABLE_POINTS: ['ungraded — no reference', 'var(--text-dim)']
+    };
+    return marks[accuracy] || [accuracy ? String(accuracy).toLowerCase().replace(/_/g, ' ') : 'not graded', 'var(--text-dim)'];
+}
+function _labChip(label, colour) {
+    return '<span style="display:inline-block;font-size:0.54rem;padding:2px 7px;border:1px solid ' + colour +
+        ';color:' + colour + ';border-radius:10px;margin:0 6px 5px 0;">' + _esc(label) + '</span>';
+}
+async function _labGet(path) {
+    const res = await fetch(`${API}/api/lab/chemistry/${path}`, {headers: {'X-Vintos-Secret': CONFIG.secret}});
+    if (!res.ok) throw new Error('Lab request refused');
+    return await res.json();
+}
+async function loadLab() {
+    const summary = document.getElementById('lab-summary');
+    const grid = document.getElementById('lab-grid');
+    if (!grid) return;
+    grid.innerHTML = '<div class="gallery-empty">reading the Lab...</div>';
+    let status, sessions, taste;
+    try {
+        [status, sessions, taste] = await Promise.all([
+            _labGet('status'), _labGet('sessions?limit=12'), _labGet('taste')
+        ]);
+    } catch (e) {
+        summary.textContent = 'unreachable';
+        grid.innerHTML = '<div class="gallery-empty">the Lab is unreachable</div>';
+        return;
+    }
+    const tools = status.tools || {};
+    const measured = Object.keys(tools).filter(name => tools[name].available).length;
+    summary.innerHTML = _labChip(status.enabled ? (status.effective_state || 'waiting') : 'off · history kept', status.enabled ? 'var(--accent)' : 'var(--text-dim)') +
+        _labChip(measured + ' of ' + Object.keys(tools).length + ' instruments measured', 'var(--text-dim)') +
+        '<div style="margin-top:6px;">last: ' + _esc(status.last_outcome || 'no turn yet') + ' · ' + _esc(String(status.last_turn_at || 'never').slice(0, 16)) + '</div>';
+    const cards = [];
+    for (const row of (sessions.sessions || []).slice().reverse()) {
+        const verdict = _labVerdict(row.aggregate_accuracy);
+        cards.push('<div class="gallery-item" style="padding:14px;">' +
+            '<div style="display:flex;justify-content:space-between;gap:10px;">' +
+            '<div style="font-size:0.74rem;color:var(--text-bright);">' + _esc(row.experiment || 'session') + '</div>' +
+            '<time style="font-size:0.56rem;color:var(--text-dim);">' + _esc(String(row.at || '').slice(0, 16)) + '</time></div>' +
+            '<div style="margin:8px 0;">' +
+            _labChip('instrument: ' + (row.execution_state || row.state || 'unknown'), 'var(--text-dim)') +
+            _labChip('answer: ' + verdict[0], verdict[1]) + '</div>' +
+            (row.reading ? '<div style="font-size:0.68rem;color:var(--text);line-height:1.6;white-space:pre-wrap;">' + _esc(row.reading) + '</div>' : '') +
+            (row.next_question ? '<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next — ' + _esc(row.next_question) + '</div>' : '') +
+            '</div>');
+    }
+    const entries = taste.taste || [];
+    if (entries.length || (taste.candidates || []).length) {
+        cards.push('<div class="gallery-item" style="padding:14px;">' +
+            '<div style="font-size:0.74rem;color:var(--text-bright);">scientific taste</div>' +
+            '<div style="font-size:0.56rem;color:var(--text-dim);margin:4px 0 10px;">what he returns to, separate from correctness</div>' +
+            entries.map(e => '<div style="display:flex;justify-content:space-between;gap:10px;font-size:0.64rem;padding:3px 0;">' +
+                '<span>' + _esc(e.kind || '') + ' · ' + _esc(e.key || '') + '</span><span>' +
+                _esc(_labNumber(e.score) === null ? '—' : _labNumber(e.score).toFixed(2)) + '</span></div>').join('') +
+            '</div>');
+    }
+    grid.innerHTML = cards.length ? cards.join('') : '<div class="gallery-empty">the Lab has not run yet</div>';
 }
 async function loadParams() {
     try {
