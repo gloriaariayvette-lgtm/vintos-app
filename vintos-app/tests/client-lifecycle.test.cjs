@@ -25,3 +25,27 @@ test('text encoding preserves zero and quotes as text',()=>{
   const ui=create({fetch:()=>{throw Error('no network')}});
   assert.equal(ui.text(0),'0');assert.equal(ui.text('<img onerror="x">'), '&lt;img onerror=&quot;x&quot;&gt;');
 });
+test('auxiliary media carries no conversational turn authority',async()=>{
+  const seen=[];
+  const ui=create({fetch:async(url,init)=>{seen.push([url,new Headers(init.headers||{})]);return new Response('{}');}});
+  const turn=ui.begin('avatar');
+  await ui.request('/reply');
+  await ui.auxiliary('/stage',{},100);
+  assert.equal(seen[0][1].get('X-Client-Turn-Id'),turn.id);
+  assert.equal(seen[1][1].get('X-Client-Turn-Id'),null);
+  ui.finish(turn);
+});
+test('a slow auxiliary clip times out without holding the controls',async()=>{
+  const ui=create({fetch:async(_url,init)=>await new Promise((resolve,reject)=>{
+    init.signal.addEventListener('abort',()=>reject(new DOMException('aborted','AbortError')),{once:true});
+  })});
+  const turn=ui.begin('avatar');
+  const bubble={text:'his reply'};             // reply has already rendered
+  ui.finish(turn);                             // exact ordering used by avSendChat
+  const delayed=ui.auxiliary('/slow-stage',{},25).catch(e=>e.name);
+  const next=ui.begin('button');               // controls remain live immediately
+  assert.equal(bubble.text,'his reply');
+  assert.ok(next);
+  assert.equal(await delayed,'AbortError');
+  ui.finish(next);
+});
