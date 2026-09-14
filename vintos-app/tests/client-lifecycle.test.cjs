@@ -65,3 +65,14 @@ test('speaking video cannot own touch or start the blurred duplicate decoder',()
   assert.match(client,/id="av-drawer"[^>]*pointer-events:auto/);
   assert.match(client,/id="av-chat-strip"[^>]*pointer-events:auto/);
 });
+test('avatar text has one home below the video and never creates overlay bubbles',()=>{
+  const client=fs.readFileSync(path.join(__dirname,'../src/index.html'),'utf8');
+  const show=client.split('function _avShowBubble(text)',2)[1].split('let _avLastCmdTs',1)[0];
+  const command=client.split('async function _avCheckCommandBubble()',2)[1].split('function _avHideBubble',1)[0];
+  assert.match(client,/id="av-chat-message"/);
+  assert.doesNotMatch(show,/createElement|appendChild|textContent\s*=/);
+  assert.match(show,/old\.remove\(\)/);
+  assert.match(command,/_avLogMsg\('system'/);
+  assert.doesNotMatch(client,/_avShowBubble\(display\)/);
+  assert.doesNotMatch(client,/bubble\.id\s*=\s*'av-bubble'/);
+});

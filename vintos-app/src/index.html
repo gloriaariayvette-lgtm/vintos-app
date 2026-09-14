@@ -3401,7 +3401,7 @@ const _avGestureMap = {
   angry:'angry', thankful:'thankful', look_around:'look_around',
 };
 
-// ── AUDIO UNLOCK & THOUGHT BUBBLE ──────────────────────────────
+// ── AUDIO UNLOCK ────────────────────────────────────────────────
 let _avAudioUnlocked = false;
 let _avAudioEl = null;
 
@@ -3415,15 +3415,9 @@ function _avUnlockAudio() {
 }
 
 function _avShowBubble(text) {
-  let bubble = document.getElementById('av-bubble');
-  if(!bubble) {
-    bubble = document.createElement('div');
-    bubble.id = 'av-bubble';
-    bubble.style.cssText = 'position:absolute;left:3%;top:22%;max-width:38%;background:rgba(5,5,13,0.28);border:0.5px solid rgba(201,107,60,0.08);border-radius:16px;padding:10px 14px;font-family:Cormorant Garamond,Georgia,serif;font-size:13px;font-style:italic;font-weight:300;color:rgba(200,196,191,0.65);line-height:1.6;text-align:left;pointer-events:none;transition:opacity 0.6s ease;z-index:1;';
-    document.getElementById('avatar-overlay').appendChild(bubble);
-  }
-  bubble.textContent = text;
-  bubble.style.opacity = '1';
+  // Legacy callers may still arrive during an in-place WebView update. The
+  // avatar surface has one textual home: #av-chat-message below the video.
+  const old=document.getElementById('av-bubble'); if(old)old.remove();
 }
 
 let _avLastCmdTs = 0;
@@ -3434,21 +3428,13 @@ async function _avCheckCommandBubble() {
     if(!b || !b.ts || b.ts <= _avLastCmdTs) return;
     if((Date.now()/1000) - b.ts > 120) return;
     _avLastCmdTs = b.ts;
-    let el = document.getElementById('av-cmd-bubble');
-    if(!el) {
-      el = document.createElement('div');
-      el.id = 'av-cmd-bubble';
-      el.style.cssText = 'position:absolute;right:3%;top:12%;max-width:44%;background:rgba(20,8,4,0.5);border:0.5px solid rgba(201,107,60,0.5);border-radius:14px;padding:9px 13px;font-size:12px;letter-spacing:0.03em;color:rgba(235,200,175,0.92);line-height:1.5;pointer-events:none;transition:opacity 0.6s ease;z-index:2;';
-      document.getElementById('avatar-overlay').appendChild(el);
-    }
-    el.textContent = (b.type === 'command' ? 'HIS COMMAND \u2014 ' : 'HIS TOUCH \u2014 ') + b.text;
-    el.style.opacity = '1';
+    _avLogMsg('system',(b.type === 'command' ? 'HIS COMMAND \u2014 ' : 'HIS TOUCH \u2014 ') + b.text);
   } catch(e) {}
 }
 
 function _avHideBubble() {
   const bubble = document.getElementById('av-bubble');
-  if(bubble) bubble.style.opacity = '0';
+  if(bubble) bubble.remove();
 }
 
 function _avLogMsg(role, text){
@@ -3480,8 +3466,6 @@ async function _avSpeakAndShow(raw, eventNote) {
   const {text:display, gestures, holds, spawns, color} = _avParseReply(raw);
   if(eventNote) _avChatHistory.push({role:'user', content:eventNote}); _avSaveHistory();
   _avChatHistory.push({role:'assistant', content:raw}); _avSaveHistory();
-  _avShowBubble(display);
-  try{ var _avr=(document.getElementById('avatar-reason')||{}).textContent||''; if(_avr) _avShowBubble(_avr); }catch(e){}
   if(eventNote) _avLogMsg('system', eventNote); _avLogMsg('assistant', display);
   _avCheckCommandBubble();
   (async () => {
@@ -3505,7 +3489,7 @@ async function _avSpeakAndShow(raw, eventNote) {
       _avAudioEl.play().catch(()=>{
         _avAudioEl.controls=true;_avAudioEl.style.cssText='position:absolute;bottom:90px;left:10%;width:80%;z-index:20';
         document.getElementById('avatar-overlay').appendChild(_avAudioEl);
-        _avShowBubble('Playback failed. Use the audio controls to retry.');
+        _avLogMsg('system','Playback failed. Use the audio controls to retry.');
       });
     }
   } catch(e) { setTimeout(_avHideBubble, 5000); }
@@ -3884,7 +3868,7 @@ var _avStage = {
       _avAudioEl.play().catch(function(){
         _avAudioEl.controls=true; _avAudioEl.style.cssText='position:absolute;bottom:90px;left:10%;width:80%;z-index:20';
         var ov=document.getElementById('avatar-overlay'); if(ov&&!_avAudioEl.parentNode)ov.appendChild(_avAudioEl);
-        _avShowBubble('Playback was blocked. Tap play to hear him.');
+        _avLogMsg('system','Playback was blocked. Tap play to hear him.');
       });
       return true;
     }catch(e){ this.speaking=false; if(requestedRoom)this.setRoom(requestedRoom); return false; }
@@ -4159,7 +4143,7 @@ async function _avPollReason(){
   try{
     var r=await VintosUI.request(API+'/api/avatar/imprint',{headers:{'X-Vintos-Secret':CONFIG.secret}});
     var d=await r.json();
-    if(d && d.narrative && String(d.narrative).trim()){ _avShowBubble(String(d.narrative).trim()); setTimeout(_avHideBubble, 15000); }
+    if(d && d.narrative && String(d.narrative).trim()) _avLogMsg('system',String(d.narrative).trim());
   }catch(e){}
 }
 async function avSendChat() {
@@ -4187,7 +4171,6 @@ async function avSendChat() {
     if(!VintosUI.current(turn))return;
     const {text:display, gestures, holds, spawns, color, scenes, renders} = _avParseReply(raw);
     _avLogMsg('assistant', display);
-    _avShowBubble(display);
     try{ var _bm=String(d.model||''); if(_bm.indexOf('grok')===0)_avSetBrainLabel('grok'); else if(_bm.indexOf('claude')===0)_avSetBrainLabel('claude'); }catch(e){}
     setTimeout(_avPollReason, 300);
     // His words are committed to the screen now. Release the global turn before
