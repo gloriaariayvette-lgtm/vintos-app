@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const {create} = require('../src/client_lifecycle.js');
 test('HTTP and application failures reject and surface an error', async()=>{
   const messages=[];
@@ -48,4 +50,18 @@ test('a slow auxiliary clip times out without holding the controls',async()=>{
   assert.ok(next);
   assert.equal(await delayed,'AbortError');
   ui.finish(next);
+});
+test('speaking video cannot own touch or start the blurred duplicate decoder',()=>{
+  const client=fs.readFileSync(path.join(__dirname,'../src/index.html'),'utf8');
+  const element=client.split('_el: function(i)',2)[1].split('_fetchBlob:',1)[0];
+  const show=client.split('_show: async function(url, opts)',2)[1].split('resolve: function(name)',1)[0];
+  const speak=client.split('speak: async function(text, requestedRoom)',2)[1].split('\n  }\n};',1)[0];
+  const media=client.split('function _avStartReplyMedia',2)[1].split('let _avLastScreenshot',1)[0];
+  assert.ok((element.match(/pointer-events:none/g)||[]).length>=3);
+  assert.match(show,/if\(!lightweight\)L\.bg\.play\(\)/);
+  assert.match(show,/L\.bg\.removeAttribute\('src'\)/);
+  assert.match(speak,/lightweight:true/);
+  assert.match(media,/requestAnimationFrame/);
+  assert.match(client,/id="av-drawer"[^>]*pointer-events:auto/);
+  assert.match(client,/id="av-chat-strip"[^>]*pointer-events:auto/);
 });
