@@ -76,3 +76,13 @@ test('avatar text has one home below the video and never creates overlay bubbles
   assert.doesNotMatch(client,/_avShowBubble\(display\)/);
   assert.doesNotMatch(client,/bubble\.id\s*=\s*'av-bubble'/);
 });
+test('avatar send paints and clears before the request while preserving server acknowledgement',()=>{
+  const client=fs.readFileSync(path.join(__dirname,'../src/index.html'),'utf8');
+  const send=client.split('async function avSendChat()',2)[1].split('// ── THREADS TAB',1)[0];
+  const request=send.indexOf("await VintosUI.request(API+'/api/avatar/chat'");
+  assert.ok(send.indexOf('VintosUI.ack(inp,sentDraft)') < request);
+  assert.ok(send.indexOf("_avLogMsg('user',text)") < request);
+  assert.ok(send.indexOf("_avChatHistory.push({role:'user',content:text})") > request);
+  assert.match(send,/history:historyForRequest/);
+  assert.doesNotMatch(send,/inp\.disabled|av-drawer.*disabled/);
+});

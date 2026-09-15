@@ -32,6 +32,24 @@ const fs=require('node:fs');const path=require('node:path');
   if(calls!==1||input.value!=='new fragment')throw Error('fragment lost newer draft or duplicated request');
   return {calls,draft:input.value};
  });
+ const avatarOptimistic=await page.evaluate(async()=>{
+  VintosUI.invalidate();
+  const original=VintosUI.request;let release;
+  VintosUI.request=(url)=>String(url).includes('/api/avatar/chat')
+    ? new Promise(r=>{release=r;})
+    : Promise.resolve({ok:true,json:async()=>({mode:'claude'})});
+  const input=document.getElementById('av-chat-input');input.value='visible immediately';
+  const drawer=document.getElementById('av-drawer');drawer.setAttribute('data-open','0');
+  const pending=avSendChat();await new Promise(r=>setTimeout(r,0));
+  const immediate={draft:input.value,shown:document.getElementById('av-chat-message').textContent,open:drawer.getAttribute('data-open')};
+  input.value='next draft';avToggleDrawer();
+  const responsive={draft:input.value,open:drawer.getAttribute('data-open')};
+  release({ok:true,json:async()=>({reply:'reply arrived'})});await pending;
+  const users=Array.from(document.querySelectorAll('#av-chat-message div')).filter(n=>n.textContent==='You: visible immediately').length;
+  VintosUI.request=original;
+  if(immediate.draft!==''||!immediate.shown.includes('You: visible immediately')||responsive.draft!=='next draft'||responsive.open!=='1'||users!==1)throw Error(JSON.stringify({immediate,responsive,users}));
+  return {immediate,responsive,users};
+ });
  const sharing=await page.evaluate(async()=>{
   const original=VintosUI.request;VintosUI.request=async()=>{throw Error('fixture failure');};
   _shareOn=true;await toggleScreenShare();if(!_shareOn)throw Error('unconfirmed stop reported stopped');
@@ -84,6 +102,8 @@ const fs=require('node:fs');const path=require('node:path');
   const socket=sockets[0];const emit=m=>socket.onmessage({data:JSON.stringify(m)});
   emit({type:'session.created',session:{id:'provider-session'}});
   emit({type:'response.created',response:{id:'response-1'}});
+  emit({type:'conversation.item.input_audio_transcription.updated',item_id:'input-1',delta:'Context: partial'});
+  emit({type:'conversation.item.input_audio_transcription.completed',item_id:'input-1',transcript:'Context: the complete words [kept]'});
   emit({type:'response.output_audio.delta',response_id:'response-1',delta:btoa(String.fromCharCode(0,0))});
   emit({type:'response.output_audio_transcript.done',response_id:'response-1',transcript:'fixture response'});
   emit({type:'response.done',response:{id:'response-1'}});
@@ -93,8 +113,8 @@ const fs=require('node:fs');const path=require('node:path');
   endVintosCall();await new Promise(r=>setTimeout(r,50));
   return {before,closed:!window._vc};
  });
- if(playback.before||ledger.length!==1||ledger[0].response_id!=='response-1'||ledger[0].playback_state!=='completed')throw Error(JSON.stringify({playback,ledger}));
- console.log(JSON.stringify({failure:result,success,posts,safe,fragment,sharing,renderChecks,screenshot,microphone,recovery,playback,ledger,pageErrors:errors},null,2));
+ if(playback.before||ledger.length!==1||ledger[0].response_id!=='response-1'||ledger[0].playback_state!=='completed'||ledger[0].gloria!=='Context: the complete words [kept]')throw Error(JSON.stringify({playback,ledger}));
+ console.log(JSON.stringify({failure:result,success,posts,safe,fragment,avatarOptimistic,sharing,renderChecks,screenshot,microphone,recovery,playback,ledger,pageErrors:errors},null,2));
  if(errors.length)throw Error('browser page errors');
  await browser.close();
 })().catch(e=>{console.error(e);process.exitCode=1;});
