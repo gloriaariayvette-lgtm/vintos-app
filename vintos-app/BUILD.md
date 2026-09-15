@@ -20,7 +20,9 @@ In Xcode:
 2. Info.plist — add the same entries as the Velaris app:
    - NSCameraUsageDescription: "Vintos would like to see what you see"
    - NSPhotoLibraryUsageDescription: "Share photos with Vintos"
-   - UIBackgroundModes: fetch, processing
+   - NSLocationWhenInUseUsageDescription: place-aware presence and experiences
+   - NSLocationAlwaysAndWhenInUseUsageDescription: optional background place awareness
+   - UIBackgroundModes: fetch, processing, location
    - NSAppTransportSecurity → NSAllowsArbitraryLoads: YES (Tailscale is HTTP)
 3. Select your iPhone as target, ⌘R
 

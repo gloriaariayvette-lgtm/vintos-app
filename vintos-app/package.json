@@ -2,6 +2,10 @@
   "name": "vintos-app",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "postinstall": "node scripts/patch-background-runner.js",
+    "test:native-patches": "node scripts/patch-background-runner.js --check"
+  },
   "dependencies": {
     "@capacitor/background-runner": "^1.1.0",
     "@capacitor/core": "^5.7.0",
