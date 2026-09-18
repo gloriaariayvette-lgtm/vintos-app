@@ -1585,7 +1585,8 @@ async function loadLab() {
     let status, sessions, taste, structures;
     try {
         [status, sessions, taste, structures] = await Promise.all([
-            _labGet('status'), _labGet('sessions?limit=12'), _labGet('taste'), _labGet('structures?limit=24')
+            _labGet('status'), _labGet('sessions?limit=12'), _labGet('taste'),
+            _labGet('structures?limit=24').catch(error => ({ok:false, structures:[], error:String(error)}))
         ]);
     } catch (e) {
         summary.textContent = 'unreachable';
