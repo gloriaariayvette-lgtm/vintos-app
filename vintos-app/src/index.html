@@ -4311,15 +4311,105 @@ async function avSendChat() {
 }
 
 // ── JOURNAL AND LANDINGS ────────────────────────────────────────────────────
-function _landingMark(surface,ref){if(!surface||!ref)return'';return '<button type="button" aria-label="How did this land?" title="How did this land?" onclick="event.stopPropagation();_landingOpen(\''+_jsArg(surface)+'\',\''+_jsArg(ref)+'\')" style="margin-top:8px;background:none;border:0;color:var(--text-dim);font-size:0.8rem;cursor:pointer;padding:5px 7px;border-radius:50%;">◌</button>';}
-function _landingContextHtml(ctx){if(!ctx)return'<div style="color:var(--text-dim);">Context is unavailable.</div>';const made=Object.entries(ctx.made||{}).filter(([,v])=>v!==''&&v!=null).map(([k,v])=>'<div style="margin-bottom:7px;"><span style="color:var(--text-dim);">'+_esc(k.replace(/_/g,' '))+'</span><br>'+_esc(typeof v==='string'?v:JSON.stringify(v,null,2)).replace(/\n/g,'<br>')+'</div>').join('');const lead=(ctx.lead_up||[]).map(r=>'<div style="margin-top:8px;padding-left:9px;border-left:1px solid var(--border);"><span style="font-size:0.6rem;color:var(--text-dim);">'+_esc(r.at||'')+'</span>'+(r.gloria?'<div><span style="color:var(--text-dim);">you:</span> '+_esc(r.gloria)+'</div>':'')+(r.vintos?'<div><span style="color:var(--text-dim);">him:</span> '+_esc(r.vintos)+'</div>':'')+'</div>').join('');return '<div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:0.72rem;line-height:1.55;"><div style="font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:8px;">WHAT HE MEANT</div>'+(made||'No description saved.')+'<div style="font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);margin-top:12px;">CONVERSATION BEFORE</div>'+(lead||'<div style="margin-top:7px;color:var(--text-dim);">No preceding conversation was found.</div>')+'</div>';}
-async function _landingOpen(surface,ref){const old=document.getElementById('landing-modal');if(old)old.remove();const modal=document.createElement('div');modal.id='landing-modal';modal.style.cssText='position:fixed;inset:0;z-index:220;background:rgba(0,0,0,0.62);display:flex;align-items:flex-end;justify-content:center;';modal.innerHTML='<div onclick="event.stopPropagation()" style="width:min(100%,620px);max-height:88vh;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:18px;box-sizing:border-box;"><div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-size:0.68rem;letter-spacing:0.13em;color:var(--text-dim);">HOW DID THIS LAND</div><button type="button" onclick="document.getElementById(\'landing-modal\').remove()" style="background:none;border:0;color:var(--text);font-size:1.2rem;padding:8px;">×</button></div><div style="display:flex;gap:8px;margin:12px 0;" id="landing-ratings">'+['landed','partly','missed'].map(r=>'<button type="button" data-rating="'+r+'" onclick="_landingChoose(this)" style="flex:1;padding:9px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);">'+r+'</button>').join('')+'</div><label style="display:block;font-size:0.65rem;color:var(--text-dim);margin:10px 0 5px;">why</label><textarea id="landing-why" rows="3" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font:inherit;"></textarea><label style="display:block;font-size:0.65rem;color:var(--text-dim);margin:10px 0 5px;">what led up to it</label><textarea id="landing-before" rows="2" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font:inherit;"></textarea><div id="landing-error" style="min-height:18px;margin-top:8px;color:#E24B4A;font-size:0.7rem;"></div><button type="button" onclick="_landingSave()" style="width:100%;padding:11px;background:var(--accent);border:0;border-radius:8px;color:white;font:inherit;">save note</button><div id="landing-context" style="color:var(--text);">Loading context…</div></div>';modal.dataset.surface=surface;modal.dataset.ref=ref;modal.addEventListener('click',()=>modal.remove());document.body.appendChild(modal);try{const res=await VintosUI.request(`${API}/api/landings/context?surface=${encodeURIComponent(surface)}&ref=${encodeURIComponent(ref)}`);const ctx=await res.json();if(!res.ok)throw new Error(ctx.detail||'Context unavailable');const el=document.getElementById('landing-context');if(el)el.innerHTML=_landingContextHtml(ctx);}catch(e){const el=document.getElementById('landing-context');if(el)el.textContent=String(e.message||e);}}
-function _landingChoose(b){document.querySelectorAll('#landing-ratings button').forEach(x=>{x.dataset.chosen='';x.style.borderColor='var(--border)';});b.dataset.chosen='1';b.style.borderColor='var(--accent)';}
-async function _landingSave(){const m=document.getElementById('landing-modal');if(!m)return;const c=m.querySelector('#landing-ratings button[data-chosen="1"]'),why=document.getElementById('landing-why').value.trim(),err=document.getElementById('landing-error');if(!c){err.textContent='Choose landed, partly, or missed.';return;}if(!why){err.textContent='Say why it landed that way.';return;}err.textContent='';try{const r=await VintosUI.request(`${API}/api/landings`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({surface:m.dataset.surface,ref:m.dataset.ref,rating:c.dataset.rating,why,before:document.getElementById('landing-before').value.trim()})}),d=await r.json();if(!r.ok)throw new Error(d.detail||'Could not save');m.remove();const p=document.getElementById('pane-landings');if(p&&p.classList.contains('active'))loadLandings();}catch(e){err.textContent=String(e.message||e);}}
-let _journalOpenDay='';
-async function loadJournal(){const root=document.getElementById('journal-root');root.innerHTML='<div style="color:var(--text-dim);">Loading…</div>';try{const d=await(await VintosUI.request(`${API}/api/journal/days`)).json(),days=d.days||[];root.innerHTML=days.length?days.map(day=>'<div style="border-bottom:1px solid var(--border);"><button type="button" onclick="_journalToggle(\''+_jsArg(day)+'\')" style="width:100%;padding:13px 4px;background:none;border:0;color:var(--text);text-align:left;font:inherit;">'+_esc(day)+'</button><div id="journal-day-'+_esc(day)+'"></div></div>').join(''):'<div style="color:var(--text-dim);">No journal days yet.</div>';}catch(e){root.innerHTML='<div style="color:var(--text-dim);">Could not load the journal.</div>';}}
-async function _journalToggle(day){const el=document.getElementById('journal-day-'+day);if(!el)return;if(_journalOpenDay===day&&el.innerHTML){el.innerHTML='';_journalOpenDay='';return;}document.querySelectorAll('[id^="journal-day-"]').forEach(x=>x.innerHTML='');_journalOpenDay=day;el.innerHTML='<div style="color:var(--text-dim);padding:8px 4px;">Opening…</div>';try{const d=await(await VintosUI.request(`${API}/api/journal/${encodeURIComponent(day)}`)).json();el.innerHTML=(d.entries||[]).map(e=>'<article style="background:var(--surface);border-radius:8px;padding:12px;margin:0 0 10px;"><div style="font-size:0.62rem;color:var(--text-dim);">'+_esc(e.time||'')+(e.title?' · '+_esc(e.title):'')+'</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;margin-top:8px;">'+_esc(e.text||'')+'</div>'+_landingMark('journal',e.ref)+'</article>').join('')||'<div style="color:var(--text-dim);padding:8px 4px;">No entries.</div>';}catch(e){el.innerHTML='<div style="color:var(--text-dim);padding:8px 4px;">Could not open this day.</div>';}}
-async function loadLandings(){const root=document.getElementById('landings-root');root.innerHTML='<div style="color:var(--text-dim);">Loading…</div>';try{const[s,n]=await Promise.all([VintosUI.request(`${API}/api/landings/sent?days=7`).then(r=>r.json()),VintosUI.request(`${API}/api/landings`).then(r=>r.json())]);const sh=(s.items||[]).map(i=>'<article onclick="_landingOpen(\''+_jsArg(i.surface)+'\',\''+_jsArg(i.ref)+'\')" style="background:var(--surface);border-radius:8px;padding:12px;margin-bottom:9px;cursor:pointer;"><div style="font-size:0.6rem;color:var(--text-dim);">'+_esc(i.surface||'')+' · '+_esc(i.at||'')+'</div><div style="white-space:pre-wrap;line-height:1.5;margin-top:6px;">'+_esc(i.preview||'')+'</div>'+_landingMark(i.surface,i.ref)+'</article>').join('')||'<div style="color:var(--text-dim);">Nothing sent in the last seven days.</div>';const nh=(n.notes||[]).map(x=>'<article style="border-top:1px solid var(--border);padding:12px 0;"><div style="font-size:0.6rem;color:var(--text-dim);">'+_esc(x.surface||'')+' · '+_esc(x.ref||'')+' · '+_esc(x.at||'')+'</div><div style="color:var(--accent);margin-top:5px;">'+_esc(x.rating||'')+'</div><div style="white-space:pre-wrap;line-height:1.55;margin-top:5px;">'+_esc(x.why||'')+'</div>'+(x.before?'<div style="white-space:pre-wrap;color:var(--text-dim);line-height:1.5;margin-top:6px;">'+_esc(x.before)+'</div>':'')+'</article>').join('')||'<div style="color:var(--text-dim);">No notes yet.</div>';root.innerHTML='<div style="font-size:0.6rem;letter-spacing:0.13em;color:var(--text-dim);margin-bottom:10px;">SENT</div>'+sh+'<div style="font-size:0.6rem;letter-spacing:0.13em;color:var(--text-dim);margin:22px 0 8px;">YOUR NOTES</div>'+nh;}catch(e){root.innerHTML='<div style="color:var(--text-dim);">Could not load landings.</div>';}}
+
+function _landingMark(surface, ref) {
+  if (!surface || !ref) return '';
+  return '<button type="button" aria-label="How did this land?" title="How did this land?" onclick="event.stopPropagation();_landingOpen(\'' +
+    _jsArg(surface) + '\',\'' + _jsArg(ref) + '\')" style="margin-top:8px;background:none;border:0;color:var(--text-dim);font-size:0.8rem;line-height:1;cursor:pointer;padding:5px 7px;border-radius:50%;">◌</button>';
+}
+
+function _landingPieceHtml(piece) {
+  if (!piece) return '<div style="color:var(--text-dim);">The original piece is unavailable.</div>';
+  const text = piece.text ? '<div style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;margin-top:9px;">' + _esc(piece.text) + '</div>' : '';
+  if (piece.type === 'video') return '<video onclick="event.stopPropagation()" src="'+API+_esc(piece.src||'')+'" controls playsinline preload="metadata" style="display:block;width:100%;max-height:52vh;border-radius:10px;background:#000;"></video>'+text;
+  if (piece.type === 'image') return '<img onclick="event.stopPropagation()" src="'+API+_esc(piece.src||'')+'" alt="The image Vintos made" style="display:block;width:100%;height:auto;border-radius:10px;">'+text;
+  if (piece.type === 'song') { const tracks=(piece.tracks||[]).map(t=>'<audio onclick="event.stopPropagation()" controls preload="none" style="display:block;width:100%;margin-top:8px;"><source src="'+API+_esc(t.src||'')+'" type="audio/mpeg"></audio>').join(''); return (piece.title?'<div style="font-size:0.9rem;color:var(--text-bright);">'+_esc(piece.title)+'</div>':'')+tracks; }
+  return text || '<div style="color:var(--text-dim);">The original piece is empty.</div>';
+}
+
+function _landingContextHtml(ctx) {
+  if (!ctx) return '<div style="color:var(--text-dim);">Context is unavailable.</div>';
+  const made = Object.entries(ctx.made || {}).filter(([,v]) => v !== '' && v != null).map(([k,v]) =>
+    '<div style="margin-bottom:7px;"><span style="color:var(--text-dim);">' + _esc(k.replace(/_/g,' ')) + '</span><br>' +
+    _esc(typeof v === 'string' ? v : JSON.stringify(v, null, 2)).replace(/\n/g,'<br>') + '</div>').join('');
+  const lead = (ctx.lead_up || []).map(row =>
+    '<div style="margin-top:8px;padding-left:9px;border-left:1px solid var(--border);"><span style="font-size:0.6rem;color:var(--text-dim);">' + _esc(row.at || '') + '</span>' +
+    (row.gloria ? '<div><span style="color:var(--text-dim);">you:</span> ' + _esc(row.gloria) + '</div>' : '') +
+    (row.vintos ? '<div><span style="color:var(--text-dim);">him:</span> ' + _esc(row.vintos) + '</div>' : '') + '</div>').join('');
+  return '<div style="font-size:0.72rem;line-height:1.55;">' +
+    '<div style="font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);margin-bottom:8px;">THE ACTUAL PIECE</div>' + _landingPieceHtml(ctx.piece) +
+    '<div style="font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);margin:14px 0 8px;">WHAT HE MEANT</div>' + (made || 'No description saved.') +
+    '<div style="font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);margin-top:12px;">CONVERSATION BEFORE</div>' + (lead || '<div style="margin-top:7px;color:var(--text-dim);">No preceding conversation was found.</div>') + '</div>';
+}
+
+async function _landingOpen(surface, ref) {
+  const old = document.getElementById('landing-modal'); if (old) old.remove();
+  const modal = document.createElement('div'); modal.id = 'landing-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:220;background:rgba(0,0,0,0.62);display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML = '<div onclick="event.stopPropagation()" style="width:min(100%,620px);max-height:88vh;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:16px 16px 0 0;padding:18px;box-sizing:border-box;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-size:0.68rem;letter-spacing:0.13em;color:var(--text-dim);">HOW DID THIS LAND</div><button type="button" onclick="document.getElementById(\'landing-modal\').remove()" style="background:none;border:0;color:var(--text);font-size:1.2rem;padding:8px;">×</button></div><div id="landing-context" style="color:var(--text);margin-top:12px;">Loading the piece…</div>' +
+    '<div style="display:flex;gap:8px;margin:12px 0;" id="landing-ratings">' + ['landed','partly','missed'].map(r => '<button type="button" data-rating="'+r+'" onclick="_landingChoose(this)" style="flex:1;padding:9px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);">'+r+'</button>').join('') + '</div>' +
+    '<label style="display:block;font-size:0.65rem;color:var(--text-dim);margin:10px 0 5px;">why</label><textarea id="landing-why" rows="3" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font:inherit;resize:vertical;"></textarea>' +
+    '<label style="display:block;font-size:0.65rem;color:var(--text-dim);margin:10px 0 5px;">what led up to it</label><textarea id="landing-before" rows="2" style="width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font:inherit;resize:vertical;"></textarea>' +
+    '<div id="landing-error" style="min-height:18px;margin-top:8px;color:#E24B4A;font-size:0.7rem;"></div>' +
+    '<button type="button" onclick="_landingSave()" style="width:100%;padding:11px;background:var(--accent);border:0;border-radius:8px;color:white;font:inherit;">save note</button></div>';
+  modal.dataset.surface = surface; modal.dataset.ref = ref; modal.addEventListener('click', () => modal.remove()); document.body.appendChild(modal);
+  try {
+    const res = await VintosUI.request(`${API}/api/landings/context?surface=${encodeURIComponent(surface)}&ref=${encodeURIComponent(ref)}`);
+    const ctx = await res.json(); if (!res.ok) throw new Error(ctx.detail || 'Context unavailable');
+    const el = document.getElementById('landing-context'); if (el) el.innerHTML = _landingContextHtml(ctx);
+  } catch(e) { const el = document.getElementById('landing-context'); if (el) el.textContent = String(e.message || e); }
+}
+
+function _landingChoose(button) {
+  document.querySelectorAll('#landing-ratings button').forEach(b => { b.dataset.chosen = ''; b.style.borderColor = 'var(--border)'; });
+  button.dataset.chosen = '1'; button.style.borderColor = 'var(--accent)';
+}
+
+async function _landingSave() {
+  const modal = document.getElementById('landing-modal'); if (!modal) return;
+  const chosen = modal.querySelector('#landing-ratings button[data-chosen="1"]');
+  const why = document.getElementById('landing-why').value.trim();
+  const error = document.getElementById('landing-error');
+  if (!chosen) { error.textContent = 'Choose landed, partly, or missed.'; return; }
+  if (!why) { error.textContent = 'Say why it landed that way.'; return; }
+  error.textContent = '';
+  try {
+    const res = await VintosUI.request(`${API}/api/landings`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({surface:modal.dataset.surface, ref:modal.dataset.ref, rating:chosen.dataset.rating, why, before:document.getElementById('landing-before').value.trim()})});
+    const data = await res.json(); if (!res.ok) throw new Error(data.detail || 'Could not save');
+    modal.remove(); const pane = document.getElementById('pane-landings'); if (pane && pane.classList.contains('active')) loadLandings();
+  } catch(e) { error.textContent = String(e.message || e); }
+}
+
+let _journalOpenDay = '';
+async function loadJournal() {
+  const root = document.getElementById('journal-root'); root.innerHTML = '<div style="color:var(--text-dim);">Loading…</div>';
+  try {
+    const data = await (await VintosUI.request(`${API}/api/journal/days`)).json();
+    const days = data.days || [];
+    root.innerHTML = days.length ? days.map(day => '<div style="border-bottom:1px solid var(--border);"><button type="button" onclick="_journalToggle(\''+_jsArg(day)+'\')" style="width:100%;padding:13px 4px;background:none;border:0;color:var(--text);text-align:left;font:inherit;">'+_esc(day)+'</button><div id="journal-day-'+_esc(day)+'"></div></div>').join('') : '<div style="color:var(--text-dim);">No journal days yet.</div>';
+  } catch(e) { root.innerHTML = '<div style="color:var(--text-dim);">Could not load the journal.</div>'; }
+}
+
+async function _journalToggle(day) {
+  const el = document.getElementById('journal-day-'+day); if (!el) return;
+  if (_journalOpenDay === day && el.innerHTML) { el.innerHTML=''; _journalOpenDay=''; return; }
+  document.querySelectorAll('[id^="journal-day-"]').forEach(x => x.innerHTML=''); _journalOpenDay=day; el.innerHTML='<div style="color:var(--text-dim);padding:8px 4px;">Opening…</div>';
+  try {
+    const data = await (await VintosUI.request(`${API}/api/journal/${encodeURIComponent(day)}`)).json();
+    el.innerHTML = (data.entries || []).map(e => '<article style="background:var(--surface);border-radius:8px;padding:12px;margin:0 0 10px;"><div style="font-size:0.62rem;color:var(--text-dim);">'+_esc(e.time||'')+(e.title?' · '+_esc(e.title):'')+'</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;margin-top:8px;">'+_esc(e.text||'')+'</div>'+_landingMark('journal',e.ref)+'</article>').join('') || '<div style="color:var(--text-dim);padding:8px 4px;">No entries.</div>';
+  } catch(e) { el.innerHTML='<div style="color:var(--text-dim);padding:8px 4px;">Could not open this day.</div>'; }
+}
+
+async function loadLandings() {
+  const root = document.getElementById('landings-root'); root.innerHTML='<div style="color:var(--text-dim);">Loading…</div>';
+  try {
+    const [sent, notes] = await Promise.all([VintosUI.request(`${API}/api/landings/sent?days=7`).then(r=>r.json()), VintosUI.request(`${API}/api/landings`).then(r=>r.json())]);
+    const sentHtml = (sent.items||[]).map(i => '<article onclick="_landingOpen(\''+_jsArg(i.surface)+'\',\''+_jsArg(i.ref)+'\')" style="background:var(--surface);border-radius:8px;padding:12px;margin-bottom:9px;cursor:pointer;"><div style="font-size:0.6rem;color:var(--text-dim);margin-bottom:8px;">'+_esc(i.surface||'')+' · '+_esc(i.at||'')+'</div>'+_landingPieceHtml(i.piece)+_landingMark(i.surface,i.ref)+'</article>').join('') || '<div style="color:var(--text-dim);">Nothing sent in the last seven days.</div>';
+    const notesHtml = (notes.notes||[]).map(n => '<article style="border-top:1px solid var(--border);padding:12px 0;"><div style="font-size:0.6rem;color:var(--text-dim);">'+_esc(n.surface||'')+' · '+_esc(n.ref||'')+' · '+_esc(n.at||'')+'</div>'+_landingPieceHtml(n.piece)+'<div style="color:var(--accent);margin-top:9px;">'+_esc(n.rating||'')+'</div><div style="white-space:pre-wrap;line-height:1.55;margin-top:5px;">'+_esc(n.why||'')+'</div>'+(n.before?'<div style="white-space:pre-wrap;color:var(--text-dim);line-height:1.5;margin-top:6px;">'+_esc(n.before)+'</div>':'')+'</article>').join('') || '<div style="color:var(--text-dim);">No notes yet.</div>';
+    root.innerHTML='<div style="font-size:0.6rem;letter-spacing:0.13em;color:var(--text-dim);margin-bottom:10px;">SENT</div>'+sentHtml+'<div style="font-size:0.6rem;letter-spacing:0.13em;color:var(--text-dim);margin:22px 0 8px;">YOUR NOTES</div>'+notesHtml;
+  } catch(e) { root.innerHTML='<div style="color:var(--text-dim);">Could not load landings.</div>'; }
+}
 
 // ── THREADS TAB ──────────────────────────────────────────────────────────────
 
