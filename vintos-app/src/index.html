@@ -1498,7 +1498,7 @@ function _setChemistryLabUI(data) {
     if (text) text.textContent = (on ? 'enabled' : 'disabled') + ' · ' +
         ((data && data.effective_state) || 'unknown') + ' · ' +
         ((data && data.last_outcome) || 'no turn yet') + ' · ' +
-        ((data && data.last_turn_at) ? String(data.last_turn_at).slice(0, 16) : 'never');
+        ((data && data.last_turn_at) ? _atelierDate(data.last_turn_at) : 'never');
 }
 async function loadChemistryLabStatus() {
     try {
@@ -1582,7 +1582,7 @@ function _labStructureCard(rows) {
 }
 function _labReviewCard(row){
     const observation=row.factual_observation||row.attention||'',speculation=row.speculative_reading||'',score=_labNumber(row.interest_score);
-    return '<div class="gallery-item" style="padding:14px;"><div style="display:flex;justify-content:space-between;gap:10px;"><div style="font-size:0.74rem;color:var(--text-bright);">'+_esc(row.kind==='genome_reflection'?'genome review':'protein review')+'</div><time style="font-size:0.56rem;color:var(--text-dim);">'+_esc(String(row.at||'').slice(0,16))+'</time></div>'+(observation?'<div style="font-size:0.68rem;color:var(--text);line-height:1.6;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;">'+_esc(observation)+'</div>':'')+(speculation?'<div style="font-size:0.63rem;color:var(--text-dim);line-height:1.55;margin-top:7px;white-space:pre-wrap;overflow-wrap:anywhere;">speculative — '+_esc(speculation)+'</div>':'')+(row.next_question?'<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next — '+_esc(row.next_question)+'</div>':'')+'<div style="font-size:0.52rem;color:var(--text-dim);margin-top:8px;">'+(score===null?'interest unscored':'interest '+_esc(score.toFixed(2)))+(row.flagged_for_next_lab_session?' · flagged for frontier':'')+(row.surfaced_to_frontier?' · surfaced':'')+'</div></div>';
+    return '<div class="gallery-item" style="padding:14px;"><div style="display:flex;justify-content:space-between;gap:10px;"><div style="font-size:0.74rem;color:var(--text-bright);">'+_esc(row.kind==='genome_reflection'?'genome review':'protein review')+'</div><time style="font-size:0.56rem;color:var(--text-dim);">'+_esc(_atelierDate(row.at))+'</time></div>'+(observation?'<div style="font-size:0.68rem;color:var(--text);line-height:1.6;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;">'+_esc(observation)+'</div>':'')+(speculation?'<div style="font-size:0.63rem;color:var(--text-dim);line-height:1.55;margin-top:7px;white-space:pre-wrap;overflow-wrap:anywhere;">speculative — '+_esc(speculation)+'</div>':'')+(row.next_question?'<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next — '+_esc(row.next_question)+'</div>':'')+'<div style="font-size:0.52rem;color:var(--text-dim);margin-top:8px;">'+(score===null?'interest unscored':'interest '+_esc(score.toFixed(2)))+(row.flagged_for_next_lab_session?' · flagged for frontier':'')+(row.surfaced_to_frontier?' · surfaced':'')+'</div></div>';
 }
 async function _labGet(path) {
     const res = await fetch(`${API}/api/lab/chemistry/${path}`, {headers: {'X-Vintos-Secret': CONFIG.secret}});
@@ -1617,7 +1617,7 @@ async function loadLab() {
     summary.innerHTML = _labChip(status.enabled ? (status.effective_state || 'waiting') : 'off · history kept', status.enabled ? 'var(--accent)' : 'var(--text-dim)') +
         _labChip(measured + ' of ' + Object.keys(tools).length + ' instruments measured', 'var(--text-dim)') +
         _labChip(((reviews&&reviews.reviews)||[]).length+' of '+LAB_REVIEW_LIMIT+' recent reviews','var(--text-dim)')+
-        '<div style="margin-top:6px;">last: ' + _esc(status.last_outcome || 'no turn yet') + ' · ' + _esc(String(status.last_turn_at || 'never').slice(0, 16)) + '</div>';
+        '<div style="margin-top:6px;">last: ' + _esc(status.last_outcome || 'no turn yet') + ' · ' + _esc(status.last_turn_at ? _atelierDate(status.last_turn_at) : 'never') + '</div>';
     const cards = [];
     const reviewRows=((reviews&&reviews.reviews)||[]).slice(-LAB_REVIEW_LIMIT).reverse();
     if(reviewRows.length){cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);">RECENT REVIEWS · ROLLING '+LAB_REVIEW_LIMIT+'</div>');reviewRows.forEach(row=>cards.push(_labReviewCard(row)));}
@@ -1627,7 +1627,7 @@ async function loadLab() {
         cards.push('<div class="gallery-item" style="padding:14px;">' +
             '<div style="display:flex;justify-content:space-between;gap:10px;">' +
             '<div style="font-size:0.74rem;color:var(--text-bright);">' + _esc(row.experiment || 'session') + '</div>' +
-            '<time style="font-size:0.56rem;color:var(--text-dim);">' + _esc(String(row.at || '').slice(0, 16)) + '</time></div>' +
+            '<time style="font-size:0.56rem;color:var(--text-dim);">' + _esc(_atelierDate(row.at)) + '</time></div>' +
             '<div style="margin:8px 0;">' +
             _labChip('instrument: ' + (row.execution_state || row.state || 'unknown'), 'var(--text-dim)') +
             _labChip('answer: ' + verdict[0], verdict[1]) + '</div>' +
@@ -4180,9 +4180,9 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 function _avSetBrainLabel(mode){
-  _avBrain = (['grok','sol','sonnet','fable','local'].indexOf(mode)>=0)?mode:'claude';
+  _avBrain = (['grok','sol','opus55','fable','local'].indexOf(mode)>=0)?mode:'claude';
   var chip=_avBrainChipEnsure(); if(!chip) return;
-  var lbl={claude:'\u2726 OPUS 4.8', sonnet:'\u2726 SONNET 5', fable:'\u2726 FABLE 5',
+  var lbl={claude:'\u2726 OPUS 4.8', opus55:'\u2726 OPUS 5.5', fable:'\u2726 FABLE 5',
            grok:'\u{1F702} GROK', sol:'\u2609 SOL', local:'\u25C9 ABLIT GEMMA'};
   chip.textContent = lbl[_avBrain];
 }
@@ -4190,7 +4190,7 @@ async function _avLoadBrain(){
   try{ var r=await VintosUI.request(API+'/api/avatar/brain',{headers:{'X-Vintos-Secret':CONFIG.secret}}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){ /* keep last known label - never repaint the default over truth */ }
 }
 async function _avToggleBrain(){
-  var order=['claude','sonnet','fable','grok','sol','local'];
+  var order=['claude','opus55','fable','grok','sol','local'];
   var next=order[(order.indexOf(_avBrain)+1)%order.length];
   try{ var r=await VintosUI.request(API+'/api/avatar/brain',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({brain:next})}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){ _avLoadBrain(); }
 }
