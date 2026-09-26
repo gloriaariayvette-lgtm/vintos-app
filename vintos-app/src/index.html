@@ -487,7 +487,6 @@ input[type="range"]::-webkit-slider-thumb {
         <div class="tab" data-tab="wants">WANTS</div>
         <div class="tab" data-tab="mischief">MISCHIEF</div>
         <div class="tab" data-tab="threads">THREADS</div>
-        <div class="tab" data-tab="journal">JOURNAL</div>
         <div class="tab" data-tab="landings">LANDINGS</div>
         <div class="tab" data-tab="valuemap">VALUE MAP</div>
         <div class="tab" data-tab="causality">CAUSALITY</div>
@@ -672,11 +671,6 @@ input[type="range"]::-webkit-slider-thumb {
             <div style="padding:1rem;overflow-y:auto;height:100%;box-sizing:border-box;">
                 <div id="threads-root" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-height:400px;"></div>
             </div>
-        </div>
-
-        <!-- JOURNAL -->
-        <div class="tab-pane" id="pane-journal">
-            <div id="journal-root" style="padding:1rem;overflow-y:auto;height:100%;box-sizing:border-box;"></div>
         </div>
 
         <!-- LANDINGS -->
@@ -1258,7 +1252,6 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'review') loadReview();
         if (tab.dataset.tab === 'wants') loadWants();
         if (tab.dataset.tab === 'threads') loadThreads();
-        if (tab.dataset.tab === 'journal') loadJournal();
         if (tab.dataset.tab === 'landings') loadLandings();
         if (tab.dataset.tab === 'valuemap') loadValueMap();
         if (tab.dataset.tab === 'voice') { loadVoice(); loadVoiceChatHistory(); loadBriefing(); }
@@ -4381,26 +4374,6 @@ async function _landingSave() {
   } catch(e) { error.textContent = String(e.message || e); }
 }
 
-let _journalOpenDay = '';
-async function loadJournal() {
-  const root = document.getElementById('journal-root'); root.innerHTML = '<div style="color:var(--text-dim);">Loading…</div>';
-  try {
-    const data = await (await VintosUI.request(`${API}/api/journal/days`)).json();
-    const days = data.days || [];
-    root.innerHTML = days.length ? days.map(day => '<div style="border-bottom:1px solid var(--border);"><button type="button" onclick="_journalToggle(\''+_jsArg(day)+'\')" style="width:100%;padding:13px 4px;background:none;border:0;color:var(--text);text-align:left;font:inherit;">'+_esc(day)+'</button><div id="journal-day-'+_esc(day)+'"></div></div>').join('') : '<div style="color:var(--text-dim);">No journal days yet.</div>';
-  } catch(e) { root.innerHTML = '<div style="color:var(--text-dim);">Could not load the journal.</div>'; }
-}
-
-async function _journalToggle(day) {
-  const el = document.getElementById('journal-day-'+day); if (!el) return;
-  if (_journalOpenDay === day && el.innerHTML) { el.innerHTML=''; _journalOpenDay=''; return; }
-  document.querySelectorAll('[id^="journal-day-"]').forEach(x => x.innerHTML=''); _journalOpenDay=day; el.innerHTML='<div style="color:var(--text-dim);padding:8px 4px;">Opening…</div>';
-  try {
-    const data = await (await VintosUI.request(`${API}/api/journal/${encodeURIComponent(day)}`)).json();
-    el.innerHTML = (data.entries || []).map(e => '<article style="background:var(--surface);border-radius:8px;padding:12px;margin:0 0 10px;"><div style="font-size:0.62rem;color:var(--text-dim);">'+_esc(e.time||'')+(e.title?' · '+_esc(e.title):'')+'</div><div style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;margin-top:8px;">'+_esc(e.text||'')+'</div>'+_landingMark('journal',e.ref)+'</article>').join('') || '<div style="color:var(--text-dim);padding:8px 4px;">No entries.</div>';
-  } catch(e) { el.innerHTML='<div style="color:var(--text-dim);padding:8px 4px;">Could not open this day.</div>'; }
-}
-
 async function loadLandings() {
   const root = document.getElementById('landings-root'); root.innerHTML='<div style="color:var(--text-dim);">Loading…</div>';
   try {
@@ -4454,10 +4427,12 @@ async function loadThreads() {
   const root = document.getElementById('threads-root');
   root.innerHTML = '<div style="color:var(--text-dim);font-size:0.75rem;padding:1rem;">Loading...</div>';
   try {
+    const nonce = Date.now();
     const [tr, gr] = await Promise.all([
-      VintosUI.request(`${API}/api/threads`, { headers: { 'X-Vintos-Secret': CONFIG.secret } }).then(r => r.json()),
-      VintosUI.request(`${API}/api/threads/weave-groups`, { headers: { 'X-Vintos-Secret': CONFIG.secret } }).then(r => r.json()),
+      VintosUI.request(`${API}/api/threads?_=${nonce}`, { cache:'no-store', headers: { 'X-Vintos-Secret': CONFIG.secret, 'Cache-Control':'no-cache' } }).then(r => r.json()),
+      VintosUI.request(`${API}/api/threads/weave-groups?_=${nonce}`, { cache:'no-store', headers: { 'X-Vintos-Secret': CONFIG.secret, 'Cache-Control':'no-cache' } }).then(r => r.json()),
     ]);
+    if (!tr.success) throw new Error(tr.error || 'Thread ledger unavailable');
     _threads = (tr.threads || []).map((t, i) => ({ ...t, _idx: i }));
     _groups = gr.groups || [];
     if (!_groups.length) _groups = [{ id: 'g1', name: '', cards: [] }];

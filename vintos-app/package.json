@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "postinstall": "node scripts/patch-background-runner.js",
-    "test:native-patches": "node scripts/patch-background-runner.js --check"
+    "test:native-patches": "node scripts/patch-background-runner.js --check",
+    "test:surfaces": "node scripts/test-surface-contracts.js"
   },
   "dependencies": {
     "@capacitor/background-runner": "^1.1.0",
