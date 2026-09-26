@@ -11,6 +11,7 @@ const checks = [
   ['thread reads bypass WebView and proxy caches', /\/api\/threads\?_=`?\$\{nonce\}/.test(page) && page.includes("cache:'no-store'") && page.includes("'Cache-Control':'no-cache'")],
   ['thread API failures do not render as an empty ledger', page.includes("if (!tr.success) throw new Error")],
   ['landings remain available', page.includes('data-tab="landings"') && page.includes('async function loadLandings()')],
+  ['Lab shows intermediate activity on its 15-second refresh', page.includes('activity?limit=12') && page.includes('LIVE ACTIVITY · REFRESHES EVERY 15 SECONDS') && page.includes('function _labActivityRow')],
 ];
 
 let failed = 0;

@@ -1591,6 +1591,10 @@ function _labReviewCard(row){
     const observation=row.factual_observation||row.attention||'',speculation=row.speculative_reading||'',score=_labNumber(row.interest_score);
     return '<div class="gallery-item" style="padding:14px;"><div style="display:flex;justify-content:space-between;gap:10px;"><div style="font-size:0.74rem;color:var(--text-bright);">'+_esc(row.kind==='genome_reflection'?'genome review':'protein review')+'</div><time style="font-size:0.56rem;color:var(--text-dim);">'+_esc(_atelierDate(row.at))+'</time></div>'+(observation?'<div style="font-size:0.68rem;color:var(--text);line-height:1.6;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;">'+_esc(observation)+'</div>':'')+(speculation?'<div style="font-size:0.63rem;color:var(--text-dim);line-height:1.55;margin-top:7px;white-space:pre-wrap;overflow-wrap:anywhere;">speculative — '+_esc(speculation)+'</div>':'')+(row.next_question?'<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next — '+_esc(row.next_question)+'</div>':'')+'<div style="font-size:0.52rem;color:var(--text-dim);margin-top:8px;">'+(score===null?'interest unscored':'interest '+_esc(score.toFixed(2)))+(row.flagged_for_next_lab_session?' · flagged for frontier':'')+(row.surfaced_to_frontier?' · surfaced':'')+'</div></div>';
 }
+function _labActivityRow(row){
+    const muted=row.redirect?'var(--text-dim)':'var(--text)';
+    return '<div style="grid-column:1/-1;display:flex;gap:9px;align-items:baseline;padding:7px 2px;border-bottom:0.5px solid var(--border);"><time style="flex:0 0 auto;font-size:0.53rem;color:var(--text-dim);">'+_esc(String(row.at||'').slice(11,16))+'</time><div style="font-size:0.62rem;color:'+muted+';line-height:1.45;"><span style="color:var(--text-bright);">'+_esc(row.label||'Lab turn')+'</span>'+(row.detail?' · '+_esc(row.detail):'')+'</div></div>';
+}
 async function _labGet(path) {
     const res = await fetch(`${API}/api/lab/chemistry/${path}`, {headers: {'X-Vintos-Secret': CONFIG.secret}});
     if (!res.ok) throw new Error('Lab request refused');
@@ -1609,10 +1613,10 @@ async function loadLab() {
     if (!grid || _labLoading) return;
     _labLoading=true;
     if(!grid.children.length)grid.innerHTML = '<div class="gallery-empty">reading the Lab...</div>';
-    let status, reviews, sessions, taste;
+    let status, reviews, activity, sessions, taste;
     try {
-        [status, reviews, sessions, taste] = await Promise.all([
-            _labGet('status'), _labGet('reviews?limit='+LAB_REVIEW_LIMIT), _labGet('sessions?limit=4'), _labGet('taste')
+        [status, reviews, activity, sessions, taste] = await Promise.all([
+            _labGet('status'), _labGet('reviews?limit='+LAB_REVIEW_LIMIT), _labGet('activity?limit=12'), _labGet('sessions?limit=4'), _labGet('taste')
         ]);
     } catch (e) {
         summary.textContent = 'unreachable';
@@ -1626,6 +1630,8 @@ async function loadLab() {
         _labChip(((reviews&&reviews.reviews)||[]).length+' of '+LAB_REVIEW_LIMIT+' recent reviews','var(--text-dim)')+
         '<div style="margin-top:6px;">last: ' + _esc(status.last_outcome || 'no turn yet') + ' · ' + _esc(status.last_turn_at ? _atelierDate(status.last_turn_at) : 'never') + '</div>';
     const cards = [];
+    const activityRows=((activity&&activity.activity)||[]).slice().reverse();
+    if(activityRows.length){cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);">LIVE ACTIVITY · REFRESHES EVERY 15 SECONDS</div>');activityRows.forEach(row=>cards.push(_labActivityRow(row)));}
     const reviewRows=((reviews&&reviews.reviews)||[]).slice(-LAB_REVIEW_LIMIT).reverse();
     if(reviewRows.length){cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);">RECENT REVIEWS · ROLLING '+LAB_REVIEW_LIMIT+'</div>');reviewRows.forEach(row=>cards.push(_labReviewCard(row)));}
     if((sessions.sessions||[]).length)cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);margin-top:8px;">EXPERIMENT RECEIPTS</div>');
