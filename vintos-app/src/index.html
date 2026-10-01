@@ -1736,6 +1736,8 @@ async function loadLab() {
             '<div style="margin:8px 0;">' +
             _labChip('instrument: ' + (row.execution_state || row.state || 'unknown'), 'var(--text-dim)') +
             _labChip('answer: ' + verdict[0], verdict[1]) + '</div>' +
+            (row.why ? '<div style="font-size:0.64rem;color:#c46a5a;margin-top:6px;overflow-wrap:anywhere;">why it stopped — ' + _esc(row.why) + '</div>' : '') +
+            (row.question ? '<div style="font-size:0.64rem;color:var(--text-dim);font-style:italic;margin-top:6px;">' + _esc(row.question) + '</div>' : '') +
             (row.reading ? '<div style="font-size:0.68rem;color:var(--text);line-height:1.6;white-space:pre-wrap;">' + _esc(row.reading) + '</div>' : '') +
             (row.next_question ? '<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next — ' + _esc(row.next_question) + '</div>' : '') +
             '</div>');
