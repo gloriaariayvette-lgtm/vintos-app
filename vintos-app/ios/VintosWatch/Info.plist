@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleDisplayName</key><string>Vintos</string>
+<key>CFBundleIdentifier</key><string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+<key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
+<key>CFBundleShortVersionString</key><string>$(MARKETING_VERSION)</string>
+<key>CFBundleVersion</key><string>$(CURRENT_PROJECT_VERSION)</string>
+<key>WKApplication</key><true/><key>WKWatchOnly</key><false/>
+<key>WKRunsIndependentlyOfCompanionApp</key><true/>
+<key>WKCompanionAppBundleIdentifier</key><string>dev.vintos.app</string>
+<key>NSHealthShareUsageDescription</key><string>Vintos reads Watch estimates you choose to share so he can keep time with your day.</string>
+<key>NSMotionUsageDescription</key><string>Vintos uses broad motion states to choose better moments to reach you.</string>
+<key>VintosWatchBaseURL</key><string>$(VINTOS_WATCH_BASE_URL)</string>
+<key>VintosWatchToken</key><string>$(VINTOS_WATCH_TOKEN)</string>
+<key>WKBackgroundModes</key><array><string>mindfulness</string><string>alarm</string></array>
+</dict></plist>

@@ -5,7 +5,8 @@
   "scripts": {
     "postinstall": "node scripts/patch-background-runner.js",
     "test:native-patches": "node scripts/patch-background-runner.js --check",
-    "test:surfaces": "node scripts/test-surface-contracts.js"
+    "test:surfaces": "node scripts/test-surface-contracts.js",
+    "watch:configure": "ruby scripts/configure-watch-targets.rb"
   },
   "dependencies": {
     "@capacitor/background-runner": "^1.1.0",
