@@ -3289,7 +3289,7 @@ let _avVrm=null,_avMixer=null,_avIdle=null,_avCurrent=null,_avClock=null,_avRend
 try { _avChatHistory = JSON.parse(localStorage.getItem('_avChatHistory')||'[]') || []; } catch(e) { _avChatHistory=[]; }
 let _avHistoryRevision=0;
 function _avSaveHistory(){ _avHistoryRevision++; try { localStorage.setItem('_avChatHistory', JSON.stringify(_avChatHistory.slice(-60))); } catch(e){} }
-window.addEventListener('load', function(){ try{ _avRenderChatLog(); }catch(e){} });
+window.addEventListener('load', function(){ try{ _avRenderChatLog(true); }catch(e){} });
 let _avStars=null,_avStarPositions=null;
 
 let _avOverlayGeneration=0, _avAnimationFrame=null;
@@ -3322,7 +3322,7 @@ function openAvatarOverlay() {
     }
     _waitBundle(0);
   }
-  try { _avRenderChatLog(); } catch(e){}
+  try { _avRenderChatLog(true); } catch(e){}
   try { _avLoadBrain(); } catch(e){}
   try { _avLoadHistory(); } catch(e){}
   if(_avRenderer&&!_avAnimationFrame)_avAnimate();
@@ -3666,29 +3666,39 @@ function _avHideBubble() {
   if(bubble) bubble.remove();
 }
 
-function _avLogMsg(role, text){
+function _avChatAtBottom(box){
+  return !box || (box.scrollHeight - box.scrollTop - box.clientHeight) <= 18;
+}
+function _avLogMsg(role, text, followMode){
   var box = document.getElementById('av-chat-message');
   if(!box || !text) return;
+  // New background history, command and imprint rows must not pull Gloria away
+  // from an older message she is reading. Her own send explicitly follows.
+  var follow = followMode === true || (followMode !== false && _avChatAtBottom(box));
   box.style.maxHeight='110px'; box.style.overflowY='auto'; box.style.textAlign='left';
   var isU = role==='user', isSys = role==='system';
   var line = document.createElement('div');
   line.style.cssText = 'margin:3px 0;line-height:1.4;'+(isU?'color:rgba(201,107,60,0.95);':(isSys?'color:var(--text-dim,#7d766b);font-size:11px;opacity:0.7;':'color:var(--text-bright,#EDE7DC);'));
   line.textContent = (isU?'You: ':'')+text;
   box.appendChild(line);
-  while(box.children.length>14) box.removeChild(box.firstChild);
-  box.scrollTop = box.scrollHeight;
+  while(box.children.length>60) box.removeChild(box.firstChild);
+  if(follow) box.scrollTop = box.scrollHeight;
 }
-function _avRenderChatLog(){
+function _avRenderChatLog(forceBottom){
   var box = document.getElementById('av-chat-message');
   if(!box) return;
+  var follow = forceBottom === true || _avChatAtBottom(box);
+  var priorTop = box.scrollTop;
   box.innerHTML='';
-  var h = _avChatHistory.slice(-14);
+  var h = _avChatHistory.slice(-60);
   for(var i=0;i<h.length;i++){
     var m = h[i], disp = m.content;
     var rl = (m.role==='user' && String(m.content).charAt(0)==='[') ? 'system' : m.role;
     if(m.role==='assistant'){ try{ disp=_avParseReply(m.content).text||m.content; }catch(e){} }
-    if(disp) _avLogMsg(rl, disp);
+    if(disp) _avLogMsg(rl, disp, false);
   }
+  if(follow) box.scrollTop=box.scrollHeight;
+  else box.scrollTop=Math.min(priorTop, Math.max(0, box.scrollHeight-box.clientHeight));
 }
 async function _avSpeakAndShow(raw, eventNote) {
   const generation=_avOverlayGeneration;
@@ -4399,9 +4409,15 @@ async function _avLoadHistory(){
     var r=await VintosUI.request(API+'/api/avatar/history',{headers:{'X-Vintos-Secret':CONFIG.secret}});
     var d=await r.json();
     if(revision===_avHistoryRevision && d && Array.isArray(d.history) && d.history.length){
-      _avChatHistory = d.history.slice(-60);
+      var incoming=d.history.slice(-60);
+      // The eight-second poll used to rebuild the same DOM and force the strip
+      // to the bottom even when nothing changed.
+      if(JSON.stringify(incoming)===JSON.stringify(_avChatHistory.slice(-60))) return;
+      var box=document.getElementById('av-chat-message');
+      var follow=_avChatAtBottom(box);
+      _avChatHistory = incoming;
       _avSaveHistory();
-      _avRenderChatLog();
+      _avRenderChatLog(follow);
     }
   }catch(e){}
 }
@@ -4428,7 +4444,7 @@ async function avSendChat() {
   // server accepts the turn. Keeping it outside the awaited path also leaves
   // the input and drawer on the browser's event loop while he is thinking.
   VintosUI.ack(inp,sentDraft);
-  _avLogMsg('user',text);
+  _avLogMsg('user',text,true);
 
   try {
     _avLoadBrain(); const r = await VintosUI.request(API+'/api/avatar/chat', {
