@@ -500,7 +500,6 @@
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
 				VINTOS_WATCH_BASE_URL = "https://aegis.tailaa3de5.ts.net:8443";
-				VINTOS_WATCH_TOKEN = "";
 				WATCHOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Debug;
@@ -690,7 +689,6 @@
 				TARGETED_DEVICE_FAMILY = 4;
 				VALIDATE_PRODUCT = YES;
 				VINTOS_WATCH_BASE_URL = "https://aegis.tailaa3de5.ts.net:8443";
-				VINTOS_WATCH_TOKEN = "";
 				WATCHOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Release;

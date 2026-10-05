@@ -40,7 +40,7 @@ watch.build_configurations.each do |c|
     'DEVELOPMENT_TEAM'=>'LH37Z6K7GP', 'CODE_SIGN_STYLE'=>'Automatic', 'SWIFT_VERSION'=>'5.0',
     'WATCHOS_DEPLOYMENT_TARGET'=>'11.0', 'SDKROOT'=>'watchos', 'TARGETED_DEVICE_FAMILY'=>'4',
     'SKIP_INSTALL'=>'NO', 'MARKETING_VERSION'=>'1.0', 'CURRENT_PROJECT_VERSION'=>'1',
-    'VINTOS_WATCH_BASE_URL'=>'https://aegis.tailaa3de5.ts.net:8443', 'VINTOS_WATCH_TOKEN'=>''
+    'VINTOS_WATCH_BASE_URL'=>'https://aegis.tailaa3de5.ts.net:8443'
   })
 end
 widget.build_configurations.each do |c|
@@ -81,4 +81,8 @@ scheme = Xcodeproj::XCScheme.new
 scheme.add_build_target(watch)
 scheme.set_launch_target(watch)
 scheme.save_as(project_path, 'VintosWatch', true)
+watch_plist = File.join(root, 'ios', 'VintosWatch', 'Info.plist')
+widget_plist = File.join(root, 'ios', 'VintosWatchWidget', 'Info.plist')
+abort 'VintosWatch Info.plist must declare CFBundleExecutable' unless File.read(watch_plist).include?('<key>CFBundleExecutable</key>')
+abort 'VintosWatchWidget Info.plist must declare CFBundleExecutable' unless File.read(widget_plist).include?('<key>CFBundleExecutable</key>')
 puts 'VintosWatch and VintosWatchWidget configured'
