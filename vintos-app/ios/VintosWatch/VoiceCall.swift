@@ -178,8 +178,9 @@ final class WatchVoiceCall:NSObject,ObservableObject,AVAudioPlayerDelegate {
             let result=try await WatchAPI.shared.localTurn(audio:audio.base64EncodedString(),instructions:baseInstructions,framing:framing)
             guard result.ok else { throw NSError(domain:"VintosWatch",code:3,userInfo:[NSLocalizedDescriptionKey:result.error ?? "Local call failed."]) }
             heard=result.transcript ?? "";said=result.reply ?? ""
-            if let encoded=result.audio,let data=Data(base64Encoded:encoded) { playLocal(data) }
+            let playing = result.audio.flatMap { Data(base64Encoded:$0) }.map(playLocal) ?? false
             try? await WatchAPI.shared.voiceLedger(gloria:heard,vintos:said,provider:"local",clientID:clientID)
+            if playing { return }
         } catch { status=error.localizedDescription;WKInterfaceDevice.current().play(.failure) }
         localBusy=false
         if active { VintosModel.shared.reaction = .listening;status="Listening · Vintos Local" }
@@ -250,13 +251,19 @@ final class WatchVoiceCall:NSObject,ObservableObject,AVAudioPlayerDelegate {
         output.scheduleBuffer(buffer)
     }
 
-    private func playLocal(_ data:Data) {
-        do { localPlayer=try AVAudioPlayer(data:data);localPlayer?.delegate=self;VintosModel.shared.reaction = .speaking;localPlayer?.play() }
-        catch { status="His reply arrived, but the Watch could not play it." }
+    private func playLocal(_ data:Data) -> Bool {
+        do {
+            localPlayer=try AVAudioPlayer(data:data);localPlayer?.delegate=self
+            VintosModel.shared.reaction = .speaking;status="Vintos is speaking…"
+            return localPlayer?.play() == true
+        } catch { status="His reply arrived, but the Watch could not play it.";return false }
     }
 
     nonisolated func audioPlayerDidFinishPlaying(_ player:AVAudioPlayer,successfully flag:Bool) {
-        Task { @MainActor in if self.active { VintosModel.shared.reaction = .listening;self.status="Listening · \(self.provider.title)" } }
+        Task { @MainActor in
+            self.localBusy=false
+            if self.active { VintosModel.shared.reaction = .listening;self.status="Listening · \(self.provider.title)" }
+        }
     }
 
     private func stopAudio() {
