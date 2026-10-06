@@ -10,6 +10,7 @@ struct Landing: Codable, Identifiable, Hashable {
 }
 struct LandingEnvelope: Codable { let items: [Landing] }
 struct WatchReply: Codable { let reply: String? }
+struct VoiceFramingEnvelope:Codable { let framing:String? }
 
 actor WatchAPI {
     static let shared = WatchAPI()
@@ -67,6 +68,38 @@ actor WatchAPI {
     func moment(_ state:String) async throws {
         _ = try await data(request("api/watch/moment",method:"POST",json:[
             "state":state,"observed_at":ISO8601DateFormatter().string(from:Date())]))
+    }
+
+    func voiceToken(provider:String) async throws -> VoiceTokenEnvelope {
+        var components=URLComponents(url:baseURL.appendingPathComponent("api/voice/token"),resolvingAgainstBaseURL:false)!
+        components.queryItems=[URLQueryItem(name:"provider",value:provider)]
+        var req=URLRequest(url:components.url!);req.httpMethod="POST";req.setValue("Bearer \(bearer)",forHTTPHeaderField:"Authorization")
+        return try JSONDecoder().decode(VoiceTokenEnvelope.self,from:await data(req))
+    }
+
+    func voiceFraming() async throws -> String {
+        let received=try await data(request("api/voice/framing"))
+        return try JSONDecoder().decode(VoiceFramingEnvelope.self,from:received).framing ?? ""
+    }
+
+    func localTurn(audio:String,instructions:String,framing:String) async throws -> LocalVoiceEnvelope {
+        let received=try await data(request("api/watch/voice/local/turn",method:"POST",json:[
+            "audio":audio,"sample_rate":24000,"instructions":instructions,"framing":framing]))
+        return try JSONDecoder().decode(LocalVoiceEnvelope.self,from:received)
+    }
+
+    func localHeartbeat() async throws { _ = try await data(request("api/watch/voice/local/heartbeat",method:"POST",json:[:])) }
+    func localEnd() async throws { _ = try await data(request("api/watch/voice/local/end",method:"POST",json:[:])) }
+
+    func voiceLedger(gloria:String,vintos:String,provider:String,clientID:String) async throws {
+        _ = try await data(request("api/voice/ledger",method:"POST",json:[
+            "gloria":gloria,"vintos":vintos,"provider":provider,"client_session_id":clientID,
+            "turn_id":"\(clientID):\(UUID().uuidString)","playback_state":"completed","interrupted":false]))
+    }
+
+    func voiceEnd(provider:String,clientID:String,duration:Int) async throws {
+        _ = try await data(request("api/voice/session-end",method:"POST",json:[
+            "provider":provider,"client_session_id":clientID,"duration_seconds":duration]))
     }
 
     nonisolated func absolute(_ path:String?) -> URL? {

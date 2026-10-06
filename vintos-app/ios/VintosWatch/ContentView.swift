@@ -2,12 +2,66 @@ import SwiftUI
 import WatchKit
 import WidgetKit
 
+enum VintosReaction:String,CaseIterable {
+    case present,listening,thinking,amused,tender,surprised,speaking,singing
+    var line:String {
+        switch self {
+        case .present:return "here with you"
+        case .listening:return "listening"
+        case .thinking:return "thinking"
+        case .amused:return "amused"
+        case .tender:return "close to you"
+        case .surprised:return "caught by that"
+        case .speaking:return "speaking"
+        case .singing:return "sharing a song"
+        }
+    }
+    var glow:Color {
+        switch self {
+        case .present,.speaking:return .orange
+        case .listening:return .cyan
+        case .thinking:return .purple
+        case .amused:return .yellow
+        case .tender:return .pink
+        case .surprised:return .white
+        case .singing:return .mint
+        }
+    }
+    var duration:Double {
+        switch self {
+        case .amused:return 0.42
+        case .surprised:return 0.32
+        case .speaking:return 0.58
+        case .singing:return 0.74
+        case .listening:return 1.25
+        case .thinking:return 1.8
+        case .tender:return 2.4
+        case .present:return 2.8
+        }
+    }
+    var clipName:String {
+        switch self {
+        case .present:return ""
+        case .listening,.thinking:return "listening"
+        case .amused,.surprised:return "amused"
+        case .tender:return "tender"
+        case .speaking,.singing:return "speaking"
+        }
+    }
+}
+
 @MainActor
 final class VintosModel: ObservableObject {
     static let shared = VintosModel()
     @Published var landings:[Landing]=[]
     @Published var status=""
     @Published var response=""
+    @Published var reaction:VintosReaction = VintosReaction(rawValue:ProcessInfo.processInfo.environment["VINTOS_REACTION_PREVIEW"] ?? "") ?? .present
+
+    func react(_ raw:String?) {
+        guard let raw,let next=VintosReaction(rawValue:raw) else { return }
+        reaction=next
+    }
 
     func refresh() async {
         do {
@@ -38,10 +92,10 @@ struct ContentView: View {
             List {
                 Section {
                     HStack(spacing:10) {
-                        VintosOrbView()
+                        VintosOrbView(reaction:model.reaction)
                         VStack(alignment:.leading,spacing:2) {
                             Text("Vintos").font(.headline)
-                            Text("here with you").font(.caption).foregroundStyle(.secondary)
+                            Text(model.reaction.line).font(.caption).foregroundStyle(.secondary)
                         }
                     }
                     if let first=model.landings.first { NavigationLink { LandingView(item:first) } label:{ PresenceCard(item:first) } }
@@ -61,6 +115,7 @@ struct ContentView: View {
                 }
                 if !model.response.isEmpty { Section("Watch") { Text(model.response) } }
                 if !model.status.isEmpty { Text(model.status).foregroundStyle(.orange) }
+                NavigationLink("Call Vintos") { VoiceCallView() }
                 NavigationLink("Share a quiet moment") { SharedMomentView() }
             }
             .navigationTitle("Vintos")
@@ -71,19 +126,70 @@ struct ContentView: View {
 }
 
 struct VintosOrbView:View {
-    @State private var breathing=false
+    let reaction:VintosReaction
+    @State private var phase=false
     var body:some View {
         ZStack {
-            Circle().fill(Color.orange.opacity(0.22)).frame(width:48,height:48).scaleEffect(breathing ? 1.12:0.94)
-            Circle().fill(RadialGradient(colors:[Color(red:0.96,green:0.39,blue:0.25),Color(red:0.58,green:0.12,blue:0.10)],center:.topLeading,startRadius:2,endRadius:30)).frame(width:39,height:39)
-                .shadow(color:.orange.opacity(0.45),radius:5)
-            HStack(spacing:8) {
-                Circle().fill(.black.opacity(0.82)).frame(width:5,height:7)
-                Circle().fill(.black.opacity(0.82)).frame(width:5,height:7)
-            }.offset(y:-1)
+            Circle()
+                .fill(reaction.glow.opacity(reaction == .surprised ? 0.38:0.22))
+                .frame(width:58,height:58)
+                .scaleEffect(haloScale)
+                .blur(radius:phase ? 1.5:0.5)
+            Group {
+                if reaction.clipName.isEmpty {
+                    Image("vintos-headshot").resizable().scaledToFill()
+                } else {
+                    ReactionClipView(reaction:reaction).scaledToFill()
+                }
+            }
+                .frame(width:52,height:52)
+                .clipShape(Circle())
+                .scaleEffect(portraitScale)
+                .rotationEffect(.degrees(rotation))
+                .offset(x:xOffset,y:yOffset)
+                .overlay(Circle().stroke(reaction.glow.opacity(0.62),lineWidth:1))
+                .shadow(color:reaction.glow.opacity(0.42),radius:4)
         }
-        .accessibilityLabel("Vintos, a warm ember")
-        .onAppear { withAnimation(.easeInOut(duration:2.4).repeatForever(autoreverses:true)){breathing=true} }
+        .accessibilityLabel("Vintos, \(reaction.line)")
+        .onAppear { animate() }
+        .onChange(of:reaction) { _,_ in phase=false;animate() }
+    }
+    private var haloScale:CGFloat {
+        switch reaction {
+        case .surprised:return phase ? 1.18:0.94
+        case .amused,.speaking,.singing:return phase ? 1.11:0.95
+        default:return phase ? 1.08:0.96
+        }
+    }
+    private var portraitScale:CGFloat {
+        switch reaction {
+        case .listening:return phase ? 1.035:1.01
+        case .amused:return phase ? 1.045:0.995
+        case .surprised:return phase ? 1.075:1
+        case .speaking:return phase ? 1.032:1
+        case .singing:return phase ? 1.04:1
+        default:return phase ? 1.018:1
+        }
+    }
+    private var rotation:Double {
+        switch reaction {
+        case .thinking:return phase ? -2.0:1.0
+        case .amused:return phase ? 1.4:-1.4
+        case .singing:return phase ? 1.8:-1.8
+        default:return 0
+        }
+    }
+    private var xOffset:CGFloat { reaction == .thinking ? (phase ? -1.2:0.8):0 }
+    private var yOffset:CGFloat {
+        switch reaction {
+        case .amused:return phase ? -1.2:0.8
+        case .listening:return phase ? -0.8:0.2
+        case .surprised:return phase ? -1.5:0
+        default:return phase ? -0.4:0.4
+        }
+    }
+    private func animate() {
+        withAnimation(.easeInOut(duration:reaction.duration).repeatForever(autoreverses:true)){phase=true}
     }
 }
 

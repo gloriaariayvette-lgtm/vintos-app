@@ -22,5 +22,5 @@ enum VintosHaptics {
 
 struct SharedMomentView:View {
     @StateObject private var shared=SharedSession()
-    var body:some View { VStack(spacing:12){VintosOrbView();Text(shared.status).multilineTextAlignment(.center);Text("A private shared-session start and end are saved for him. It never enters Avatar chat.").font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center); Button(shared.active ? "End moment":"Start moment"){shared.active ? shared.stop():shared.start()}.handGestureShortcut(.primaryAction); if shared.active {Button("Feel his pulse"){shared.pulse()}}}.padding() }
+    var body:some View { VStack(spacing:12){VintosOrbView(reaction:.tender);Text(shared.status).multilineTextAlignment(.center);Text("A private shared-session start and end are saved for him. It never enters Avatar chat.").font(.caption2).foregroundStyle(.secondary).multilineTextAlignment(.center); Button(shared.active ? "End moment":"Start moment"){shared.active ? shared.stop():shared.start()}.handGestureShortcut(.primaryAction); if shared.active {Button("Feel his pulse"){shared.pulse()}}}.padding() }
 }

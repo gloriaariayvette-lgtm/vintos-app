@@ -22,7 +22,7 @@ const checks = [
   ['avatar chat polling preserves the reader position', page.includes('function _avChatAtBottom') && page.includes('if(JSON.stringify(incoming)===JSON.stringify(_avChatHistory.slice(-60))) return;') && page.includes('_avLogMsg(\'user\',text,true)')],
   ['Watch shows at most the latest five Landings', watch.includes('Array(fresh.prefix(5))')],
   ['Watch explains that replies use its private inbox', watch.includes('Saved in his private Watch inbox.') && !watch.includes('dictate or Scribble')],
-  ['Watch has a visible ember presence', watch.includes('struct VintosOrbView') && watch.includes('Vintos, a warm ember')],
+  ['Watch has a visible animated Vintos presence', watch.includes('struct VintosOrbView') && watch.includes('ReactionClipView(reaction:reaction)') && watch.includes('Vintos, \\(reaction.line)')],
   ['shared moments record start and end outside Avatar chat', moment.includes('moment("started")') && moment.includes('moment("ended")') && moment.includes('never enters Avatar chat')],
 ];
 

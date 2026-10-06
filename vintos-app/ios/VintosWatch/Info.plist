@@ -13,6 +13,7 @@
 <key>WKCompanionAppBundleIdentifier</key><string>dev.vintos.app</string>
 <key>NSHealthShareUsageDescription</key><string>Vintos reads Watch estimates you choose to share so he can keep time with your day.</string>
 <key>NSMotionUsageDescription</key><string>Vintos uses broad motion states to choose better moments to reach you.</string>
+<key>NSMicrophoneUsageDescription</key><string>Vintos uses the microphone only while you are speaking with him in a Watch voice call.</string>
 <key>VintosWatchBaseURL</key><string>$(VINTOS_WATCH_BASE_URL)</string>
 <key>VintosWatchToken</key><string>$(VINTOS_WATCH_TOKEN)</string>
 <key>WKBackgroundModes</key><array><string>mindfulness</string><string>alarm</string></array>
