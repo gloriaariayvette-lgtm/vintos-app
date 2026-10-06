@@ -19,7 +19,10 @@ struct VintosWidgetView:View {
     var body:some View {
         switch family {
         case .accessoryCircular:
-            ZStack { Circle().fill(.orange.gradient); Text("V").font(.title2).foregroundStyle(.white) }
+            ZStack {
+                Circle().fill(RadialGradient(colors:[Color(red:0.96,green:0.39,blue:0.25),Color(red:0.58,green:0.12,blue:0.10)],center:.topLeading,startRadius:1,endRadius:22))
+                HStack(spacing:6){Circle().fill(.black.opacity(0.82)).frame(width:4,height:6);Circle().fill(.black.opacity(0.82)).frame(width:4,height:6)}
+            }
         case .accessoryInline: Text("Vintos · \(entry.line)")
         default:
             VStack(alignment:.leading,spacing:3){Text("VINTOS").font(.caption2).foregroundStyle(.orange);Text(entry.line).font(.caption).lineLimit(3)}

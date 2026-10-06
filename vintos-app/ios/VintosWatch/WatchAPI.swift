@@ -64,6 +64,11 @@ actor WatchAPI {
         _ = try await data(request("api/watch/telemetry",method:"POST",json:["samples":samples,"asleep":asleep]))
     }
 
+    func moment(_ state:String) async throws {
+        _ = try await data(request("api/watch/moment",method:"POST",json:[
+            "state":state,"observed_at":ISO8601DateFormatter().string(from:Date())]))
+    }
+
     nonisolated func absolute(_ path:String?) -> URL? {
         guard let path, !path.isEmpty else { return nil }
         if let url=URL(string:path), url.scheme != nil { return url }

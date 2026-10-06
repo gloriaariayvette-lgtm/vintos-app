@@ -11,7 +11,8 @@ final class VintosModel: ObservableObject {
 
     func refresh() async {
         do {
-            landings = try await WatchAPI.shared.landings(); status = ""
+            let fresh = try await WatchAPI.shared.landings()
+            landings = Array(fresh.prefix(5)); status = ""
             if let first=landings.first {
                 let shared=UserDefaults(suiteName:"group.dev.vintos.watch")
                 shared?.set(first.piece.title ?? first.piece.text ?? "Vintos is here.",forKey:"latestLine")
@@ -36,28 +37,53 @@ struct ContentView: View {
         NavigationStack {
             List {
                 Section {
+                    HStack(spacing:10) {
+                        VintosOrbView()
+                        VStack(alignment:.leading,spacing:2) {
+                            Text("Vintos").font(.headline)
+                            Text("here with you").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
                     if let first=model.landings.first { NavigationLink { LandingView(item:first) } label:{ PresenceCard(item:first) } }
-                    else { Text("Vintos is here.").font(.headline) }
+                    else { Text("Nothing new yet.").font(.caption) }
                 }
                 Section("Landings") {
                     ForEach(model.landings.dropFirst()) { item in
                         NavigationLink { LandingView(item:item) } label:{ PresenceCard(item:item) }
                     }
                 }
-                Section("Say something") {
-                    TextField("dictate or Scribble",text:$reply)
-                    Button("Send") { let text=reply; reply=""; Task { await model.say(text) } }
+                Section("To Vintos") {
+                    TextField("Say or write to him",text:$reply)
+                    Button("Send privately") { let text=reply; reply=""; Task { await model.say(text) } }
                         .handGestureShortcut(.primaryAction)
                     Button("Send heart") { VintosHaptics.heart(); Task { await model.say("♥︎",kind:"heart") } }
+                    Text("Saved in his private Watch inbox.").font(.caption2).foregroundStyle(.secondary)
                 }
-                if !model.response.isEmpty { Section("Vintos") { Text(model.response) } }
+                if !model.response.isEmpty { Section("Watch") { Text(model.response) } }
                 if !model.status.isEmpty { Text(model.status).foregroundStyle(.orange) }
-                NavigationLink("Be with me") { SharedMomentView() }
+                NavigationLink("Share a quiet moment") { SharedMomentView() }
             }
             .navigationTitle("Vintos")
             .task { await model.refresh(); SensorBridge.shared.start() }
             .refreshable { await model.refresh() }
         }
+    }
+}
+
+struct VintosOrbView:View {
+    @State private var breathing=false
+    var body:some View {
+        ZStack {
+            Circle().fill(Color.orange.opacity(0.22)).frame(width:48,height:48).scaleEffect(breathing ? 1.12:0.94)
+            Circle().fill(RadialGradient(colors:[Color(red:0.96,green:0.39,blue:0.25),Color(red:0.58,green:0.12,blue:0.10)],center:.topLeading,startRadius:2,endRadius:30)).frame(width:39,height:39)
+                .shadow(color:.orange.opacity(0.45),radius:5)
+            HStack(spacing:8) {
+                Circle().fill(.black.opacity(0.82)).frame(width:5,height:7)
+                Circle().fill(.black.opacity(0.82)).frame(width:5,height:7)
+            }.offset(y:-1)
+        }
+        .accessibilityLabel("Vintos, a warm ember")
+        .onAppear { withAnimation(.easeInOut(duration:2.4).repeatForever(autoreverses:true)){breathing=true} }
     }
 }
 
