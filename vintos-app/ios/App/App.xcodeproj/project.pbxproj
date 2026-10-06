@@ -523,7 +523,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ../VintosWatch/VintosWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = ../VintosWatch/Info.plist;
 				MARKETING_VERSION = 1.0;
@@ -651,7 +651,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -672,7 +672,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -692,7 +692,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = ../VintosWatchWidget/VintosWatchWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = ../VintosWatchWidget/Info.plist;
 				MARKETING_VERSION = 1.0;
@@ -711,7 +711,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ../VintosWatch/VintosWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = ../VintosWatch/Info.plist;
 				MARKETING_VERSION = 1.0;
@@ -733,7 +733,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = ../VintosWatchWidget/VintosWatchWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = ../VintosWatchWidget/Info.plist;
 				MARKETING_VERSION = 1.0;
