@@ -377,6 +377,22 @@ input[type="range"]::-webkit-slider-thumb {
     font-style: italic;
 }
 
+/* Song controls: keep the native player full-width so its play target stays easy to tap. */
+.song-track { margin-top: 8px; }
+.song-track-meta {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; margin-bottom: 4px;
+}
+.song-player {
+    display: block; width: 100%; height: 44px; opacity: 0.9;
+}
+.song-save {
+    min-width: 56px; min-height: 36px; flex-shrink: 0;
+    padding: 6px 12px; background: none;
+    border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text-dim); font-size: 0.7rem; cursor: pointer;
+}
+
 /* Outreach banner */
 .outreach-banner {
     position: fixed; top: 0; left: 0; right: 0;
@@ -3164,7 +3180,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 var tracks = c.tracks || [];
                 var trackHtml = '';
                 tracks.forEach(function(t,i) {
-                    trackHtml += '<div style="display:flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:0.7rem;color:var(--text-dim);">v' + _esc(t.version ?? i+1) + '</span><audio controls preload="none" style="height:32px;width:100%;opacity:0.85;"><source src="' + API + '/api/art/music/stream/' + encodeURIComponent(t.file) + '" type="audio/mpeg"></audio><button class="song-save" data-src="' + _esc('/api/art/music/stream/' + encodeURIComponent(t.file)) + '" data-title="' + _esc(c.title || 'Untitled') + '" onclick="event.stopPropagation();saveSong(this)" style="flex-shrink:0;padding:4px 10px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-size:0.7rem;cursor:pointer;">Save</button></div>';
+                    trackHtml += '<div class="song-track"><div class="song-track-meta"><span style="font-size:0.7rem;color:var(--text-dim);">v' + _esc(t.version ?? i+1) + '</span><button class="song-save" data-src="' + _esc('/api/art/music/stream/' + encodeURIComponent(t.file)) + '" data-title="' + _esc(c.title || 'Untitled') + '" onclick="event.stopPropagation();saveSong(this)">Save</button></div><audio class="song-player" controls preload="none"><source src="' + API + '/api/art/music/stream/' + encodeURIComponent(t.file) + '" type="audio/mpeg"></audio></div>';
                 });
                 html += '<div style="background:var(--card);padding:0.8rem;border-radius:8px;border:1px solid var(--border);"><div style="font-size:0.9rem;color:var(--text);">' + _esc((c.title || 'Untitled')) + '</div><div style="font-size:0.7rem;color:var(--text-dim);margin-top:2px;">' + _esc((c.style || '')) + '</div>' + trackHtml + _landingMark('song', c.task_id) + '</div>';
             });
@@ -4503,7 +4519,7 @@ function _landingPieceHtml(piece) {
   const text = piece.text ? '<div style="white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;margin-top:9px;">' + _esc(piece.text) + '</div>' : '';
   if (piece.type === 'video') return '<video onclick="event.stopPropagation()" src="'+API+_esc(piece.src||'')+'" controls playsinline preload="metadata" style="display:block;width:100%;max-height:52vh;border-radius:10px;background:#000;"></video>'+text;
   if (piece.type === 'image') return '<img onclick="event.stopPropagation()" src="'+API+_esc(piece.src||'')+'" alt="The image Vintos made" style="display:block;width:100%;height:auto;border-radius:10px;">'+text;
-  if (piece.type === 'song') { const tracks=(piece.tracks||[]).map(t=>'<audio onclick="event.stopPropagation()" controls preload="none" style="display:block;width:100%;margin-top:8px;"><source src="'+API+_esc(t.src||'')+'" type="audio/mpeg"></audio><button class="song-save" data-src="'+_esc(t.src||'')+'" data-title="'+_esc(piece.title||'Untitled')+'" onclick="event.stopPropagation();saveSong(this)" style="margin-top:4px;padding:4px 10px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-size:0.7rem;cursor:pointer;">Save</button>').join(''); return (piece.title?'<div style="font-size:0.9rem;color:var(--text-bright);">'+_esc(piece.title)+'</div>':'')+tracks; }
+  if (piece.type === 'song') { const tracks=(piece.tracks||[]).map(t=>'<div class="song-track"><div class="song-track-meta"><span></span><button class="song-save" data-src="'+_esc(t.src||'')+'" data-title="'+_esc(piece.title||'Untitled')+'" onclick="event.stopPropagation();saveSong(this)">Save</button></div><audio class="song-player" onclick="event.stopPropagation()" controls preload="none"><source src="'+API+_esc(t.src||'')+'" type="audio/mpeg"></audio></div>').join(''); return (piece.title?'<div style="font-size:0.9rem;color:var(--text-bright);">'+_esc(piece.title)+'</div>':'')+tracks; }
   return text || '<div style="color:var(--text-dim);">The original piece is empty.</div>';
 }
 
