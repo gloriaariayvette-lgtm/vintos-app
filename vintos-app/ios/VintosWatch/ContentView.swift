@@ -86,6 +86,7 @@ final class VintosModel: ObservableObject {
 
 struct ContentView: View {
     @EnvironmentObject var model:VintosModel
+    @Environment(\.scenePhase) private var scenePhase
     @State private var reply=""
     var body: some View {
         NavigationStack {
@@ -119,7 +120,15 @@ struct ContentView: View {
                 NavigationLink("Share a quiet moment") { SharedMomentView() }
             }
             .navigationTitle("Vintos")
-            .task { await model.refresh(); SensorBridge.shared.start() }
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
+                SensorBridge.shared.start()
+                repeat {
+                    await model.refresh()
+                    if model.status.isEmpty { return }
+                    try? await Task.sleep(for: .seconds(5))
+                } while !Task.isCancelled
+            }
             .refreshable { await model.refresh() }
         }
     }
