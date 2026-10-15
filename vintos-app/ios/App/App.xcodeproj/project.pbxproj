@@ -15,7 +15,6 @@
 		4F4B4D4D1E11FC69731A89E8 /* vintos.caf in Resources */ = {isa = PBXBuildFile; fileRef = D7A1B895FACE6E917FA8D642 /* vintos.caf */; };
 		50379B232058CBB4000EE86E /* capacitor.config.json in Resources */ = {isa = PBXBuildFile; fileRef = 50379B222058CBB4000EE86E /* capacitor.config.json */; };
 		504EC3081FED79650016851F /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 504EC3071FED79650016851F /* AppDelegate.swift */; };
-		A711C3E18F704D64A27A1001 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A711C3E18F704D64A27A1002 /* SceneDelegate.swift */; };
 		504EC30D1FED79650016851F /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30B1FED79650016851F /* Main.storyboard */; };
 		504EC30F1FED79650016851F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 504EC30E1FED79650016851F /* Assets.xcassets */; };
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
@@ -25,17 +24,18 @@
 		843AA19FF32D2736C3773CDA /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B5F2CC7702F63A55DE6A35 /* AudioPlayer.swift */; };
 		8B59A8E74F91EB40DE5EE54C /* Pods_Vintos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D10C1B4A14F204F13F750E3 /* Pods_Vintos.framework */; };
 		9B7B4F19964AC91408195827 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F683D90CD052727E4195D138 /* Foundation.framework */; };
-		FA729A316ABE63D988A1B07E /* VintosWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C134AA46DC08A51C3FEC3C77 /* VintosWatchWidget.swift */; };
-		FB721357B8D54CABCD3E5B28 /* SensorBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADF8DCEB3119369F3BE96F8 /* SensorBridge.swift */; };
-		FF9369286AC8BC398A018B82 /* WatchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4440B34205E1DD30C843396D /* WatchAPI.swift */; };
+		A711C3E18F704D64A27A1001 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A711C3E18F704D64A27A1002 /* SceneDelegate.swift */; };
+		A8F1490B2C6D4E80AFA55101 /* WatchAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A8F1490B2C6D4E80AFA55100 /* WatchAssets.xcassets */; };
+		A8F1490B2C6D4E80AFA55102 /* WatchAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A8F1490B2C6D4E80AFA55100 /* WatchAssets.xcassets */; };
 		C19E07A22C064A43AA210101 /* VoiceCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA210100 /* VoiceCall.swift */; };
 		C19E07A22C064A43AA210103 /* ReactionClipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA210102 /* ReactionClipView.swift */; };
 		C19E07A22C064A43AA210105 /* listening.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA210104 /* listening.mp4 */; };
 		C19E07A22C064A43AA210107 /* amused.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA210106 /* amused.mp4 */; };
 		C19E07A22C064A43AA210109 /* tender.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA210108 /* tender.mp4 */; };
 		C19E07A22C064A43AA21010B /* speaking.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA21010A /* speaking.mp4 */; };
-		A8F1490B2C6D4E80AFA55101 /* WatchAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A8F1490B2C6D4E80AFA55100 /* WatchAssets.xcassets */; };
-		A8F1490B2C6D4E80AFA55102 /* WatchAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A8F1490B2C6D4E80AFA55100 /* WatchAssets.xcassets */; };
+		FA729A316ABE63D988A1B07E /* VintosWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C134AA46DC08A51C3FEC3C77 /* VintosWatchWidget.swift */; };
+		FB721357B8D54CABCD3E5B28 /* SensorBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADF8DCEB3119369F3BE96F8 /* SensorBridge.swift */; };
+		FF9369286AC8BC398A018B82 /* WatchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4440B34205E1DD30C843396D /* WatchAPI.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -94,7 +94,6 @@
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* Vintos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vintos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		A711C3E18F704D64A27A1002 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		504EC30C1FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		504EC30E1FED79650016851F /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		504EC3111FED79650016851F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -102,10 +101,18 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		75B90A1EF37C1753995D5CC6 /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		9995394258CB50F1298AE395 /* SharedMoment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedMoment.swift; sourceTree = "<group>"; };
+		A711C3E18F704D64A27A1002 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		A8F1490B2C6D4E80AFA55100 /* WatchAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WatchAssets.xcassets; sourceTree = "<group>"; };
 		AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.release.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig"; sourceTree = "<group>"; };
 		B49BDA9E1F2041E65FFB11AD /* VintosWatchWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = VintosWatchWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4BED723EC52F33C7E041965 /* WatchAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchAPI.swift; sourceTree = "<group>"; };
 		C134AA46DC08A51C3FEC3C77 /* VintosWatchWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VintosWatchWidget.swift; sourceTree = "<group>"; };
+		C19E07A22C064A43AA210100 /* VoiceCall.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VoiceCall.swift; sourceTree = "<group>"; };
+		C19E07A22C064A43AA210102 /* ReactionClipView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReactionClipView.swift; sourceTree = "<group>"; };
+		C19E07A22C064A43AA210104 /* listening.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = listening.mp4; path = ReactionClips/listening.mp4; sourceTree = "<group>"; };
+		C19E07A22C064A43AA210106 /* amused.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = amused.mp4; path = ReactionClips/amused.mp4; sourceTree = "<group>"; };
+		C19E07A22C064A43AA210108 /* tender.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = tender.mp4; path = ReactionClips/tender.mp4; sourceTree = "<group>"; };
+		C19E07A22C064A43AA21010A /* speaking.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = speaking.mp4; path = ReactionClips/speaking.mp4; sourceTree = "<group>"; };
 		D7A1B895FACE6E917FA8D642 /* vintos.caf */ = {isa = PBXFileReference; includeInIndex = 1; path = vintos.caf; sourceTree = "<group>"; };
 		E90F482554561D81EF65B8AE /* AudioPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
 		EADF8DCEB3119369F3BE96F8 /* SensorBridge.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SensorBridge.swift; sourceTree = "<group>"; };
@@ -114,13 +121,6 @@
 		F683D90CD052727E4195D138 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/WatchOS.platform/Developer/SDKs/WatchOS11.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 		FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-App.debug.xcconfig"; path = "Pods/Target Support Files/Pods-App/Pods-App.debug.xcconfig"; sourceTree = "<group>"; };
 		FF62E175A5FEA60B9A7E4178 /* SharedMoment.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SharedMoment.swift; sourceTree = "<group>"; };
-		A8F1490B2C6D4E80AFA55100 /* WatchAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WatchAssets.xcassets; sourceTree = "<group>"; };
-		C19E07A22C064A43AA210100 /* VoiceCall.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VoiceCall.swift; sourceTree = "<group>"; };
-		C19E07A22C064A43AA210102 /* ReactionClipView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ReactionClipView.swift; sourceTree = "<group>"; };
-		C19E07A22C064A43AA210104 /* listening.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = listening.mp4; path = ReactionClips/listening.mp4; sourceTree = "<group>"; };
-		C19E07A22C064A43AA210106 /* amused.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = amused.mp4; path = ReactionClips/amused.mp4; sourceTree = "<group>"; };
-		C19E07A22C064A43AA210108 /* tender.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = tender.mp4; path = ReactionClips/tender.mp4; sourceTree = "<group>"; };
-		C19E07A22C064A43AA21010A /* speaking.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = speaking.mp4; path = ReactionClips/speaking.mp4; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -286,6 +286,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 2AF9E1059E78A1BFF600D3A1 /* Build configuration list for PBXNativeTarget "VintosWatch" */;
 			buildPhases = (
+				859A988E2E37EB51327EA5D2 /* Validate Watch connection configuration */,
 				F42EC9CE9C836B7A8BB56CA5 /* Sources */,
 				497D1D49903C0DF0ED669B82 /* Frameworks */,
 				5D693D083C3E991B65E7BBD2 /* Resources */,
@@ -431,6 +432,26 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
+		859A988E2E37EB51327EA5D2 /* Validate Watch connection configuration */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Validate Watch connection configuration";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ -z \"${VINTOS_WATCH_TOKEN:-}\" ]; then\n  echo \"error: Watch connection credential is missing. Build with -xcconfig $HOME/.config/vintos/watch.xcconfig. No credential was printed.\"\n  exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
 		9592DBEFFC6D2A0C8D5DEB22 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -523,7 +544,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ../VintosWatch/VintosWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = ../VintosWatch/Info.plist;
 				MARKETING_VERSION = 1.0;
@@ -651,7 +672,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -672,7 +693,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = App/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
@@ -692,7 +713,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = ../VintosWatchWidget/VintosWatchWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = ../VintosWatchWidget/Info.plist;
 				MARKETING_VERSION = 1.0;
@@ -711,7 +732,7 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ../VintosWatch/VintosWatch.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = ../VintosWatch/Info.plist;
 				MARKETING_VERSION = 1.0;
@@ -733,7 +754,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = ../VintosWatchWidget/VintosWatchWidget.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
 				INFOPLIST_FILE = ../VintosWatchWidget/Info.plist;
 				MARKETING_VERSION = 1.0;
