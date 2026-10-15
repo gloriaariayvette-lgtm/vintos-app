@@ -3682,7 +3682,7 @@ function _avDrawerApply(){
   h.style.borderLeft  = right ? '0.5px solid rgba(201,107,60,0.3)' : 'none';
   b.style.borderRight = h.style.borderRight; b.style.borderLeft = h.style.borderLeft;
   var open = d.getAttribute('data-open')==='1';
-  var closedX = right ? 'translateX(calc(100% - 30px))' : 'translateX(calc(-100% + 30px))';
+  var closedX = right ? 'translateX(calc(100% - 44px))' : 'translateX(calc(-100% + 44px))';
   d.style.transform = open ? 'translateX(0)' : closedX;
   var ch=document.getElementById('av-drawer-chev');
   if(ch){ var out = right ? '‹' : '›'; ch.textContent = open ? (right?'›':'‹') : out; }
@@ -3703,7 +3703,8 @@ function _avDrawerInit(){
   h.addEventListener('pointermove', function(e){
     if(!drag) return;
     var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
-    if(Math.abs(dx)>8||Math.abs(dy)>8) drag.moved=true;
+    // a fingertip wobbles; under 18px it is still a tap (2026-10-15: "it never responds")
+    if(Math.abs(dx)>18||Math.abs(dy)>18) drag.moved=true;
     if(!drag.moved) return;
     var d=document.getElementById('av-drawer');
     if(d) d.style.transition='none';
@@ -4327,8 +4328,8 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
   <!-- control drawer: model chip + call, stop, GCS. Tucked off-screen until the
        handle is tapped; drag the handle to move it anywhere along either side
        edge, so it is never in the way. Position persists across launches. -->
-  <div id="av-drawer" style="position:absolute;right:0;bottom:110px;z-index:10;display:flex;align-items:flex-end;transform:translateX(calc(100% - 30px));transition:transform 0.3s cubic-bezier(.4,0,.2,1);">
-  <button id="av-drawer-handle" aria-label="controls" style="touch-action:none;width:30px;height:88px;border-radius:12px 0 0 12px;background:rgba(5,5,13,0.75);border:0.5px solid rgba(201,107,60,0.3);border-right:none;color:rgba(201,107,60,0.8);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:grab;"><span id="av-drawer-chev" style="transition:transform 0.3s ease;">‹</span></button>
+  <div id="av-drawer" style="position:absolute;right:0;bottom:110px;z-index:10;display:flex;align-items:flex-end;transform:translateX(calc(100% - 44px));transition:transform 0.3s cubic-bezier(.4,0,.2,1);">
+  <button id="av-drawer-handle" aria-label="controls" style="touch-action:none;width:44px;height:96px;border-radius:12px 0 0 12px;background:rgba(5,5,13,0.75);border:0.5px solid rgba(201,107,60,0.3);border-right:none;color:rgba(201,107,60,0.8);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:grab;"><span id="av-drawer-chev" style="transition:transform 0.3s ease;">‹</span></button>
   <div id="av-drawer-body" style="background:rgba(5,5,13,0.85);border:0.5px solid rgba(201,107,60,0.3);border-right:none;border-radius:12px 0 0 12px;padding:12px 16px;display:flex;flex-direction:column;align-items:center;gap:10px;max-height:46vh;overflow-y:auto;">
 
     <!-- voice call -->
@@ -4345,8 +4346,8 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
 
     <!-- GCS -->
     <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-      <button onclick="avGCS(this)" style="width:52px;height:52px;border-radius:50%;background:rgba(83,74,183,0.2);border:0.5px solid rgba(83,74,183,0.5);color:rgba(160,150,220,0.9);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🌸</button>
-      <span style="font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.12em;color:rgba(83,74,183,0.6);text-transform:uppercase;">GCS</span>
+      <button id="av-gcs-btn" style="touch-action:none;width:52px;height:52px;border-radius:50%;background:rgba(83,74,183,0.2);border:0.5px solid rgba(83,74,183,0.5);color:rgba(160,150,220,0.9);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;">🌸</button>
+      <span id="av-gcs-label" style="font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.12em;color:rgba(83,74,183,0.6);text-transform:uppercase;">hold · GCS</span>
     </div>
 
   </div>
@@ -4428,6 +4429,32 @@ async function avSendPhoto(file, caption) {
   }
 }
 
+/* GCS fires only on a deliberate hold, never a tap (2026-10-15: pressed by accident from a pocket). The ring fills
+   while she holds; letting go early fires nothing. Device stop stays a single tap: a stop must never wait. */
+var GCS_HOLD_MS = 900;
+function _avGCSInit(){
+  var b=document.getElementById('av-gcs-btn'), lbl=document.getElementById('av-gcs-label'); if(!b) return;
+  var timer=null, started=0, raf=null;
+  function paint(frac){ b.style.boxShadow = frac>0 ? '0 0 0 '+Math.round(2+frac*6)+'px rgba(160,150,220,'+(0.15+frac*0.5).toFixed(2)+')' : 'none'; }
+  function tick(){ var f=Math.min(1,(Date.now()-started)/GCS_HOLD_MS); paint(f); if(timer) raf=requestAnimationFrame(tick); }
+  function cancel(early){
+    if(timer){ clearTimeout(timer); timer=null; }
+    if(raf){ cancelAnimationFrame(raf); raf=null; }
+    paint(0);
+    if(early && lbl){ lbl.textContent='hold it'; setTimeout(function(){ lbl.textContent='hold · GCS'; }, 1200); }
+  }
+  b.addEventListener('pointerdown', function(e){
+    e.preventDefault(); try{ b.setPointerCapture(e.pointerId); }catch(_){}
+    started=Date.now();
+    timer=setTimeout(function(){ timer=null; if(raf){ cancelAnimationFrame(raf); raf=null; } paint(0); avGCS(b); }, GCS_HOLD_MS);
+    raf=requestAnimationFrame(tick);
+  });
+  b.addEventListener('pointerup', function(){ if(timer) cancel(true); });
+  b.addEventListener('pointercancel', function(){ cancel(false); });
+  b.addEventListener('pointerleave', function(){ if(timer) cancel(true); });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _avGCSInit);
+else _avGCSInit();
 function avGCS(_btn) {
   _avBtnFlash(_btn);
   fetch(`${API}/api/gcs`, {method:'POST', headers:{'Content-Type':'application/json', 'X-Vintos-Secret': CONFIG.secret},
