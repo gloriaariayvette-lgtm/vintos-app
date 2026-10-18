@@ -35,7 +35,7 @@ final class SongArrival {
             let content = UNMutableNotificationContent()
             content.title = song.title
             content.body = "His newest song, for when you came in."
-            content.sound = UNNotificationSound(named: UNNotificationSoundName("vintos.caf"))
+            content.sound = .default
             content.categoryIdentifier = "VINTOS_SONG"
             content.threadIdentifier = "vintos"
             content.interruptionLevel = .active
