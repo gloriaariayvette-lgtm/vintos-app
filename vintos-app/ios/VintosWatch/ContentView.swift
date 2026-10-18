@@ -64,6 +64,7 @@ final class VintosModel: ObservableObject {
     }
 
     func refresh() async {
+        if let song = try? await WatchAPI.shared.arrivalSong() { await SongArrival.shared.receive(song) }
         do {
             let fresh = try await WatchAPI.shared.landings()
             landings = Array(fresh.prefix(5)); status = ""

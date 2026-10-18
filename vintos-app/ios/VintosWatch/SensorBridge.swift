@@ -82,6 +82,12 @@ final class SensorBridge:NSObject {
         let d=WKInterfaceDevice.current(); let states:[WKInterfaceDeviceBatteryState:String]=[.charging:"charging",.full:"full",.unplugged:"unplugged",.unknown:"unknown"]
         send([["kind":"battery","value":["level":d.batteryLevel,"state":states[d.batteryState] ?? "unknown"],"observed_at":iso(Date())]])
     }
-    private func send(_ samples:[[String:Any]]) { Task { try? await WatchAPI.shared.telemetry(samples,asleep:asleep); WidgetCenter.shared.reloadAllTimelines() } }
+    private func send(_ samples:[[String:Any]]) {
+        Task {
+            // Every check-in can bring back the bedroom song (Aegis has no push key; this is how it reaches her).
+            if let song = try? await WatchAPI.shared.telemetry(samples,asleep:asleep) { await SongArrival.shared.receive(song) }
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+    }
     private func iso(_ date:Date)->String { ISO8601DateFormatter().string(from:date) }
 }
