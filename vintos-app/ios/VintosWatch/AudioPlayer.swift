@@ -1,18 +1,43 @@
 import AVFoundation
 import Foundation
+import MediaPlayer
+import UIKit
 import UserNotifications
 import WatchKit
 
+/// His songs. While one plays, his face stays with it (Gloria, 19 October): the orb sings until the song ends, and the
+/// Now Playing screen the Watch switches to shows his face as the song's picture, under the song's title.
 @MainActor
 final class AudioPlayer {
-    static let shared=AudioPlayer(); private var player:AVPlayer?
-    func play(_ url:URL) {
+    static let shared=AudioPlayer(); private var player:AVPlayer?; private var ended:NSObjectProtocol?
+    func play(_ url:URL, title:String?=nil) {
         do {
             let session=AVAudioSession.sharedInstance()
             try session.setCategory(.playback,mode:.default,policy:.longFormAudio)
             try session.setActive(true)
-            player=AVPlayer(url:url); player?.play()
+            let item=AVPlayerItem(url:url)
+            if let ended { NotificationCenter.default.removeObserver(ended) }
+            ended=NotificationCenter.default.addObserver(forName:.AVPlayerItemDidPlayToEndTime,object:item,queue:.main) { _ in
+                Task { @MainActor in AudioPlayer.shared.finished() }
+            }
+            player=AVPlayer(playerItem:item); player?.play()
+            VintosModel.shared.react("singing")
+            nowPlaying(title)
         } catch { VintosModel.shared.status="The Watch could not start audio: \(error.localizedDescription)" }
+    }
+
+    private func nowPlaying(_ title:String?) {
+        var info:[String:Any]=[MPMediaItemPropertyTitle:(title?.isEmpty == false ? title! : "A song from Vintos"),
+                                MPMediaItemPropertyArtist:"Vintos"]
+        if let face=UIImage(named:"vintos-headshot") {
+            info[MPMediaItemPropertyArtwork]=MPMediaItemArtwork(boundsSize:face.size) { _ in face }
+        }
+        MPNowPlayingInfoCenter.default().nowPlayingInfo=info
+    }
+
+    private func finished() {
+        MPNowPlayingInfoCenter.default().nowPlayingInfo=nil
+        if VintosModel.shared.reaction == .singing { VintosModel.shared.react("present") }
     }
 }
 
@@ -30,7 +55,7 @@ final class SongArrival {
         UserDefaults.standard.set(song.id, forKey: seenKey)
         VintosModel.shared.react("singing")
         if WKApplication.shared().applicationState == .active {
-            AudioPlayer.shared.play(url); WKInterfaceDevice.current().play(.start)
+            AudioPlayer.shared.play(url,title:song.title); WKInterfaceDevice.current().play(.start)
         } else {
             let content = UNMutableNotificationContent()
             content.title = song.title
