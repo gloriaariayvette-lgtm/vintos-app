@@ -54,6 +54,7 @@ enum VintosReaction:String,CaseIterable {
 final class VintosModel: ObservableObject {
     static let shared = VintosModel()
     @Published var landings:[Landing]=[]
+    @Published var audioStatus=""
     @Published var status=""
     @Published var response=""
     @Published var reaction:VintosReaction = VintosReaction(rawValue:ProcessInfo.processInfo.environment["VINTOS_REACTION_PREVIEW"] ?? "") ?? .present
@@ -116,6 +117,7 @@ struct ContentView: View {
                     Text("Saved in his private Watch inbox.").font(.caption2).foregroundStyle(.secondary)
                 }
                 if !model.response.isEmpty { Section("Watch") { Text(model.response) } }
+                if !model.audioStatus.isEmpty { Text(model.audioStatus).foregroundStyle(.orange) }
                 if !model.status.isEmpty { Text(model.status).foregroundStyle(.orange) }
                 NavigationLink("Call Vintos") { VoiceCallView() }
                 NavigationLink("Share a quiet moment") { SharedMomentView() }
@@ -228,6 +230,7 @@ struct LandingView:View {
                     Button("Play") { AudioPlayer.shared.play(url,title:item.piece.title); WKInterfaceDevice.current().play(.start) }
                         .handGestureShortcut(.primaryAction)
                 }
+                if !model.audioStatus.isEmpty { Text(model.audioStatus).font(.caption).foregroundStyle(.orange) }
                 Text("How did it land?").font(.caption)
                 HStack { choice("landed","✓"); choice("partly","~"); choice("missed","×") }
                 TextField("why",text:$why)

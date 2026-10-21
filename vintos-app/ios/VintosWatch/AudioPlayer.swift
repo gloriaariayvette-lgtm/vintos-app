@@ -9,21 +9,79 @@ import WatchKit
 /// Now Playing screen the Watch switches to shows his face as the song's picture, under the song's title.
 @MainActor
 final class AudioPlayer {
-    static let shared=AudioPlayer(); private var player:AVPlayer?; private var ended:NSObjectProtocol?
+    static let shared=AudioPlayer()
+    private var player:AVPlayer?
+    private var ended:NSObjectProtocol?
+    private var failed:NSObjectProtocol?
+    private var itemStatus:NSKeyValueObservation?
+    private var playbackStatus:NSKeyValueObservation?
+    private var requestID=UUID()
+
     func play(_ url:URL, title:String?=nil) {
+        let id=UUID(); requestID=id
+        player?.pause()
+        VintosModel.shared.audioStatus="Connecting audio…"
         do {
             let session=AVAudioSession.sharedInstance()
             try session.setCategory(.playback,mode:.default,policy:.longFormAudio)
-            try session.setActive(true)
-            let item=AVPlayerItem(url:url)
-            if let ended { NotificationCenter.default.removeObserver(ended) }
-            ended=NotificationCenter.default.addObserver(forName:.AVPlayerItemDidPlayToEndTime,object:item,queue:.main) { _ in
-                Task { @MainActor in AudioPlayer.shared.finished() }
+            // watchOS resolves the output route asynchronously for long-form audio.
+            session.activate(options: []) { [weak self] active, error in
+                Task { @MainActor in
+                    guard let self, self.requestID == id else { return }
+                    guard active, error == nil else {
+                        self.reportFailure(error?.localizedDescription ?? "No audio output was selected.")
+                        return
+                    }
+                    self.start(url,title:title,id:id)
+                }
             }
-            player=AVPlayer(playerItem:item); player?.play()
-            VintosModel.shared.react("singing")
-            nowPlaying(title)
-        } catch { VintosModel.shared.status="The Watch could not start audio: \(error.localizedDescription)" }
+        } catch { reportFailure(error.localizedDescription) }
+    }
+
+    private func start(_ url:URL,title:String?,id:UUID) {
+        let item=AVPlayerItem(url:url)
+        itemStatus=nil; playbackStatus=nil
+        if let ended { NotificationCenter.default.removeObserver(ended) }
+        if let failed { NotificationCenter.default.removeObserver(failed) }
+        ended=NotificationCenter.default.addObserver(forName:.AVPlayerItemDidPlayToEndTime,object:item,queue:.main) { _ in
+            Task { @MainActor in
+                guard AudioPlayer.shared.requestID == id else { return }
+                AudioPlayer.shared.finished()
+            }
+        }
+        failed=NotificationCenter.default.addObserver(forName:.AVPlayerItemFailedToPlayToEndTime,object:item,queue:.main) { note in
+            let message=(note.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error)?.localizedDescription ?? "The song could not finish playing."
+            Task { @MainActor in
+                guard AudioPlayer.shared.requestID == id else { return }
+                AudioPlayer.shared.reportFailure(message)
+            }
+        }
+        let playing=AVPlayer(playerItem:item); player=playing
+        itemStatus=item.observe(\.status,options:[.initial,.new]) { [weak self] item,_ in
+            Task { @MainActor in
+                guard let self, self.requestID == id else { return }
+                if item.status == .failed { self.reportFailure(item.error?.localizedDescription ?? "The song could not load.") }
+            }
+        }
+        playbackStatus=playing.observe(\.timeControlStatus,options:[.initial,.new]) { [weak self] player,_ in
+            Task { @MainActor in
+                guard let self, self.requestID == id, item.status != .failed else { return }
+                switch player.timeControlStatus {
+                case .playing: VintosModel.shared.audioStatus=""; VintosModel.shared.react("singing")
+                case .waitingToPlayAtSpecifiedRate: VintosModel.shared.audioStatus="Loading the song…"
+                default: break
+                }
+            }
+        }
+        nowPlaying(title)
+        playing.play()
+    }
+
+    private func reportFailure(_ message:String) {
+        player?.pause()
+        MPNowPlayingInfoCenter.default().nowPlayingInfo=nil
+        VintosModel.shared.audioStatus="Could not play this song: \(message)"
+        if VintosModel.shared.reaction == .singing { VintosModel.shared.react("present") }
     }
 
     private func nowPlaying(_ title:String?) {
@@ -36,6 +94,7 @@ final class AudioPlayer {
     }
 
     private func finished() {
+        VintosModel.shared.audioStatus=""
         MPNowPlayingInfoCenter.default().nowPlayingInfo=nil
         if VintosModel.shared.reaction == .singing { VintosModel.shared.react("present") }
     }

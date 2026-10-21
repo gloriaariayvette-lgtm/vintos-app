@@ -2,11 +2,30 @@ import AVFoundation
 import AVKit
 import SwiftUI
 
+// The portrait is visual-only. Its source movie contains an AAC track even though
+// it is muted; keep that track out of the visual player so the song owns audio.
+@MainActor
+func reactionVideoItem(_ url:URL) async throws -> AVPlayerItem {
+    let asset=AVURLAsset(url:url)
+    let duration=try await asset.load(.duration)
+    guard let source=try await asset.loadTracks(withMediaType:.video).first else {
+        throw URLError(.cannotDecodeContentData)
+    }
+    let composition=AVMutableComposition()
+    guard let track=composition.addMutableTrack(withMediaType:.video,preferredTrackID:kCMPersistentTrackID_Invalid) else {
+        throw URLError(.cannotDecodeContentData)
+    }
+    try track.insertTimeRange(CMTimeRange(start:.zero,duration:duration),of:source,at:.zero)
+    track.preferredTransform=try await source.load(.preferredTransform)
+    return AVPlayerItem(asset:composition)
+}
+
 @MainActor
 final class ReactionClipPlayer: ObservableObject {
     let player = AVPlayer()
     private var endObserver: NSObjectProtocol?
     private var currentName = ""
+    private var loadTask:Task<Void,Never>?
 
     init() {
         player.isMuted = true
@@ -22,17 +41,22 @@ final class ReactionClipPlayer: ObservableObject {
 
     func show(_ reaction: VintosReaction) {
         let name = reaction.clipName
-        guard name != currentName else { player.play(); return }
+        guard name != currentName || player.currentItem == nil else { player.play(); return }
+        loadTask?.cancel()
         currentName = name
         player.replaceCurrentItem(with: nil)
         guard !name.isEmpty,
               let url = Bundle.main.url(forResource: name, withExtension: "mp4") else { return }
-        let item = AVPlayerItem(url: url)
-        player.replaceCurrentItem(with: item)
-        player.play()
+        loadTask=Task { [weak self] in
+            // Keep the original visual playback if the composition cannot be read.
+            let item=(try? await reactionVideoItem(url)) ?? AVPlayerItem(url:url)
+            guard !Task.isCancelled, let self, self.currentName == name else { return }
+            self.player.replaceCurrentItem(with:item)
+            self.player.play()
+        }
     }
 
-    func pause() { player.pause() }
+    func pause() { loadTask?.cancel(); player.pause() }
 
     deinit {
         if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
