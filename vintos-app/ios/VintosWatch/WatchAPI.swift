@@ -14,6 +14,8 @@ struct VoiceFramingEnvelope:Codable { let framing:String? }
 /// The bedroom song Aegis hands the Watch when she comes in (Gloria, 17 October).
 struct ArrivalSong: Codable, Hashable { let id: String; let title: String; let media_url: String }
 struct ArrivalSongEnvelope: Codable { let song: ArrivalSong? }
+struct LiveHeartState: Codable { let on: Bool; let until: String?; let minutes_left: Int? }
+struct TelemetryEnvelope: Codable { let song: ArrivalSong?; let live: LiveHeartState? }
 
 actor WatchAPI {
     static let shared = WatchAPI()
@@ -66,9 +68,9 @@ actor WatchAPI {
 
     /// Returns the bedroom song when Aegis has one waiting for the Watch.
     @discardableResult
-    func telemetry(_ samples:[[String:Any]], asleep:Bool) async throws -> ArrivalSong? {
+    func telemetry(_ samples:[[String:Any]], asleep:Bool) async throws -> TelemetryEnvelope {
         let received = try await data(request("api/watch/telemetry",method:"POST",json:["samples":samples,"asleep":asleep]))
-        return (try? JSONDecoder().decode(ArrivalSongEnvelope.self, from: received))?.song
+        return try JSONDecoder().decode(TelemetryEnvelope.self, from: received)
     }
 
     func arrivalSong() async throws -> ArrivalSong? {

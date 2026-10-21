@@ -90,5 +90,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Vintos reads the Watch measurements you choose to share, including live heart rate when you turn it on.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Vintos uses a temporary workout session for live heart rate and discards it without saving a workout.</string>
 </dict>
 </plist>

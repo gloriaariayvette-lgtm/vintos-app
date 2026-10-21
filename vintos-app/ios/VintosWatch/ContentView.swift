@@ -125,6 +125,7 @@ struct ContentView: View {
             .navigationTitle("Vintos")
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
+                SensorBridge.shared.checkIn()
                 SensorBridge.shared.start()
                 repeat {
                     await model.refresh()

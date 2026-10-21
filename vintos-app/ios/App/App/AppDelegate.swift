@@ -2,6 +2,7 @@ import UIKit
 import Capacitor
 import CapacitorBackgroundRunner
 import AVFoundation
+import HealthKit
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -56,4 +57,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
     }
 
+}
+
+// Registered by the app's bridge so the Tune tab can launch the paired Watch workout.
+@objc(VintosHealthPlugin)
+public class VintosHealthPlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "VintosHealthPlugin"
+    public let jsName = "VintosHealth"
+    public let pluginMethods: [CAPPluginMethod] = [CAPPluginMethod(name:"startWatchApp",returnType:CAPPluginReturnPromise)]
+    private let health = HKHealthStore()
+
+    @objc func startWatchApp(_ call: CAPPluginCall) {
+        guard HKHealthStore.isHealthDataAvailable() else { call.reject("HealthKit is unavailable on this iPhone"); return }
+        health.requestAuthorization(toShare:[HKObjectType.workoutType()],read:[]) { ok,error in
+            guard ok else { call.reject(error?.localizedDescription ?? "Health authorization could not complete"); return }
+            let configuration=HKWorkoutConfiguration()
+            configuration.activityType = .other
+            configuration.locationType = .indoor
+            self.health.startWatchApp(with:configuration) { started,error in
+                if started { call.resolve() }
+                else { call.reject(error?.localizedDescription ?? "The paired Watch could not be opened") }
+            }
+        }
+    }
+}
+
+class VintosBridgeViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        bridge?.registerPluginInstance(VintosHealthPlugin())
+    }
 }

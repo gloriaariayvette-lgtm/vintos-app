@@ -1,6 +1,7 @@
 import SwiftUI
 import UserNotifications
 import WatchKit
+import HealthKit
 
 @main
 struct VintosWatchApp: App {
@@ -34,6 +35,10 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
         }
         #endif
         SensorBridge.shared.start()
+    }
+
+    func handle(_ workoutConfiguration: HKWorkoutConfiguration) {
+        SensorBridge.shared.handleWorkout(workoutConfiguration)
     }
 
     func didRegisterForRemoteNotifications(withDeviceToken deviceToken: Data) {
