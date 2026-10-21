@@ -64,6 +64,7 @@ final class VintosModel: ObservableObject {
     }
 
     func refresh() async {
+        if let song = try? await WatchAPI.shared.arrivalSong() { await SongArrival.shared.receive(song) }
         do {
             let fresh = try await WatchAPI.shared.landings()
             landings = Array(fresh.prefix(5)); status = ""
@@ -224,7 +225,7 @@ struct LandingView:View {
                 Text(item.piece.title ?? item.surface.capitalized).font(.headline)
                 if let text=item.piece.text { Text(text) }
                 if let url=songURL,item.surface=="song" {
-                    Button("Play") { AudioPlayer.shared.play(url); WKInterfaceDevice.current().play(.start) }
+                    Button("Play") { AudioPlayer.shared.play(url,title:item.piece.title); WKInterfaceDevice.current().play(.start) }
                         .handGestureShortcut(.primaryAction)
                 }
                 Text("How did it land?").font(.caption)
