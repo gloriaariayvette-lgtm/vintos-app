@@ -65,7 +65,7 @@ EXPRESSION_IMPLIES = {
 LM_STUDIO_API = os.environ.get("GROK_API_BASE", "https://api.x.ai/v1")
 LLM_API_KEY = os.environ.get("XAI_API_KEY", "")
 LLM_AUTH_HEADERS = {"Authorization": f"Bearer {LLM_API_KEY}"} if LLM_API_KEY else {}
-APP_SECRET = os.environ.get("VINTOS_SECRET", "vintos-aegis-2026")
+APP_SECRET = os.environ["VINTOS_SECRET"]
 GUESTBOOK_FILE = os.path.join(MEMORY, "guestbook.json")
 PUBLISH_CONFIG = os.path.join(MEMORY, "publish-config.json")
 

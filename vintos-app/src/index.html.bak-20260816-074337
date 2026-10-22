@@ -811,7 +811,7 @@ input[type="range"]::-webkit-slider-thumb {
 const CONFIG = {
     host: '100.72.225.119',
     port: 8500,
-    secret: 'vintos-aegis-2026',
+    secret: '',
 };
 const API = `http://${CONFIG.host}:${CONFIG.port}`;
 const WS_BASE = `ws://${CONFIG.host}:${CONFIG.port}`;

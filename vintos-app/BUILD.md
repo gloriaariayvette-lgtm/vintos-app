@@ -26,13 +26,39 @@ In Xcode:
    - NSAppTransportSecurity → NSAllowsArbitraryLoads: YES (Tailscale is HTTP)
 3. Select your iPhone as target, ⌘R
 
-## Configuration
+## Configuration — coordinated house identity cutover
 
-Tailscale IP is set to 100.72.225.119 (same Aegis box as Velaris) in:
-- `src/index.html` — CONFIG block (port 8500, secret vintos-aegis-2026)
-- `src/runners/outreach.js` — HOST/PORT/SECRET
+The house remains public through `https://aegis.tailaa3de5.ts.net:8443`.
+`src/house_auth_client.js` reads runtime `VINTOS_ENV.VINTOS_SECRET` when supplied by
+an owner-controlled host, otherwise prompts for enrollment and validates it before
+storing it. Never generate a JS file containing the credential in the public web
+root. Browsers cannot read Aegis's process environment.
 
-If Aegis's Tailscale IP ever changes, update both.
+The foreground app provisions `VINTOS_SECRET` and `VINTOS_API_BASE` into the native
+background runner's CapacitorKV; `src/runners/outreach.js` reads its own process
+environment first, then that enrolled KV. Existing installations need this app
+update and one owner enrollment. No credential is compiled into the app.
+
+Before approval, run the offline client suite:
+
+```sh
+node tests/house-auth.cjs
+```
+
+After both repositories are reviewed and approved, with dependencies already
+installed and the existing iOS project present:
+
+```sh
+npx cap sync ios
+npx cap open ios
+```
+
+Use the existing signing team and paired iPhone target. Install through Xcode's
+usual Run action. Preserve the independent Watch bearer and current Watch URL.
+The coordinated Aegis rollout and rollback are documented in the main repository's
+`docs/security-auth-rollout.md`; do not restore a credential-bearing old bundle.
+Native background execution and physical-device acceptance remain required after
+Gloria approves; source tests alone do not prove installed behavior.
 
 ## Assets still needed
 

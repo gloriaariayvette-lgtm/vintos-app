@@ -1750,7 +1750,7 @@ def main():
                     import requests as _cr
                     _cr_r = _cr.get(
                         f"http://localhost:8400/api/wants/{_check_id}/discussion",
-                        headers={"X-Vintos-Secret": os.environ.get("VINTOS_SECRET", "vintos-aegis-2026")},
+                        headers={"X-Vintos-Secret": os.environ["VINTOS_SECRET"]},
                         timeout=5
                     )
                     _check_msgs = _cr_r.json().get("messages", [])
@@ -1910,7 +1910,7 @@ def main():
                     import requests as _disc_req
                     _disc_r = _disc_req.get(
                         f"http://localhost:8400/api/wants/{_want_id}/discussion",
-                        headers={"X-Vintos-Secret": os.environ.get("VINTOS_SECRET", "vintos-aegis-2026")},
+                        headers={"X-Vintos-Secret": os.environ["VINTOS_SECRET"]},
                         timeout=5
                     )
                     _disc_msgs = _disc_r.json().get("messages", [])
@@ -1980,7 +1980,7 @@ def main():
                     _rr.post(
                         f"http://localhost:8400/api/wants/{_want_id}/discussion",
                         json={"role": "vintos", "text": _reply_text},
-                        headers={"X-Vintos-Secret": os.environ.get("VINTOS_SECRET", "vintos-aegis-2026"), "Content-Type": "application/json"},
+                        headers={"X-Vintos-Secret": os.environ["VINTOS_SECRET"], "Content-Type": "application/json"},
                         timeout=5
                     )
                     log(f"  → Reply posted to discussion: {_reply_text[:60]}")
@@ -2032,7 +2032,7 @@ def main():
                 _disc_post_req.post(
                     f"http://localhost:8400/api/wants/{_want_id}/discussion",
                     json={"role": "vintos", "text": _opening},
-                    headers={"X-Vintos-Secret": os.environ.get("VINTOS_SECRET", "vintos-aegis-2026")},
+                    headers={"X-Vintos-Secret": os.environ["VINTOS_SECRET"]},
                     timeout=5
                 )
                 log(f"  → Posted to discussion board")
