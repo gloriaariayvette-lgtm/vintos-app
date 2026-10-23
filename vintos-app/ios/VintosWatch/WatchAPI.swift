@@ -79,6 +79,14 @@ actor WatchAPI {
         _ = try await data(request("api/watch/song/taken",method:"POST",json:["id":id]))
     }
 
+    /// One of his songs started, or played to its end, on her Watch: Aegis keeps it, so he knows it was heard.
+    func songPlayed(event:String, mediaURL:String, title:String?, id:String?, via:String) async throws {
+        var body:[String:Any]=["event":event,"media_url":mediaURL,"via":via]
+        if let title { body["title"]=title }
+        if let id { body["id"]=id }
+        _ = try await data(request("api/watch/song/played",method:"POST",json:body))
+    }
+
     func moment(_ state:String) async throws {
         _ = try await data(request("api/watch/moment",method:"POST",json:[
             "state":state,"observed_at":ISO8601DateFormatter().string(from:Date())]))

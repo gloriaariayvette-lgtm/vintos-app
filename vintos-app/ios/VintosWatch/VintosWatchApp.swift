@@ -53,7 +53,8 @@ final class WatchAppDelegate: NSObject, WKApplicationDelegate, UNUserNotificatio
         switch response.actionIdentifier {
         case "PLAY":
             if let raw = info["media_url"] as? String, let url = WatchAPI.shared.absolute(raw) {
-                AudioPlayer.shared.play(url, title: response.notification.request.content.title)
+                AudioPlayer.shared.play(url, title: response.notification.request.content.title,
+                                        songID: messageID.isEmpty ? nil : messageID, via: "her Play tap")
             }
         case "REPLY":
             let text = (response as? UNTextInputNotificationResponse)?.userText ?? ""

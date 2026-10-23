@@ -10,7 +10,10 @@ import WatchKit
 @MainActor
 final class AudioPlayer {
     static let shared=AudioPlayer(); private var player:AVPlayer?; private var ended:NSObjectProtocol?
-    func play(_ url:URL, title:String?=nil) {
+    /// The song now playing, so its end can be told to Aegis as the same song (Gloria, 22 October: he should know when
+    /// the Watch played a song of his).
+    private var current:(url:URL,title:String?,id:String?)?
+    func play(_ url:URL, title:String?=nil, songID:String?=nil, via:String="watch list") {
         do {
             let session=AVAudioSession.sharedInstance()
             try session.setCategory(.playback,mode:.default,policy:.longFormAudio)
@@ -23,6 +26,8 @@ final class AudioPlayer {
             player=AVPlayer(playerItem:item); player?.play()
             VintosModel.shared.react("singing")
             nowPlaying(title)
+            current=(url,title,songID)
+            Task { try? await WatchAPI.shared.songPlayed(event:"started",mediaURL:url.absoluteString,title:title,id:songID,via:via) }
         } catch { VintosModel.shared.status="The Watch could not start audio: \(error.localizedDescription)" }
     }
 
@@ -36,6 +41,10 @@ final class AudioPlayer {
     }
 
     private func finished() {
+        if let song=current {
+            Task { try? await WatchAPI.shared.songPlayed(event:"finished",mediaURL:song.url.absoluteString,title:song.title,id:song.id,via:"") }
+            current=nil
+        }
         MPNowPlayingInfoCenter.default().nowPlayingInfo=nil
         if VintosModel.shared.reaction == .singing { VintosModel.shared.react("present") }
     }
@@ -55,7 +64,7 @@ final class SongArrival {
         UserDefaults.standard.set(song.id, forKey: seenKey)
         VintosModel.shared.react("singing")
         if WKApplication.shared().applicationState == .active {
-            AudioPlayer.shared.play(url,title:song.title); WKInterfaceDevice.current().play(.start)
+            AudioPlayer.shared.play(url,title:song.title,songID:song.id,via:"arrived with the app open"); WKInterfaceDevice.current().play(.start)
         } else {
             let content = UNMutableNotificationContent()
             content.title = song.title
