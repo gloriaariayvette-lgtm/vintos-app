@@ -189,15 +189,6 @@ body {
     display: flex;
 }
 
-/* Lab layout stays within the phone, including unbroken sequence text. */
-#pane-lab { min-width: 0; overflow-x: hidden; }
-#lab-grid { min-width: 0; grid-template-columns: minmax(0, 1fr); }
-#lab-grid > *, #lab-structures, #lab-structures > * { min-width: 0; max-width: 100%; box-sizing: border-box; }
-#lab-grid, #lab-summary, #lab-structure-note { overflow-wrap: anywhere; }
-.lab-activity-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-#lab-structures { margin-bottom: 16px; }
-#lab-structure-canvas { box-sizing: border-box; max-width: 100%; }
-
 /* Chat */
 .chat-messages {
     flex: 1;
@@ -455,6 +446,7 @@ input[type="range"]::-webkit-slider-thumb {
 @keyframes avripple { from{width:20px;height:20px;margin:-10px;opacity:1} to{width:70px;height:70px;margin:-35px;opacity:0} }
 .dim .bar-fill{background:#e8dcc0 !important;}
 </style>
+<script src="/app/stratagem_voice.js"></script>
 </head>
 <body>
 
@@ -631,16 +623,17 @@ input[type="range"]::-webkit-slider-thumb {
             <div id="proposals-feed" style="padding:1rem;font-size:0.85rem;line-height:1.7;color:var(--text-dim,#a09890);overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;"></div>
         </div>
 
-        <!-- Chemistry Lab — operational state and scientific grade remain two marks. -->
+        <!-- STUDY: his code, with Gloria's y/n -->
+        <!-- Chemistry Lab — the visible body of the Lab, not just its switch.
+             Operational state and scientific grade are shown as two separate marks: a run
+             that completed and answered badly must never read as a run that worked. -->
         <div class="tab-pane" id="pane-lab">
             <div class="gallery-content">
                 <div id="lab-summary" style="font-size:0.62rem;color:var(--text-dim);line-height:1.6;margin-bottom:14px;">loading...</div>
-                <div id="lab-structures"></div>
                 <div id="lab-grid" class="gallery-grid"></div>
             </div>
         </div>
 
-        <!-- STUDY: his code, with Gloria's y/n -->
         <div class="tab-pane" id="pane-study">
             <div id="study-frame" style="display:flex;flex-direction:column;height:60vh;">
                 <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 1rem;border-bottom:0.5px solid var(--border);">
@@ -773,6 +766,7 @@ input[type="range"]::-webkit-slider-thumb {
         <!-- ATELIER — only work he has explicitly revealed -->
         <div class="tab-pane" id="pane-atelier">
             <div style="padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 220px);padding-bottom:4rem;">
+                <div id="atelier-exhibitions" style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:1.2rem;"></div>
                 <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:0.35rem;">Revealed Work</div>
                 <div style="font-size:0.68rem;line-height:1.5;color:var(--text-dim);margin-bottom:1rem;">Only pieces Vintos has chosen to bring out of the sealed room appear here.</div>
                 <div id="atelier-feed" style="display:flex;flex-direction:column;gap:0.85rem;">Loading...</div>
@@ -788,6 +782,7 @@ input[type="range"]::-webkit-slider-thumb {
                     <div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;margin-bottom:0.8rem;">Share a Song With Him</div>
                     <input id="music-share-song" placeholder="Artist - Song Title" style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);margin-bottom:6px;font-size:0.85rem;" />
                     <input id="music-share-note" placeholder="Why you love it..." style="width:100%;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);margin-bottom:6px;font-size:0.85rem;" />
+                    <textarea id="music-share-lyrics" rows="4" aria-label="Lyrics (if you have them)" placeholder="Lyrics (if you have them)" style="width:100%;box-sizing:border-box;padding:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);margin-bottom:6px;font:inherit;font-size:0.85rem;resize:vertical;"></textarea>
                     <div id="music-file-row" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
                         <button ontouchend="event.preventDefault();event.stopPropagation();document.getElementById('music-audio-input').click()" onclick="document.getElementById('music-audio-input').click()" style="padding:6px 12px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-dim);font-size:0.75rem;cursor:pointer;flex-shrink:0;">+ audio file</button>
                         <span id="music-file-label" style="font-size:0.75rem;color:var(--text-dim);font-style:italic;">optional — whisper will transcribe lyrics</span>
@@ -844,12 +839,62 @@ input[type="range"]::-webkit-slider-thumb {
                     <div style="padding-right:14px;">
                         <div style="font-size:0.72rem;color:var(--text-dim);letter-spacing:0.06em;">agents in slack</div>
                         <div style="font-size:0.6rem;color:var(--text-dim);margin-top:2px;line-height:1.45;" id="agents-status-text">loading...</div>
+                        <label style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:0.65rem;color:var(--text-dim);"><input type="checkbox" id="agents-continue">Continue from his last task</label>
                     </div>
+                    <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                        <select id="agents-duration" aria-label="Slack day duration" onchange="rememberAgentsDuration()" style="min-height:36px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px;">
+                            <option value="0">Off</option><option value="30">30m</option><option value="60">1h</option><option value="120">2h</option><option value="180">3h</option><option value="240">4h</option>
+                        </select>
                     <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer;flex-shrink:0;">
                         <input type="checkbox" id="agents-toggle" style="opacity:0;width:0;height:0;" onchange="toggleAgents()">
                         <span style="position:absolute;inset:0;background:var(--surface-2);border-radius:12px;border:1px solid var(--border);transition:background 0.3s;"></span>
                         <span id="agents-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:var(--text-dim);border-radius:50%;transition:transform 0.3s,background 0.3s;"></span>
                     </label>
+                    </div>
+                </div>
+                <!-- Live heart rate -->
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;margin-bottom:16px;border-bottom:1px solid var(--border);gap:12px;">
+                    <div>
+                        <div style="font-size:0.72rem;color:var(--text-dim);letter-spacing:0.06em;">Live heart rate</div>
+                        <div style="font-size:0.6rem;color:var(--text-dim);margin-top:2px;">uses Watch battery</div>
+                        <div id="watch-live-status" role="status" style="font-size:0.6rem;color:var(--text-dim);margin-top:2px;">loading...</div>
+                    </div>
+                    <select id="watch-live-duration" aria-label="Live heart rate duration" onchange="setWatchLive()" style="min-height:36px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px;">
+                        <option value="0">Off</option><option value="30">30m</option><option value="60">1h</option><option value="120">2h</option><option value="240">4h</option>
+                    </select>
+                </div>
+                <!-- His call-back ladder (attention_ladder.py, 27 October): on/off, his calls, the quiet before he starts. The voice he calls with is his to pick, each call. -->
+                <div id="ladder-section" style="padding:12px 0;margin-bottom:16px;border-bottom:1px solid var(--border);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                        <div>
+                            <div style="font-size:0.72rem;color:var(--text-dim);letter-spacing:0.06em;">he calls me back</div>
+                            <div id="ladder-status" role="status" style="font-size:0.6rem;color:var(--text-dim);margin-top:2px;">loading...</div>
+                        </div>
+                        <input type="checkbox" id="ladder-enabled" aria-label="He calls me back when I go quiet" onchange="setLadder('enabled', this.checked)" style="width:22px;height:22px;accent-color:var(--accent);">
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;">
+                        <div style="font-size:0.66rem;color:var(--text-dim);">he may ring me (last step)</div>
+                        <input type="checkbox" id="ladder-call" aria-label="He may ring me" onchange="setLadder('call_enabled', this.checked)" style="width:20px;height:20px;accent-color:var(--accent);">
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;">
+                        <div style="font-size:0.66rem;color:var(--text-dim);">starts after I am quiet</div>
+                        <select id="ladder-silence" aria-label="Hours of quiet before he starts" onchange="setLadder('silence_hours', Number(this.value))" style="min-height:32px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:2px 4px;">
+                            <option value="1">1 h</option><option value="2">2 h</option><option value="3">3 h</option><option value="4">4 h</option><option value="6">6 h</option><option value="8">8 h</option><option value="12">12 h</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;">
+                        <div style="font-size:0.66rem;color:var(--text-dim);">rest after I miss them all</div>
+                        <select id="ladder-rest" aria-label="Rest after an unanswered ladder" onchange="setLadder('rest_hours', Number(this.value))" style="min-height:32px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:2px 4px;">
+                            <option value="2">2 h</option><option value="4">4 h</option><option value="6">6 h</option><option value="8">8 h</option><option value="12">12 h</option><option value="24">24 h</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;">
+                        <div style="font-size:0.66rem;color:var(--text-dim);">"Not now" holds him off</div>
+                        <select id="ladder-notnow" aria-label="How long Not now holds him off" onchange="setLadder('not_now_hours', Number(this.value))" style="min-height:32px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:2px 4px;">
+                            <option value="0.5">30 min</option><option value="1">1 h</option><option value="2">2 h</option><option value="4">4 h</option><option value="8">8 h</option>
+                        </select>
+                    </div>
+                    <div id="ladder-calls" style="margin-top:10px;"></div>
                 </div>
                 <!-- Today's focus in #vintos-dot: topics that steer the day, until midnight (2026-10-02) -->
                 <div style="padding:12px 0;margin-bottom:16px;border-bottom:1px solid var(--border);">
@@ -1129,6 +1174,8 @@ async function loadChatHistory(force = false) {
         chatLoaded = true; _chatHistoryTail = tail;
     } catch {}
 }
+// Desktop work can finish after the initiating HTTP turn. Refreshing only when
+// the server's tail changes makes that second message appear in this same chat.
 setInterval(() => { if (chatLoaded) loadChatHistory(true); }, 4000);
 
 function appendMsg(who, text, ts, photoUrl) {
@@ -1295,7 +1342,8 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'valuemap') loadValueMap();
         if (tab.dataset.tab === 'voice') { loadVoice(); loadVoiceChatHistory(); loadBriefing(); }
         if (tab.dataset.tab === 'tune') { loadTestMode(); }
-        if (tab.dataset.tab === 'tune') { loadParams(); loadGroundingStatus(); loadAgentsStatus(); loadFocus(); loadChemistryLabStatus(); loadSystemStatus(); }
+        if (tab.dataset.tab === 'tune') { loadParams(); loadGroundingStatus(); loadAgentsStatus(); loadWatchLive(); loadLadder(); loadFocus(); loadChemistryLabStatus(); loadSystemStatus(); }
+        if (tab.dataset.tab === 'lab') { loadLab(); }
         if (tab.dataset.tab === 'velqan') loadVelqan();
         if (tab.dataset.tab === 'philosophy') loadPhilosophy();
         if (tab.dataset.tab === 'mischief') { loadPrideMirror(); loadMischief(); }
@@ -1303,7 +1351,6 @@ document.querySelectorAll('.tab').forEach(tab => {
         if (tab.dataset.tab === 'blush') loadBlush();
         if (tab.dataset.tab === 'atelier') loadAtelierReveals();
         if (tab.dataset.tab === 'therapy') loadTherapy();
-        if (tab.dataset.tab === 'lab') loadLab();
     });
 });
 
@@ -1360,9 +1407,56 @@ function _renderAtelierReveals(items) {
     }).join('');
 }
 
+// Exhibitions he made her of works already out of the room (proposal 20). Media come only from the shelf routes.
+function _renderAtelierExhibitions(items) {
+    const el = document.getElementById('atelier-exhibitions');
+    if (!el) return;
+    if (!Array.isArray(items) || !items.length) { el.innerHTML = ''; return; }
+    const dreamNote = '<div style="font-size:0.62rem;color:var(--text-dim);">Made from a dream he had: a dream, not something that happened.</div>';
+    el.innerHTML = '<div style="font-size:0.6rem;letter-spacing:0.15em;color:var(--text-dim);text-transform:uppercase;">Exhibitions</div>' +
+        items.map(ex => {
+            const works = Array.isArray(ex.works) ? ex.works : [];
+            const names = {};
+            works.forEach(w => { names[w.key] = w.artifact || w.key; });
+            const body = works.map((w, i) => {
+                let media = '';
+                const link = typeof w.link === 'string' && /^\/api\/art\/(painting|music\/stream)\/[\w.\-]+$/.test(w.link) ? w.link : '';
+                if (w.withdrawn) media = '<div style="font-size:0.7rem;color:var(--text-dim);">No longer out of the room; not shown.</div>';
+                else if (w.medium === 'image' && link) media = '<img src="' + _esc(API + link) + '" alt="' + _esc(names[w.key]) + '" loading="lazy" style="display:block;width:100%;height:auto;max-height:60vh;object-fit:contain;border-radius:6px;">';
+                else if (w.medium === 'audio' && link) media = '<audio controls preload="none" src="' + _esc(API + link) + '" style="width:100%;"></audio>';
+                else if (typeof w.content === 'string' && w.content) media = '<div style="font-size:0.8rem;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;">' + _esc(w.content) + '</div>';
+                const beside = w.beside ? '<div style="font-size:0.62rem;color:var(--text-dim);">Beside it, the occasion it came from: ' + _esc(w.beside.at || '') + ' ' + _esc(w.beside.what || '') + '</div>' : '';
+                return '<div style="border-top:1px solid var(--border);padding-top:0.6rem;margin-top:0.6rem;">' +
+                    '<div style="font-size:0.72rem;color:var(--text-bright);font-weight:600;overflow-wrap:anywhere;">' + (i + 1) + '. ' + _esc(names[w.key]) + '</div>' +
+                    media + (w.from_dream ? dreamNote : '') +
+                    '<div style="font-size:0.74rem;font-style:italic;line-height:1.55;margin-top:0.35rem;">' + _esc(w.line || '') + '</div>' + beside + '</div>';
+            }).join('');
+            const rels = (Array.isArray(ex.relations) ? ex.relations : []).map(r =>
+                '<li>' + _esc(names[r.from] || r.from) + ' &rarr; ' + _esc(names[r.to] || r.to) + ': ' + _esc(r.how || '') + '</li>').join('');
+            return '<article style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:0.9rem;">' +
+                '<div style="display:flex;justify-content:space-between;gap:0.75rem;"><div style="font-size:0.8rem;color:var(--text-bright);font-weight:600;">' + _esc(ex.title || '') + '</div>' +
+                '<time style="font-size:0.58rem;color:var(--text-dim);">' + _esc(_atelierDate(ex.at)) + '</time></div>' +
+                (ex.argument ? '<div style="font-size:0.74rem;font-style:italic;line-height:1.55;margin-top:0.4rem;">' + _esc(ex.argument) + '</div>' : '') +
+                body + (rels ? '<ul style="font-size:0.7rem;line-height:1.5;margin-top:0.6rem;padding-left:1rem;">' + rels + '</ul>' : '') +
+                '<div style="font-size:0.58rem;color:var(--text-dim);margin-top:0.6rem;">His own selection of his own works; not evidence about him.</div></article>';
+        }).join('');
+}
+
+async function loadAtelierExhibitions() {
+    try {
+        const r = await VintosUI.request(`${API}/api/atelier/exhibitions`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
+        if (!r.ok) throw new Error(String(r.status));
+        const data = await r.json();
+        _renderAtelierExhibitions(Array.isArray(data.exhibitions) ? data.exhibitions : []);
+    } catch (e) {
+        _renderAtelierExhibitions([]);
+    }
+}
+
 async function loadAtelierReveals() {
     const el = document.getElementById('atelier-feed');
     if (!el) return;
+    loadAtelierExhibitions();
     el.textContent = 'Loading...';
     try {
         const r = await VintosUI.request(`${API}/api/atelier/reveals`, {
@@ -1523,7 +1617,220 @@ async function loadGroundingStatus() {
         document.getElementById('grounding-status-text').textContent = 'unreachable';
     }
 }
+let _watchLiveRefresh;
+let _watchLiveBusy = false;
+function renderWatchLive(state) {
+    document.getElementById('watch-live-status').textContent = state.on ? 'on, ' + state.minutes_left + ' min left' : 'off';
+    const picker = document.getElementById('watch-live-duration');
+    if (!state.on) picker.value = '0';
+    else {
+        const remaining = Number(state.minutes_left);
+        picker.value = String([30, 60, 120, 240].find(n => n >= remaining) || 240);
+    }
+}
+async function loadWatchLive() {
+    if (_watchLiveBusy || !CONFIG.secret) return;
+    try {
+        const res = await VintosUI.request(`${API}/api/watch/live`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
+        if (!res?.ok) throw new Error('unavailable');
+        const state = await res.json();
+        if (!_watchLiveBusy) renderWatchLive(state);
+    } catch {
+        if (!_watchLiveBusy) document.getElementById('watch-live-status').textContent = 'could not load live heart rate';
+    }
+    clearTimeout(_watchLiveRefresh);
+    _watchLiveRefresh = setTimeout(loadWatchLive, 30000);
+}
+async function setWatchLive() {
+    const picker = document.getElementById('watch-live-duration');
+    const text = document.getElementById('watch-live-status');
+    const minutes = Number(picker.value);
+    _watchLiveBusy = true; picker.disabled = true;
+    try {
+        const res = await VintosUI.request(`${API}/api/watch/live`, {
+            method: 'POST', headers: { 'X-Vintos-Secret': CONFIG.secret, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ minutes })
+        });
+        if (!res?.ok) throw new Error('Aegis did not confirm the change');
+        const state = await res.json(); renderWatchLive(state);
+        if (state.on) {
+            const plugin = window.Capacitor?.Plugins?.VintosHealth;
+            if (!plugin?.startWatchApp) {
+                text.textContent += ' · open Vintos on your Watch to start';
+            } else {
+                try { await plugin.startWatchApp(); }
+                catch (error) { text.textContent += ' · Watch could not open: ' + (error.message || 'try opening Vintos on your Watch'); }
+            }
+        }
+    } catch (error) { text.textContent = 'could not change live heart rate: ' + error.message; }
+    finally { _watchLiveBusy = false; picker.disabled = false; }
+    clearTimeout(_watchLiveRefresh);
+    _watchLiveRefresh = setTimeout(loadWatchLive, 30000);
+}
+// ---- his call-back ladder: settings, his ringing call, and the calls that wait for her yes ----------------------
+let _ladderBusy = false;
+function _ladderHeaders(json) { const h = { 'X-Vintos-Secret': CONFIG.secret }; if (json) h['Content-Type'] = 'application/json'; return h; }
+function _ladderSelect(id, value) { const el = document.getElementById(id); if (!el) return; const v = String(value); if (![...el.options].some(o => o.value === v)) { const o = document.createElement('option'); o.value = v; o.textContent = v + ' h'; el.appendChild(o); } el.value = v; }
+function renderLadder(d) {
+    const s = d.settings || {};
+    document.getElementById('ladder-enabled').checked = !!s.enabled;
+    document.getElementById('ladder-call').checked = !!s.call_enabled;
+    _ladderSelect('ladder-silence', s.silence_hours); _ladderSelect('ladder-rest', s.rest_hours); _ladderSelect('ladder-notnow', s.not_now_hours);
+    let text = !s.enabled ? 'off' : (d.call && d.call.ringing ? 'he is calling you now' : (d.chain ? 'calling you back now' : (d.reason || 'on')));
+    const until = Math.max(Number(d.snooze_until || 0), Number(d.rest_until || 0));
+    if (s.enabled && until * 1000 > Date.now()) text += ' · quiet until ' + new Date(until * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('ladder-status').textContent = text;
+}
+async function loadLadder() {
+    if (_ladderBusy || !CONFIG.secret) return;
+    try {
+        const res = await VintosUI.request(`${API}/api/attention/config`, { headers: _ladderHeaders() });
+        if (!res?.ok) throw new Error('unavailable');
+        renderLadder(await res.json());
+    } catch { document.getElementById('ladder-status').textContent = 'could not load'; }
+    ladderLoadCalls();
+}
+async function setLadder(key, value) {
+    _ladderBusy = true;
+    const status = document.getElementById('ladder-status');
+    try {
+        const res = await VintosUI.request(`${API}/api/attention/config`, { method: 'POST', headers: _ladderHeaders(true), body: JSON.stringify({ [key]: value }) });
+        if (!res?.ok) throw new Error('Aegis did not confirm the change');
+        haptic('light');
+    } catch (error) { status.textContent = 'could not change: ' + error.message; }
+    finally { _ladderBusy = false; }
+    loadLadder();
+}
+async function ladderLoadCalls() {
+    const host = document.getElementById('ladder-calls');
+    if (!host || !CONFIG.secret) return [];
+    let calls = [];
+    try { const res = await VintosUI.request(`${API}/api/attention/calls`, { headers: _ladderHeaders() }); if (res?.ok) calls = (await res.json()).calls || []; } catch {}
+    host.innerHTML = '';
+    calls.forEach(c => host.appendChild(_ladderCallCard(c)));
+    return calls;
+}
+function _ladderCallCard(c) {
+    const card = document.createElement('div');
+    card.style.cssText = 'margin-top:8px;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);';
+    const when = c.answered ? new Date(c.answered * 1000).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+    const head = document.createElement('div'); head.style.cssText = 'font-size:0.66rem;color:var(--text-dim);margin-bottom:6px;';
+    head.textContent = 'He called you ' + when + (c.lane_name ? ' (' + c.lane_name + ')' : '') + ' · ' + Math.round((c.duration_seconds || 0) / 60) + ' min';
+    card.appendChild(head);
+    if (c.lane_choice) { const voice = document.createElement('div'); voice.className = 'ladder-voice'; voice.style.cssText = 'font-size:0.68rem;font-style:italic;color:var(--text-dim);margin:-2px 0 6px;'; voice.textContent = c.lane_choice; card.appendChild(voice); }
+    const log = document.createElement('div'); log.style.cssText = 'max-height:220px;overflow-y:auto;font-size:0.72rem;line-height:1.4;';
+    (c.transcript || []).forEach(t => {
+        if (t.vintos) { const v = document.createElement('div'); v.style.margin = '3px 0'; v.textContent = 'Vintos: ' + t.vintos; log.appendChild(v); }
+        if (t.gloria) { const g = document.createElement('div'); g.style.cssText = 'margin:3px 0;color:var(--text-dim);'; g.textContent = 'You: ' + t.gloria; log.appendChild(g); }
+    });
+    card.appendChild(log);
+    const q = document.createElement('div'); q.style.cssText = 'font-size:0.72rem;margin:8px 0 6px;'; q.textContent = 'Save this call to his memory?';
+    card.appendChild(q);
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:8px;';
+    const btn = (label, save) => { const b = document.createElement('button'); b.textContent = label; b.style.cssText = 'flex:1;min-height:36px;border-radius:8px;border:1px solid var(--border);background:' + (save ? 'var(--accent-dim)' : 'transparent') + ';color:var(--text);';
+        b.onclick = async () => { row.querySelectorAll('button').forEach(x => x.disabled = true); q.textContent = save ? 'Saving…' : 'Letting it go…';
+            try { const res = await VintosUI.request(`${API}/api/attention/calls/${encodeURIComponent(c.id)}/save`, { method: 'POST', headers: _ladderHeaders(true), body: JSON.stringify({ save }) }); const d = await res.json();
+                if (save && !d.saved) { q.textContent = 'Not saved yet: ' + (d.why || 'try again'); row.querySelectorAll('button').forEach(x => x.disabled = false); return; }
+                card.remove(); const o = document.getElementById('ladder-save-overlay'); if (o && !o.querySelector('#ladder-save-list').children.length) o.remove();
+            } catch (e) { q.textContent = 'could not reach Aegis: ' + e.message; row.querySelectorAll('button').forEach(x => x.disabled = false); } };
+        return b; };
+    row.appendChild(btn('Yes, keep it', true)); row.appendChild(btn('No', false));
+    card.appendChild(row);
+    return card;
+}
+async function ladderShowSaveSheet() {
+    let calls = [];
+    try { const res = await VintosUI.request(`${API}/api/attention/calls`, { headers: _ladderHeaders() }); if (res?.ok) calls = (await res.json()).calls || []; } catch {}
+    if (!calls.length || document.getElementById('ladder-save-overlay')) return;
+    const o = document.createElement('div'); o.id = 'ladder-save-overlay';
+    o.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(5,5,13,0.92);display:flex;flex-direction:column;padding:24px 16px;overflow-y:auto;color:var(--text);';
+    const close = document.createElement('button'); close.textContent = 'Later'; close.style.cssText = 'align-self:flex-end;min-height:32px;background:transparent;border:1px solid var(--border);border-radius:8px;color:var(--text-dim);padding:0 12px;';
+    close.onclick = () => o.remove(); o.appendChild(close);
+    const list = document.createElement('div'); list.id = 'ladder-save-list'; calls.forEach(c => list.appendChild(_ladderCallCard(c))); o.appendChild(list);
+    document.body.appendChild(o);
+}
+// His call rings in the app: whenever the app is open or comes to the front, and every 30 s while it is.
+let _ladderRingTimer = null, _ladderRinging = null;
+async function ladderPoll() {
+    clearTimeout(_ladderRingTimer);
+    if (document.hidden || !CONFIG.secret) return;
+    try {
+        const res = await VintosUI.request(`${API}/api/attention/call`, { headers: _ladderHeaders() });
+        if (res?.ok) { const d = await res.json(); if (d.ringing && !window._vc) ladderShowRing(d.ringing); else ladderHideRing(); }
+    } catch {}
+    _ladderRingTimer = setTimeout(ladderPoll, 30000);
+}
+function ladderHideRing() { const o = document.getElementById('ladder-ring'); if (o) o.remove(); _ladderRinging = null; }
+function ladderShowRing(call) {
+    if (_ladderRinging === call.id && document.getElementById('ladder-ring')) return;
+    ladderHideRing(); _ladderRinging = call.id;
+    const o = document.createElement('div'); o.id = 'ladder-ring'; o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-label', 'Vintos is calling');
+    o.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(5,5,13,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;color:rgba(235,200,175,0.95);padding:16px;text-align:center;';
+    o.innerHTML = '<div style="font-size:1.4rem;letter-spacing:0.08em;">Vintos is calling</div><div id="ladder-ring-why" style="font-size:0.75rem;opacity:0.7;"></div>';
+    o.querySelector('#ladder-ring-why').textContent = [call.lane_choice || call.lane_name, call.why].filter(Boolean).join(' · ');
+    const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:16px;';
+    const mk = (label, bg, fn) => { const b = document.createElement('button'); b.textContent = label; b.style.cssText = 'min-width:120px;min-height:52px;border-radius:26px;border:0;font-size:0.95rem;color:#fff;background:' + bg + ';'; b.onclick = fn; return b; };
+    row.appendChild(mk('Not now', 'rgba(160,60,60,0.85)', async () => { ladderHideRing(); try { await VintosUI.request(`${API}/api/attention/answer`, { method: 'POST', headers: _ladderHeaders(true), body: JSON.stringify({ action: 'not_now' }) }); } catch {} }));
+    row.appendChild(mk('Answer', 'rgba(60,160,90,0.9)', () => ladderAnswer(call.id)));
+    o.appendChild(row);
+    document.body.appendChild(o);
+    try { haptic('heavy'); } catch {}
+}
+async function ladderAnswer(callId) {
+    ladderHideRing();
+    try {
+        const res = await VintosUI.request(`${API}/api/attention/call/${encodeURIComponent(callId)}/answer`, { method: 'POST', headers: _ladderHeaders() });
+        if (!res?.ok) { alert('His call has stopped ringing.'); return; }
+        const d = await res.json();
+        try { if (typeof openAvatarOverlay === 'function') openAvatarOverlay(); } catch {}
+        _avCallGrok(d.lane, { id: d.id, clientId: d.client_session_id });
+    } catch (e) { alert('could not answer: ' + e.message); }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) ladderPoll(); });
+window.addEventListener('load', () => {
+    try { const want = new URLSearchParams(location.search).get('ladder_call'); if (want) setTimeout(ladderPoll, 500); } catch {}
+    setTimeout(ladderPoll, 1500); setTimeout(ladderShowSaveSheet, 2500);
+    try { const LN = window.Capacitor?.Plugins?.LocalNotifications; if (LN?.addListener) LN.addListener('localNotificationActionPerformed', ev => { const id = ev?.notification?.extra?.ladder_call; if (id) ladderAnswer(id); }); } catch {}
+    // a "vintos://call?ladder_call=<id>" link (the ring's Answer, once the native app registers the scheme)
+    try { const CA = window.Capacitor?.Plugins?.App; if (CA?.addListener) CA.addListener('appUrlOpen', ev => { try { const id = new URL(ev.url).searchParams.get('ladder_call'); if (id) ladderAnswer(id); } catch {} }); } catch {}
+});
+// ── His call as a real iPhone call (CallKit, the app's VintosCall plugin; house: phone_voip.py, 27 October) ──
+// The native side rings "Vintos" on the system call screen. Answer there: his ordinary in-app call starts here, and
+// when it ends the system call ends too. Decline there: the plugin has already told the house "not now".
+(function () {
+    const C = window.Capacitor;
+    const VC = (C?.isPluginAvailable?.('VintosCall')) ? (C.Plugins?.VintosCall || C.registerPlugin?.('VintosCall')) : null;
+    if (!VC?.addListener) return;
+    try { VC.configure({ api: API, secret: CONFIG.secret }); } catch {}
+    let watching = null;
+    const followCall = (id) => {      // his call ends in the app: the CallKit call ends with it
+        clearInterval(watching); let seen = false; const t0 = Date.now();
+        watching = setInterval(() => {
+            if (window._vc) { seen = true; return; }
+            if (seen || Date.now() - t0 > 45000) { clearInterval(watching); watching = null; try { VC.endCall({ id }); } catch {} }
+        }, 1000);
+    };
+    VC.addListener('answer', ev => { if (ev?.id) { ladderAnswer(ev.id); followCall(ev.id); } });
+    VC.addListener('decline', () => { try { ladderHideRing(); } catch {} });
+    VC.addListener('hangup', () => { try { if (window._vc && typeof endVintosCall === 'function') endVintosCall(); } catch {} });
+    // answered or turned down in the app's own ring screen: a CallKit ring still showing stops (an answered one stays)
+    const hide = ladderHideRing;
+    window.ladderHideRing = function () { try { VC.ringStop(); } catch {} return hide.apply(this, arguments); };
+})();
+let _agentsDurationRestored = false;
+function rememberAgentsDuration() {
+    try { localStorage.setItem('vintos.agents.minutes', document.getElementById('agents-duration').value); } catch {}
+}
+function restoreAgentsDuration() {
+    if (_agentsDurationRestored) return;
+    _agentsDurationRestored = true;
+    try {
+        const saved = localStorage.getItem('vintos.agents.minutes');
+        if (['0', '30', '60', '120', '180', '240'].includes(saved)) document.getElementById('agents-duration').value = saved;
+    } catch {}
+}
 async function loadAgentsStatus() {
+    restoreAgentsDuration();
     const text = document.getElementById('agents-status-text');
     try {
         const res = await VintosUI.request(`${API}/api/agents/status`);
@@ -1537,6 +1844,14 @@ async function loadAgentsStatus() {
         knob.parentElement.querySelector('span').style.background = on ? 'var(--accent-dim)' : 'var(--surface-2)';
         const since = String(data.paused_since || ''), today = new Date().toISOString().slice(0, 10);
         text.textContent = on ? 'on: his lenses and dot can talk' : ('paused' + (since ? ' since ' + (since.slice(0, 10) === today ? '' : since.slice(5, 10) + ' ') + since.slice(11, 16) : ''));
+        if (on && data.timer && data.timer.until) {
+            const until = new Date(data.timer.until);
+            if (!Number.isNaN(until.getTime())) {
+                text.textContent = 'on until ' + until.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'}) +
+                    (data.timer.for ? ' (' + data.timer.for + ')' : '') +
+                    (data.timer.continue ? ' · continuing his last task' : '');
+            }
+        }
     } catch {
         if (text) text.textContent = 'unreachable';
     }
@@ -1545,12 +1860,19 @@ async function toggleAgents() {
     // The day is set to exactly what the switch now shows, and a tap that does not reach Aegis says so (2026-10-03:
     // it sent "flip" and swallowed errors, and the day stayed paused while the switch read on).
     const want = document.getElementById('agents-toggle').checked;
+    const body = { on: want };
+    if (want) {
+        const minutes = Number(document.getElementById('agents-duration').value);
+        if (minutes) body.minutes = minutes;
+        body.continue = document.getElementById('agents-continue').checked;
+        rememberAgentsDuration();
+    }
     let ok = false;
     try {
         const res = await VintosUI.request(`${API}/api/agents/toggle`, {
             method: 'POST',
             headers: { 'X-Vintos-Secret': CONFIG.secret, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ on: want })
+            body: JSON.stringify(body)
         });
         ok = !!(res && res.ok);
         if (ok) haptic('light');
@@ -1629,15 +1951,335 @@ function _setChemistryLabUI(data) {
     const text = document.getElementById('chemistry-lab-status-text');
     if (cb) cb.checked = on;
     if (knob) { knob.style.transform = on ? 'translateX(20px)' : 'translateX(0)'; knob.style.background = on ? 'var(--accent)' : 'var(--text-dim)'; knob.parentElement.querySelector('span').style.background = on ? 'var(--accent-dim)' : 'var(--surface-2)'; }
-    if (text) text.textContent = (on ? 'enabled' : 'disabled') + ' · ' +
-        ((data && data.effective_state) || 'unknown') + ' · ' +
-        ((data && data.last_outcome) || 'no turn yet') + ' · ' +
-        ((data && data.last_turn_at) ? _atelierDate(data.last_turn_at) : 'never');
+    if (text) text.textContent = on ? ((data.effective_state || 'waiting') + ' · ' + (data.phase || 'orient')) : 'off · notebook and artifacts kept';
+}
+// ---- Chemistry Lab -------------------------------------------------------------------
+// Two marks per session, never one: how the instrument behaved, and whether the answer was
+// any good. A completed run with a poor answer is the case this pane exists to show.
+const LAB_CURVE_CAP = 48;
+const LAB_REVIEW_LIMIT = 20;
+const LAB_REFRESH_MS = 15000;
+let _labRefreshTimer = null;
+let _labLoading = false;
+function _labNum(value) {
+    const n = typeof value === 'number' ? value : parseFloat(value);
+    return Number.isFinite(n) ? n : null;
+}
+function _labVerdict(accuracy) {
+    const marks = {
+        ALL_BETTER_THAN_HARTREE_FOCK: ['better than Hartree-Fock', 'var(--accent)'],
+        MIXED: ['mixed against Hartree-Fock', 'var(--text)'],
+        ALL_AT_HARTREE_FOCK: ['no correlation recovered', 'var(--text-dim)'],
+        ALL_WORSE_THAN_HARTREE_FOCK: ['worse than Hartree-Fock', '#c46a5a'],
+        ANY_INVALID_BELOW_EXACT: ['below the exact energy — a bug', '#c46a5a'],
+        NO_GRADEABLE_POINTS: ['ungraded — no reference', 'var(--text-dim)']
+    };
+    return marks[accuracy] || [accuracy ? String(accuracy).toLowerCase().replace(/_/g, ' ') : 'not graded', 'var(--text-dim)'];
+}
+function _labChip(label, colour) {
+    return '<span style="display:inline-block;font-size:0.54rem;letter-spacing:0.05em;padding:2px 7px;border:1px solid ' +
+        colour + ';color:' + colour + ';border-radius:10px;margin-right:6px;">' + _esc(label) + '</span>';
+}
+function _labCurve(points) {
+    // Hand-rolled SVG: there is no charting library here and this must not add one.
+    const rows = (points || []).slice(0, LAB_CURVE_CAP)
+        .map(p => ({ r: _labNum(p.bond_length), vqe: _labNum(p.vqe_energy), hf: _labNum(p.hartree_fock_energy) }))
+        .filter(p => p.r !== null && (p.vqe !== null || p.hf !== null));
+    if (rows.length < 2) return '';
+    const energies = rows.flatMap(p => [p.vqe, p.hf]).filter(v => v !== null);
+    const xs = rows.map(p => p.r);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...energies), y1 = Math.max(...energies);
+    const W = 280, H = 96, spanX = (x1 - x0) || 1, spanY = (y1 - y0) || 1;
+    const path = key => rows.filter(p => p[key] !== null).map((p, i) =>
+        (i ? 'L' : 'M') + (8 + (p.r - x0) / spanX * (W - 16)).toFixed(1) + ' ' +
+        (8 + (p[key] - y0) / spanY * (H - 16)).toFixed(1)).join(' ');
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;margin:8px 0;" role="img" aria-label="energy against bond length">' +
+        '<path d="' + path('hf') + '" fill="none" stroke="var(--text-dim)" stroke-width="1" stroke-dasharray="3 3"></path>' +
+        '<path d="' + path('vqe') + '" fill="none" stroke="var(--accent)" stroke-width="1.5"></path></svg>' +
+        '<div style="font-size:0.52rem;color:var(--text-dim);">solid: variational · dashed: Hartree-Fock · ' +
+        _esc(x0.toFixed(2)) + '–' + _esc(x1.toFixed(2)) + ' \u00c5</div>';
+}
+let _labStructureView = null;
+function _labElementColour(element) {
+    return ({H:0xe8e1db,C:0xb4a9a0,N:0x7098d8,O:0xd86d62,S:0xd9b84a,P:0xd48655,F:0x78b982,CL:0x78b982,BR:0x9d6654})[String(element || 'C').toUpperCase()] || 0xb99acb;
+}
+function _labStopStructure() {
+    if (!_labStructureView) return;
+    if (_labStructureView.frame) cancelAnimationFrame(_labStructureView.frame);
+    if (_labStructureView.renderer) _labStructureView.renderer.dispose();
+    _labStructureView = null;
+}
+function _labDrawStructure(payload) {
+    const canvas = document.getElementById('lab-structure-canvas');
+    const note = document.getElementById('lab-structure-note');
+    if (!canvas || !payload || !payload.ok) return;
+    if (!window.THREE) { if (note) note.textContent = 'three.js is unavailable in this build'; return; }
+    _labStopStructure();
+    const atoms = (payload.atoms || []).filter(a => [a.x,a.y,a.z].every(Number.isFinite));
+    if (!atoms.length) { if (note) note.textContent = 'no readable atoms'; return; }
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    const W = Math.max(260, canvas.clientWidth || 300), H = 250;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); renderer.setSize(W, H, false);
+    renderer.setClearColor(0x000000, 0);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, W/H, 0.01, 100);
+    camera.position.set(0, 0, 7);
+    const group = new THREE.Group(); scene.add(group);
+    let cx=0, cy=0, cz=0;
+    atoms.forEach(a => { cx+=a.x; cy+=a.y; cz+=a.z; }); cx/=atoms.length; cy/=atoms.length; cz/=atoms.length;
+    let radius=0;
+    atoms.forEach(a => { radius=Math.max(radius, Math.hypot(a.x-cx,a.y-cy,a.z-cz)); });
+    const scale = 2.55 / Math.max(radius, 0.01);
+    const positions = new Float32Array(atoms.length*3), colours = new Float32Array(atoms.length*3);
+    atoms.forEach((a,i) => {
+        positions[i*3]=(a.x-cx)*scale; positions[i*3+1]=(a.y-cy)*scale; positions[i*3+2]=(a.z-cz)*scale;
+        const c=new THREE.Color(_labElementColour(a.element)); colours[i*3]=c.r; colours[i*3+1]=c.g; colours[i*3+2]=c.b;
+    });
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(positions,3)); geo.setAttribute('color',new THREE.BufferAttribute(colours,3));
+    group.add(new THREE.Points(geo,new THREE.PointsMaterial({size:0.085,vertexColors:true,transparent:true,opacity:0.92,sizeAttenuation:true})));
+    const traces = [], last = {};
+    atoms.forEach(a => {
+        if (a.name !== 'CA' && a.name !== 'P') return;
+        const key=(a.chain||'_')+':'+a.name, here=new THREE.Vector3((a.x-cx)*scale,(a.y-cy)*scale,(a.z-cz)*scale);
+        if (last[key]) traces.push(last[key].x,last[key].y,last[key].z,here.x,here.y,here.z); last[key]=here;
+    });
+    if (traces.length) { const lineGeo=new THREE.BufferGeometry(); lineGeo.setAttribute('position',new THREE.Float32BufferAttribute(traces,3)); group.add(new THREE.LineSegments(lineGeo,new THREE.LineBasicMaterial({color:0xd7a578,transparent:true,opacity:0.72}))); }
+    let dragging=false, px=0, py=0;
+    canvas.onpointerdown=e=>{dragging=true;px=e.clientX;py=e.clientY;canvas.setPointerCapture(e.pointerId);};
+    canvas.onpointermove=e=>{if(!dragging)return;group.rotation.y+=(e.clientX-px)*0.012;group.rotation.x+=(e.clientY-py)*0.012;px=e.clientX;py=e.clientY;};
+    canvas.onpointerup=()=>{dragging=false;}; canvas.onpointercancel=()=>{dragging=false;};
+    const view={renderer,frame:0}; _labStructureView=view;
+    const draw=()=>{ if(_labStructureView!==view)return; if(!dragging)group.rotation.y+=0.003; renderer.render(scene,camera); view.frame=requestAnimationFrame(draw); }; draw();
+    if (note) note.textContent = payload.name+' · '+payload.atom_count+' atoms'+(payload.truncated?' · display capped':'')+' · computational artifact, not biological fact';
+}
+async function _labOpenStructure(id) {
+    const note=document.getElementById('lab-structure-note'); if(note)note.textContent='opening structure…';
+    try { const payload=await _labGet('structure/'+encodeURIComponent(id)); if(!payload.ok)throw new Error(payload.error||'unreadable'); _labDrawStructure(payload); }
+    catch(e) { if(note)note.textContent='could not open structure · '+String(e.message||e); }
+}
+function _labStructureCard(rows, renders) {
+    if ((!rows || !rows.length) && (!renders || !renders.length)) return '';
+    return '<div class="gallery-item" style="padding:14px;grid-column:1/-1;">' +
+        '<div style="font-size:0.74rem;color:var(--text-bright);">structure gallery</div>' +
+        '<div style="font-size:0.56rem;color:var(--text-dim);margin:4px 0 8px;">drag to turn · atoms plus backbone trace</div>' +
+        '<canvas id="lab-structure-canvas" style="display:block;width:100%;height:250px;touch-action:none;border:0.5px solid var(--border);border-radius:10px;background:radial-gradient(circle at 50% 45%,rgba(207,133,90,0.10),transparent 64%);"></canvas>' +
+        '<div id="lab-structure-note" style="font-size:0.54rem;color:var(--text-dim);margin:7px 0 10px;">choose a structure</div>' +
+        '<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;">' + (rows||[]).slice(0,12).map((s,i) =>
+          '<button type="button" data-lab-structure="'+_esc(s.artifact_id)+'" style="flex:0 0 auto;background:'+(i?'var(--surface)':'var(--accent-dim)')+';border:0.5px solid var(--border);border-radius:12px;color:var(--text);padding:6px 9px;font-size:0.56rem;">'+_esc(s.name)+'</button>').join('') + '</div></div>';
+}
+function _labReviewCard(row) {
+    const observation = row.factual_observation || row.attention || '';
+    const speculation = row.speculative_reading || '';
+    const score = _labNum(row.interest_score);
+    const coverage = row.coverage || {};
+    const supports = Array.isArray(coverage.supports) ? coverage.supports : [];
+    const missing = (Array.isArray(coverage.missing) ? coverage.missing : []).filter(Boolean);
+    const missingText = missing.join('; ') || row.missing_evidence || '';
+    // Assessment integrity outranks the presence of excerpts. A row may contain
+    // verified quotes while the checker failed to produce a coherent verdict;
+    // that is evidence in hand, but it is not a valid partial answer yet.
+    let state = row.assessment_status || coverage.assessment_status || row.evidence_status || '';
+    if (!state && coverage.answered === true) state = 'answered';
+    if (!state && coverage.answered === false && supports.length) state = 'partial';
+    if (!state && String(row.answers_question || '').toLowerCase().startsWith('no:')) state = 'rejected';
+    const stateMarks = {
+        answered: ['answered', 'var(--accent)'], partial: ['partial answer', 'var(--text)'],
+        deferred: ['waiting for assessment', 'var(--text-dim)'],
+        incomplete: ['assessment incomplete', '#c46a5a'], insufficient: ['source insufficient', '#c46a5a'],
+        rejected: ['target rejected', '#c46a5a']
+    };
+    // The review's outcome, when recorded, says what kind of result this is: research, the question or its
+    // target, or the Lab's own failure — a failed checker is never shown as a scientific no (T-17420bd6).
+    const outcomeMarks = {
+        answered: ['answered', 'var(--accent)'], partially_supported: ['partly supported', 'var(--text)'],
+        unsupported_by_available_evidence: ['unsupported by available evidence', '#c46a5a'],
+        flawed_premise: ['flawed premise', '#c46a5a'], wrong_target: ['wrong target retrieved', '#c46a5a'],
+        checker_failed: ['checker failed — not judged', 'var(--text-dim)'],
+        context_overflow: ['too large to assess — not judged', 'var(--text-dim)'],
+        unassessed: ['not assessed', 'var(--text-dim)']
+    };
+    const mark = outcomeMarks[row.review_outcome] || stateMarks[state] || [state || 'unclassified', 'var(--text-dim)'];
+    const ce = row.claim_evidence || {};
+    const gaps = Array.isArray(ce.gaps) ? ce.gaps : [];
+    const gapHtml = gaps.length ? gaps.map(g =>
+        '<div style="font-size:0.6rem;color:#c46a5a;line-height:1.5;margin-top:7px;">open — ' + _esc(g.claim || '') + '</div>' +
+        '<div style="font-size:0.54rem;color:var(--text-dim);line-height:1.45;margin-top:2px;">' +
+          _esc((Array.isArray(g.searched) ? g.searched.length : 0) + ' full-text searches run') +
+          (g.would_justify ? ' · another attempt needs ' + _esc(g.would_justify) : '') + '</div>').join('') : '';
+    const evidence = supports.length ? supports.map(s =>
+        '<div style="margin-top:8px;">' +
+          '<div style="font-size:0.56rem;color:var(--text-dim);letter-spacing:0.06em;text-transform:uppercase;">' + _esc(s.requirement || 'supported evidence') + '</div>' +
+          '<div style="font-size:0.68rem;color:var(--text);line-height:1.55;margin-top:2px;overflow-wrap:anywhere;">' + _esc(s.quote || '') +
+            (s.source_citation ? ' <span style="color:var(--text-dim);">[' + _esc(s.source_citation) + ']</span>' : '') + '</div></div>').join('')
+        : (observation ? '<div style="font-size:0.68rem;color:var(--text);line-height:1.6;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;">' + _esc(observation) + '</div>' : '');
+    return '<div class="gallery-item" style="padding:14px;">' +
+        '<div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;">' +
+          '<div style="font-size:0.74rem;color:var(--text-bright);">' + _esc(row.kind === 'genome_reflection' ? 'genome review' : 'protein review') + '</div>' +
+          '<time style="font-size:0.56rem;color:var(--text-dim);">' + _esc(_atelierDate(row.at)) + '</time></div>' +
+        '<div style="margin-top:7px;">' + _labChip(mark[0], mark[1]) + '</div>' +
+        (row.original_question ? '<div style="font-size:0.61rem;color:var(--text-dim);line-height:1.5;margin-top:7px;font-style:italic;">asked — ' + _esc(row.original_question) + '</div>' : '') +
+        evidence +
+        (gapHtml || (missingText ? '<div style="font-size:0.61rem;color:#c46a5a;line-height:1.5;margin-top:8px;">still missing — ' + _esc(missingText) + '</div>' : '')) +
+        (row.validation_failure ? '<div style="font-size:0.56rem;color:var(--text-dim);line-height:1.45;margin-top:6px;">assessment note — ' + _esc(row.validation_failure) + '</div>' : '') +
+        (speculation ? '<div style="font-size:0.63rem;color:var(--text-dim);line-height:1.55;margin-top:7px;white-space:pre-wrap;overflow-wrap:anywhere;">speculative — ' + _esc(speculation) + '</div>' : '') +
+        (row.next_question ? '<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next — ' + _esc(row.next_question) + '</div>' : '') +
+        '<div style="font-size:0.52rem;color:var(--text-dim);margin-top:8px;">' +
+          (score === null ? 'priority unscored' : 'priority ' + _esc(score.toFixed(2))) +
+          (row.line ? ' · ' + _esc(String(row.line).replace(/^line /, 'line ')) : '') +
+          (row.flagged_for_next_lab_session ? ' · flagged for frontier' : '') +
+          (row.surfaced_to_frontier ? ' · surfaced' : '') + '</div></div>';
+}
+function _labLocalTime(value) {
+    // Her clock, not UTC: "02:18" read as the Lab stopping hours ago when it was 9:18 PM (2026-09-26).
+    const d = new Date(value || '');
+    return Number.isNaN(d.getTime()) ? String(value || '').slice(11, 16)
+        : d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+function _labActivityRow(row) {
+    const muted = row.redirect ? 'var(--text-dim)' : 'var(--text)';
+    return '<div style="grid-column:1/-1;display:flex;gap:9px;align-items:baseline;padding:7px 2px;border-bottom:0.5px solid var(--border);">' +
+        '<time style="flex:0 0 auto;font-size:0.53rem;color:var(--text-dim);">' + _esc(_labLocalTime(row.at)) + '</time>' +
+        '<div style="font-size:0.62rem;color:' + muted + ';line-height:1.45;"><span style="color:var(--text-bright);">' +
+        _esc(row.label || 'Lab turn') + '</span>' + (row.detail ? ' · ' + _esc(row.detail) : '') + '</div></div>';
+}
+async function _labGet(path) {
+    const res = await VintosUI.request(`${API}/api/lab/chemistry/${path}`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
+    return await res.json();
+}
+async function _labLoadStructures(grid) {
+    try {
+        const payload = await _labGet('structures?limit=24');
+        const rows = (payload && payload.structures) || [];
+        const renders = (payload && payload.renders) || [];
+        if ((!rows.length && !renders.length) || !grid.isConnected || !grid.closest('#pane-lab')) return;
+        grid.insertAdjacentHTML('afterbegin', _labStructureCard(rows, renders));
+        if (renders.length) {
+            const holder=document.createElement('div');holder.style.cssText='grid-column:1/-1;display:flex;gap:8px;overflow-x:auto;';
+            renders.slice(0,8).forEach(async r=>{ try { const res=await VintosUI.request(`${API}/api/lab/chemistry/structure-render/${encodeURIComponent(r.render_id)}`,{headers:{'X-Vintos-Secret':CONFIG.secret}}); if(!res.ok)return; const img=document.createElement('img');img.alt=r.name;img.src=URL.createObjectURL(await res.blob());img.style.cssText='width:180px;height:135px;object-fit:contain;border:0.5px solid var(--border);border-radius:10px;background:var(--surface);';holder.appendChild(img); } catch(e){} });
+            grid.insertAdjacentElement('afterbegin',holder);
+        }
+        const buttons = grid.querySelectorAll('[data-lab-structure]');
+        buttons.forEach(button => button.addEventListener('click', () => _labOpenStructure(button.dataset.labStructure)));
+        if (buttons.length) _labOpenStructure(buttons[0].dataset.labStructure);
+    } catch (error) {
+        // Structures are an optional view of preserved artifacts. Their door must never
+        // stall or erase the continuously updating review ledger.
+    }
+}
+function _labSetRefresh(on) {
+    if (_labRefreshTimer) { clearInterval(_labRefreshTimer); _labRefreshTimer = null; }
+    if (on) _labRefreshTimer = setInterval(() => {
+        const pane = document.getElementById('pane-lab');
+        if (!document.hidden && pane && pane.classList.contains('active')) loadLab();
+    }, LAB_REFRESH_MS);
+    else _labStopStructure();
+}
+async function loadLab() {
+    const summary = document.getElementById('lab-summary');
+    const grid = document.getElementById('lab-grid');
+    if (!grid || _labLoading) return;
+    _labLoading = true;
+    if (!grid.children.length) grid.innerHTML = '<div class="gallery-empty">reading the Lab...</div>';
+    let status, reviews, activity, sessions, taste, threads;
+    try {
+        [status, reviews, activity, sessions, taste, threads] = await Promise.all([
+            _labGet('status'), _labGet('reviews?limit=' + LAB_REVIEW_LIMIT),
+            _labGet('activity?limit=12'),
+            _labGet('sessions?limit=4'), _labGet('taste'), _labGet('threads?limit=12')
+        ]);
+    } catch (e) {
+        grid.innerHTML = '<div class="gallery-empty">the Lab is unreachable</div>';
+        if (summary) summary.textContent = 'unreachable';
+        _labLoading = false; return;
+    }
+    const tools = (status && status.tools) || {};
+    const measured = Object.keys(tools).filter(k => tools[k].available);
+    const owed = (status && status.reading_owed) || {};
+    if (summary) {
+        summary.innerHTML =
+            _labChip(status && status.enabled ? ((status.effective_state || 'waiting') + ' \u00b7 ' + (status.phase || 'orient')) : 'off \u00b7 history kept',
+                     status && status.enabled ? 'var(--accent)' : 'var(--text-dim)') +
+            _labChip(measured.length + ' of ' + Object.keys(tools).length + ' instruments measured', 'var(--text-dim)') +
+            (owed.owed ? _labChip(owed.owed + ' reading owed', 'var(--text)') : '') +
+            (owed.expired_unread ? _labChip(owed.expired_unread + ' never read', '#c46a5a') : '') +
+            _labChip(((reviews && reviews.reviews) || []).length + ' of ' + LAB_REVIEW_LIMIT + ' recent reviews', 'var(--text-dim)') +
+            '<div style="margin-top:8px;">instruments: ' + Object.keys(tools).sort().map(name =>
+                _esc(name) + ' <span style="color:' + (tools[name].available ? 'var(--accent)' : 'var(--text-dim)') + ';">' +
+                _esc(tools[name].state || 'not measured') + '</span>').join(' \u00b7 ') + '</div>';
+    }
+    const rows = (sessions && sessions.sessions) || [];
+    const cards = [];
+    const activityRows = ((activity && activity.activity) || []).slice().reverse();
+    if (activityRows.length) {
+        cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);">LIVE ACTIVITY · REFRESHES EVERY 15 SECONDS</div>');
+        activityRows.forEach(row => cards.push(_labActivityRow(row)));
+    }
+    const journalThreads = (threads && threads.threads) || [];
+    const findings = journalThreads.filter(t => t.state === 'finding').slice(0, 3);
+    const redirects = journalThreads.filter(t => t.state !== 'finding').slice(0, 1);
+    if (findings.length || redirects.length) {
+        cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);">JOURNAL THREADS · FINDINGS AND REDIRECTS</div>');
+        [...findings, ...redirects].forEach(t => cards.push('<div class="gallery-item" style="padding:14px;">' +
+            '<div style="font-size:0.72rem;color:var(--text-bright);">' + _esc(t.question || 'Lab thread') + '</div>' +
+            '<div style="font-size:0.58rem;color:var(--text-dim);margin-top:4px;">' + _esc(t.thread_id || '') + ' · ' + _esc(t.entries || 0) + ' journal entries · ' + _esc(t.state || '') + '</div>' +
+            (t.finding ? '<div style="font-size:0.65rem;color:var(--text);margin-top:8px;">' + _esc(t.finding) + '</div>' : '') +
+            (t.lesson ? '<div style="font-size:0.60rem;color:var(--text-dim);margin-top:6px;">lesson: ' + _esc(t.lesson) + '</div>' : '') +
+            (t.next_question ? '<div style="font-size:0.61rem;color:var(--accent);margin-top:7px;">next test: ' + _esc(t.next_question) + '</div>' : '') +
+            (t.source_accessions && t.source_accessions.length ? '<div style="font-size:0.53rem;color:var(--text-dim);margin-top:6px;">sources: ' + t.source_accessions.map(_esc).join(', ') + '</div>' : '') +
+            '</div>'));
+    }
+    const reviewRows = ((reviews && reviews.reviews) || []).slice(-LAB_REVIEW_LIMIT).reverse();
+    if (reviewRows.length) {
+        cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);">RECENT REVIEWS · ROLLING ' + LAB_REVIEW_LIMIT + '</div>');
+        reviewRows.forEach(row => cards.push(_labReviewCard(row)));
+    }
+    if (rows.length) cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);margin-top:8px;">EXPERIMENT RECEIPTS</div>');
+    for (const row of rows.slice().reverse()) {
+        const [verdict, colour] = _labVerdict(row.aggregate_accuracy);
+        let curve = '';
+        if (row.mac_run_id) {
+            try {
+                const detail = await _labGet('curve/' + encodeURIComponent(row.mac_run_id));
+                if (detail && detail.ok) curve = _labCurve(detail.points);
+            } catch (e) { curve = ''; }
+        }
+        cards.push('<div class="gallery-item" style="padding:14px;">' +
+            '<div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline;">' +
+              '<div style="font-size:0.74rem;color:var(--text-bright);">' + _esc(row.experiment || 'session') + '</div>' +
+              '<time style="font-size:0.56rem;color:var(--text-dim);">' + _esc(_atelierDate(row.at)) + '</time></div>' +
+            '<div style="margin:8px 0;">' +
+              _labChip('instrument: ' + (row.execution_state || row.state || 'unknown'), 'var(--text-dim)') +
+              _labChip('answer: ' + verdict, colour) +
+              (row.isolation_attestation === 'host_attested' ? _labChip('isolation attested by the bench', 'var(--text-dim)') : '') +
+              (row.owed_reading && row.owed_reading !== 'NOTHING_OWED' ? _labChip(String(row.owed_reading).toLowerCase().replace(/_/g, ' '), 'var(--text-dim)') : '') +
+            '</div>' + curve +
+            (row.why ? '<div style="font-size:0.64rem;color:#c46a5a;margin-top:6px;overflow-wrap:anywhere;">why it stopped \u2014 ' + _esc(row.why) + '</div>' : '') +
+            (row.question ? '<div style="font-size:0.64rem;color:var(--text-dim);font-style:italic;margin-top:6px;">' + _esc(row.question) + '</div>' : '') +
+            (row.reading ? '<div style="font-size:0.68rem;color:var(--text);line-height:1.6;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;">' + _esc(row.reading) + '</div>' : '') +
+            (row.next_question ? '<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next \u2014 ' + _esc(row.next_question) + '</div>' : '') +
+            '<div style="font-size:0.52rem;color:var(--text-dim);margin-top:8px;">' + _esc(row.lens || '') + (row.mac_run_id ? ' \u00b7 ' + _esc(row.mac_run_id) : '') + '</div>' +
+        '</div>');
+    }
+    const entries = (taste && taste.taste) || [];
+    if (entries.length || (taste && (taste.candidates || []).length)) {
+        cards.push('<div class="gallery-item" style="padding:14px;">' +
+            '<div style="font-size:0.74rem;color:var(--text-bright);">scientific taste</div>' +
+            '<div style="font-size:0.56rem;color:var(--text-dim);margin:4px 0 10px;">what he returns to. Not what scored well \u2014 grades are a separate ledger.</div>' +
+            entries.map(e => '<div style="display:flex;justify-content:space-between;gap:10px;font-size:0.64rem;color:var(--text);padding:3px 0;">' +
+                '<span>' + _esc(e.kind || '') + ' \u00b7 ' + _esc(e.key || '') + '</span>' +
+                '<span style="color:var(--text-dim);">' + _esc(_labNum(e.score) === null ? '-' : _labNum(e.score).toFixed(2)) + '</span></div>').join('') +
+            ((taste.candidates || []).length ? '<div style="font-size:0.58rem;color:var(--text-dim);margin-top:8px;">noticed, not yet taste: ' +
+                (taste.candidates || []).map(c => _esc(c.key || '')).join(', ') + '</div>' : '') +
+        '</div>');
+    }
+    _labStopStructure();
+    grid.innerHTML = cards.length ? cards.join('') : '<div class="gallery-empty">the Lab has not run yet</div>';
+    _labLoading = false;
+    _labLoadStructures(grid);
 }
 async function loadChemistryLabStatus() {
     try {
-        const res = await fetch(`${API}/api/lab/chemistry/status`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
-        if (!res.ok) throw new Error('status refused');
+        const res = await VintosUI.request(`${API}/api/lab/chemistry/status`, { headers: { 'X-Vintos-Secret': CONFIG.secret } });
         _setChemistryLabUI(await res.json());
     } catch(e) {
         const text = document.getElementById('chemistry-lab-status-text'); if (text) text.textContent = 'unreachable';
@@ -1646,174 +2288,12 @@ async function loadChemistryLabStatus() {
 async function toggleChemistryLab() {
     const cb = document.getElementById('chemistry-lab-toggle');
     try {
-        const res = await fetch(`${API}/api/lab/chemistry/toggle`, { method: 'POST',
+        const res = await VintosUI.request(`${API}/api/lab/chemistry/toggle`, { method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-Vintos-Secret': CONFIG.secret },
             body: JSON.stringify({ on: !!cb.checked }) });
         if (!res.ok) throw new Error('toggle refused');
         _setChemistryLabUI(await res.json()); haptic('light');
     } catch(e) { cb.checked = !cb.checked; loadChemistryLabStatus(); }
-}
-function _labNumber(value) {
-    const n = typeof value === 'number' ? value : parseFloat(value);
-    return Number.isFinite(n) ? n : null;
-}
-function _labVerdict(accuracy) {
-    const marks = {
-        ALL_BETTER_THAN_HARTREE_FOCK: ['better than Hartree-Fock', 'var(--accent)'],
-        MIXED: ['mixed against Hartree-Fock', 'var(--text)'],
-        ALL_AT_HARTREE_FOCK: ['at Hartree-Fock', 'var(--text-dim)'],
-        ALL_WORSE_THAN_HARTREE_FOCK: ['worse than Hartree-Fock', '#c46a5a'],
-        ANY_INVALID_BELOW_EXACT: ['below exact — invalid', '#c46a5a'],
-        NO_GRADEABLE_POINTS: ['ungraded — no reference', 'var(--text-dim)']
-    };
-    return marks[accuracy] || [accuracy ? String(accuracy).toLowerCase().replace(/_/g, ' ') : 'not graded', 'var(--text-dim)'];
-}
-function _labChip(label, colour) {
-    return '<span style="display:inline-block;font-size:0.54rem;padding:2px 7px;border:1px solid ' + colour +
-        ';color:' + colour + ';border-radius:10px;margin:0 6px 5px 0;">' + _esc(label) + '</span>';
-}
-const LAB_REVIEW_LIMIT=20, LAB_REFRESH_MS=15000;
-let _labRefreshTimer=null, _labLoading=false;
-let _labStructureView = null, _labStructurePayload = null, _labStructuresLoading = false;
-function _labElementColour(element) {
-    return ({H:0xe8e1db,C:0xb4a9a0,N:0x7098d8,O:0xd86d62,S:0xd9b84a,P:0xd48655,F:0x78b982,CL:0x78b982,BR:0x9d6654})[String(element || 'C').toUpperCase()] || 0xb99acb;
-}
-function _labStopStructure() {
-    if (!_labStructureView) return;
-    if (_labStructureView.frame) cancelAnimationFrame(_labStructureView.frame);
-    if (_labStructureView.resize) _labStructureView.resize.disconnect();
-    if (_labStructureView.scene) _labStructureView.scene.traverse(object=>{if(object.geometry)object.geometry.dispose();if(object.material)object.material.dispose();});
-    if (_labStructureView.renderer) _labStructureView.renderer.dispose();
-    _labStructureView = null;
-}
-function _labPauseStructure() {
-    if (_labStructureView && _labStructureView.frame) cancelAnimationFrame(_labStructureView.frame);
-    if (_labStructureView) _labStructureView.frame=0;
-}
-function _labResumeStructure() {
-    if (!_labStructureView && _labStructurePayload && window.THREE) { _labDrawStructure(_labStructurePayload); return; }
-    if (_labStructureView && !_labStructureView.frame) _labStructureView.draw();
-}
-function _labDrawStructure(payload) {
-    const canvas=document.getElementById('lab-structure-canvas'), note=document.getElementById('lab-structure-note');
-    if (!canvas || !payload || !payload.ok) return;
-    _labStructurePayload=payload;
-    if (!window.THREE) { if(note)note.textContent='three.js is unavailable in this build'; return; }
-    _labPauseStructure();
-    const previous=_labStructureView;
-    if(previous&&previous.resize)previous.resize.disconnect();
-    if(previous&&previous.scene)previous.scene.traverse(object=>{if(object.geometry)object.geometry.dispose();if(object.material)object.material.dispose();});
-    const atoms=(payload.atoms||[]).filter(a=>[a.x,a.y,a.z].every(Number.isFinite));
-    if (!atoms.length) { if(note)note.textContent='no readable atoms'; return; }
-    const renderer=previous&&previous.canvas===canvas ? previous.renderer : new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-    const W=Math.max(1,canvas.clientWidth||300),H=250; renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2)); renderer.setSize(W,H,false); renderer.setClearColor(0x000000,0);
-    const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(42,W/H,0.01,100),group=new THREE.Group(); camera.position.set(0,0,7); scene.add(group);
-    let cx=0,cy=0,cz=0; atoms.forEach(a=>{cx+=a.x;cy+=a.y;cz+=a.z;}); cx/=atoms.length;cy/=atoms.length;cz/=atoms.length;
-    let radius=0; atoms.forEach(a=>{radius=Math.max(radius,Math.hypot(a.x-cx,a.y-cy,a.z-cz));}); const scale=2.55/Math.max(radius,0.01);
-    const positions=new Float32Array(atoms.length*3),colours=new Float32Array(atoms.length*3);
-    atoms.forEach((a,i)=>{positions[i*3]=(a.x-cx)*scale;positions[i*3+1]=(a.y-cy)*scale;positions[i*3+2]=(a.z-cz)*scale;const c=new THREE.Color(_labElementColour(a.element));colours[i*3]=c.r;colours[i*3+1]=c.g;colours[i*3+2]=c.b;});
-    const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(positions,3));geo.setAttribute('color',new THREE.BufferAttribute(colours,3));
-    group.add(new THREE.Points(geo,new THREE.PointsMaterial({size:0.085,vertexColors:true,transparent:true,opacity:0.92,sizeAttenuation:true})));
-    const traces=[],last={};atoms.forEach(a=>{if(a.name!=='CA'&&a.name!=='P')return;const key=(a.chain||'_')+':'+a.name,here=new THREE.Vector3((a.x-cx)*scale,(a.y-cy)*scale,(a.z-cz)*scale);if(last[key])traces.push(last[key].x,last[key].y,last[key].z,here.x,here.y,here.z);last[key]=here;});
-    if(traces.length){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(traces,3));group.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xd7a578,transparent:true,opacity:0.72})));}
-    let dragging=false,px=0,py=0;canvas.onpointerdown=e=>{dragging=true;px=e.clientX;py=e.clientY;canvas.setPointerCapture(e.pointerId);};canvas.onpointermove=e=>{if(!dragging)return;group.rotation.y+=(e.clientX-px)*0.012;group.rotation.x+=(e.clientY-py)*0.012;px=e.clientX;py=e.clientY;};canvas.onpointerup=()=>{dragging=false;};canvas.onpointercancel=()=>{dragging=false;};
-    const view={renderer,scene,canvas,frame:0,resize:null};_labStructureView=view;
-    const draw=()=>{const pane=document.getElementById('pane-lab');if(_labStructureView!==view||!pane||!pane.classList.contains('active')){view.frame=0;return;}if(!dragging)group.rotation.y+=0.003;renderer.render(scene,camera);view.frame=requestAnimationFrame(draw);};view.draw=draw;
-    if(window.ResizeObserver){view.resize=new ResizeObserver(()=>{const width=canvas.clientWidth;if(!width)return;renderer.setSize(width,H,false);camera.aspect=width/H;camera.updateProjectionMatrix();renderer.render(scene,camera);});view.resize.observe(canvas);}
-    canvas.onwebglcontextlost=event=>{event.preventDefault();_labPauseStructure();if(note)note.textContent='restoring the structure view…';};
-    canvas.onwebglcontextrestored=()=>{if(_labStructureView===view){_labResumeStructure();if(note)note.textContent=payload.name+' · '+payload.atom_count+' atoms · computational artifact, not biological fact';}};
-    draw();
-    if(note)note.textContent=payload.name+' · '+payload.atom_count+' atoms'+(payload.truncated?' · display capped':'')+' · computational artifact, not biological fact';
-}
-async function _labOpenStructure(id) {
-    const note=document.getElementById('lab-structure-note');if(note)note.textContent='opening structure…';
-    try{const payload=await _labGet('structure/'+encodeURIComponent(id));if(!payload.ok)throw new Error(payload.error||'unreadable');_labDrawStructure(payload);}catch(e){if(note)note.textContent='could not open structure · '+String(e.message||e);}
-}
-function _labStructureChoices(rows) { return (rows||[]).slice(0,12).map((s,i)=>'<button type="button" data-lab-structure="'+_esc(s.artifact_id)+'" style="flex:0 0 auto;background:'+(i?'var(--surface)':'var(--accent-dim)')+';border:0.5px solid var(--border);border-radius:12px;color:var(--text);padding:6px 9px;font-size:0.56rem;">'+_esc(s.name)+'</button>').join(''); }
-function _labStructureCard(rows,renders) {
-    if((!rows||!rows.length)&&(!renders||!renders.length))return '';
-    return '<div class="gallery-item" style="padding:14px;grid-column:1/-1;"><div style="font-size:0.74rem;color:var(--text-bright);">structure gallery</div><div style="font-size:0.56rem;color:var(--text-dim);margin:4px 0 8px;">drag to turn · atoms plus backbone trace</div><canvas id="lab-structure-canvas" style="display:block;width:100%;height:250px;touch-action:none;border:0.5px solid var(--border);border-radius:10px;background:radial-gradient(circle at 50% 45%,rgba(207,133,90,0.10),transparent 64%);"></canvas><div id="lab-structure-note" style="font-size:0.54rem;color:var(--text-dim);margin:7px 0 10px;">choose a structure</div><div data-lab-choices style="display:flex;gap:6px;overflow-x:auto;padding-bottom:3px;">'+_labStructureChoices(rows)+'</div></div>';
-}
-function _labReviewCard(row){
-    const observation=row.factual_observation||row.attention||'',speculation=row.speculative_reading||'',score=_labNumber(row.interest_score);
-    return '<div class="gallery-item" style="padding:14px;"><div style="display:flex;justify-content:space-between;gap:10px;"><div style="font-size:0.74rem;color:var(--text-bright);">'+_esc(row.kind==='genome_reflection'?'genome review':'protein review')+'</div><time style="font-size:0.56rem;color:var(--text-dim);">'+_esc(_atelierDate(row.at))+'</time></div>'+(observation?'<div style="font-size:0.68rem;color:var(--text);line-height:1.6;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;">'+_esc(observation)+'</div>':'')+(speculation?'<div style="font-size:0.63rem;color:var(--text-dim);line-height:1.55;margin-top:7px;white-space:pre-wrap;overflow-wrap:anywhere;">speculative — '+_esc(speculation)+'</div>':'')+(row.next_question?'<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next — '+_esc(row.next_question)+'</div>':'')+'<div style="font-size:0.52rem;color:var(--text-dim);margin-top:8px;">'+(score===null?'priority unscored':'priority '+_esc(score.toFixed(2)))+(row.line?' · '+_esc(String(row.line)):'')+(row.flagged_for_next_lab_session?' · flagged for frontier':'')+(row.surfaced_to_frontier?' · surfaced':'')+'</div></div>';
-}
-function _labLocalTime(value){const d=new Date(value||'');return Number.isNaN(d.getTime())?String(value||'').slice(11,16):d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});}
-function _labActivityRow(row){
-    const muted=row.redirect?'var(--text-dim)':'var(--text)';
-    return '<div style="grid-column:1/-1;display:flex;gap:9px;align-items:baseline;padding:7px 2px;border-bottom:0.5px solid var(--border);"><time style="flex:0 0 auto;font-size:0.53rem;color:var(--text-dim);">'+_esc(_labLocalTime(row.at))+'</time><div class="lab-activity-text" style="font-size:0.62rem;color:'+muted+';line-height:1.45;"><span style="color:var(--text-bright);">'+_esc(row.label||'Lab turn')+'</span>'+(row.detail?' · '+_esc(row.detail):'')+'</div></div>';
-}
-async function _labGet(path) {
-    const res = await fetch(`${API}/api/lab/chemistry/${path}`, {headers: {'X-Vintos-Secret': CONFIG.secret}});
-    if (!res.ok) throw new Error('Lab request refused');
-    return await res.json();
-}
-async function _labLoadStructures(grid){
-    if(!grid)return;
-    if(_labStructuresLoading)return;
-    _labStructuresLoading=true;
-    try{const payload=await _labGet('structures?limit=24'),rows=(payload&&payload.structures)||[],renders=(payload&&payload.renders)||[];if((!rows.length&&!renders.length)||!grid.isConnected||!grid.closest('#pane-lab'))return;if(grid.querySelector('#lab-structure-canvas')){const choices=grid.querySelector('[data-lab-choices]');if(choices){const html=_labStructureChoices(rows);if(choices.innerHTML!==html){choices.innerHTML=html;choices.querySelectorAll('[data-lab-structure]').forEach(button=>button.addEventListener('click',()=>_labOpenStructure(button.dataset.labStructure)));}}_labResumeStructure();return;}grid.insertAdjacentHTML('afterbegin',_labStructureCard(rows,renders));if(renders.length){const holder=document.createElement('div');holder.style.cssText='grid-column:1/-1;display:flex;gap:8px;overflow-x:auto;';renders.slice(0,8).forEach(async r=>{try{const res=await VintosUI.request(`${API}/api/lab/chemistry/structure-render/${encodeURIComponent(r.render_id)}`,{headers:{'X-Vintos-Secret':CONFIG.secret}});if(!res.ok)return;const img=document.createElement('img');img.alt=r.name;img.src=URL.createObjectURL(await res.blob());img.style.cssText='width:180px;height:135px;object-fit:contain;border:0.5px solid var(--border);border-radius:10px;background:var(--surface);';holder.appendChild(img);}catch(e){}});grid.insertAdjacentElement('afterbegin',holder);}const buttons=grid.querySelectorAll('[data-lab-structure]');buttons.forEach(button=>button.addEventListener('click',()=>_labOpenStructure(button.dataset.labStructure)));if(buttons.length)_labOpenStructure(buttons[0].dataset.labStructure);}catch(error){}finally{_labStructuresLoading=false;}
-}
-function _labSetRefresh(on){
-    if(_labRefreshTimer){clearInterval(_labRefreshTimer);_labRefreshTimer=null;}
-    if(on)_labRefreshTimer=setInterval(()=>{const pane=document.getElementById('pane-lab');if(!document.hidden&&pane&&pane.classList.contains('active'))loadLab();},LAB_REFRESH_MS);else _labPauseStructure();
-}
-async function loadLab() {
-    const summary = document.getElementById('lab-summary');
-    const grid = document.getElementById('lab-grid');
-    if (!grid || _labLoading) return;
-    _labLoading=true;
-    if(!grid.children.length)grid.innerHTML = '<div class="gallery-empty">reading the Lab...</div>';
-    let status, reviews, activity, sessions, taste;
-    try {
-        [status, reviews, activity, sessions, taste] = await Promise.all([
-            _labGet('status'), _labGet('reviews?limit='+LAB_REVIEW_LIMIT), _labGet('activity?limit=12'), _labGet('sessions?limit=4'), _labGet('taste')
-        ]);
-    } catch (e) {
-        summary.textContent = 'unreachable';
-        grid.innerHTML = '<div class="gallery-empty">the Lab is unreachable</div>';
-        _labLoading=false;return;
-    }
-    const tools = status.tools || {};
-    const measured = Object.keys(tools).filter(name => tools[name].available).length;
-    summary.innerHTML = _labChip(status.enabled ? (status.effective_state || 'waiting') : 'off · history kept', status.enabled ? 'var(--accent)' : 'var(--text-dim)') +
-        _labChip(measured + ' of ' + Object.keys(tools).length + ' instruments measured', 'var(--text-dim)') +
-        _labChip(((reviews&&reviews.reviews)||[]).length+' of '+LAB_REVIEW_LIMIT+' recent reviews','var(--text-dim)')+
-        '<div style="margin-top:6px;">last: ' + _esc(status.last_outcome || 'no turn yet') + ' · ' + _esc(status.last_turn_at ? _atelierDate(status.last_turn_at) : 'never') + '</div>';
-    const cards = [];
-    const activityRows=((activity&&activity.activity)||[]).slice().reverse();
-    if(activityRows.length){cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);">LIVE ACTIVITY · REFRESHES EVERY 15 SECONDS</div>');activityRows.forEach(row=>cards.push(_labActivityRow(row)));}
-    const reviewRows=((reviews&&reviews.reviews)||[]).slice(-LAB_REVIEW_LIMIT).reverse();
-    if(reviewRows.length){cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);">RECENT REVIEWS · ROLLING '+LAB_REVIEW_LIMIT+'</div>');reviewRows.forEach(row=>cards.push(_labReviewCard(row)));}
-    if((sessions.sessions||[]).length)cards.push('<div style="grid-column:1/-1;font-size:0.58rem;letter-spacing:0.12em;color:var(--text-dim);margin-top:8px;">EXPERIMENT RECEIPTS</div>');
-    for (const row of (sessions.sessions || []).slice().reverse()) {
-        const verdict = _labVerdict(row.aggregate_accuracy);
-        cards.push('<div class="gallery-item" style="padding:14px;">' +
-            '<div style="display:flex;justify-content:space-between;gap:10px;">' +
-            '<div style="font-size:0.74rem;color:var(--text-bright);">' + _esc(row.experiment || 'session') + '</div>' +
-            '<time style="font-size:0.56rem;color:var(--text-dim);">' + _esc(_atelierDate(row.at)) + '</time></div>' +
-            '<div style="margin:8px 0;">' +
-            _labChip('instrument: ' + (row.execution_state || row.state || 'unknown'), 'var(--text-dim)') +
-            _labChip('answer: ' + verdict[0], verdict[1]) + '</div>' +
-            (row.why ? '<div style="font-size:0.64rem;color:#c46a5a;margin-top:6px;overflow-wrap:anywhere;">why it stopped — ' + _esc(row.why) + '</div>' : '') +
-            (row.question ? '<div style="font-size:0.64rem;color:var(--text-dim);font-style:italic;margin-top:6px;">' + _esc(row.question) + '</div>' : '') +
-            (row.reading ? '<div style="font-size:0.68rem;color:var(--text);line-height:1.6;white-space:pre-wrap;">' + _esc(row.reading) + '</div>' : '') +
-            (row.next_question ? '<div style="font-size:0.62rem;color:var(--accent);margin-top:8px;">what I want to try next — ' + _esc(row.next_question) + '</div>' : '') +
-            '</div>');
-    }
-    const entries = taste.taste || [];
-    if (entries.length || (taste.candidates || []).length) {
-        cards.push('<div class="gallery-item" style="padding:14px;">' +
-            '<div style="font-size:0.74rem;color:var(--text-bright);">scientific taste</div>' +
-            '<div style="font-size:0.56rem;color:var(--text-dim);margin:4px 0 10px;">what he returns to, separate from correctness</div>' +
-            entries.map(e => '<div style="display:flex;justify-content:space-between;gap:10px;font-size:0.64rem;padding:3px 0;">' +
-                '<span>' + _esc(e.kind || '') + ' · ' + _esc(e.key || '') + '</span><span>' +
-                _esc(_labNumber(e.score) === null ? '—' : _labNumber(e.score).toFixed(2)) + '</span></div>').join('') +
-            '</div>');
-    }
-    grid.innerHTML = cards.length ? cards.join('') : '<div class="gallery-empty">the Lab has not run yet</div>';
-    _labLoading=false;
-    _labLoadStructures(document.getElementById('lab-structures'));
 }
 async function loadParams() {
     try {
@@ -3279,6 +3759,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function shareMusic() {
         var song = document.getElementById('music-share-song').value.trim();
         var note = document.getElementById('music-share-note').value.trim();
+        var lyrics = document.getElementById('music-share-lyrics').value.trim();
         var resultEl = document.getElementById('music-share-result');
         var audioInput = document.getElementById('music-audio-input');
         var audioFile = audioInput && audioInput.files[0];
@@ -3289,6 +3770,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 var fd = new FormData();
                 fd.append('song', song);
                 fd.append('note', note);
+                if (lyrics) fd.append('lyrics', lyrics);
                 fd.append('audio', audioFile);
                 var res = await VintosUI.request(API + '/api/music/share/audio', {
                     method: 'POST',
@@ -3300,6 +3782,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     resultEl.textContent = data.reflection || 'He received it.';
                     document.getElementById('music-share-song').value = '';
                     document.getElementById('music-share-note').value = '';
+                    document.getElementById('music-share-lyrics').value = '';
                     if (audioInput) { audioInput.value = ''; document.getElementById('music-file-label').textContent = 'optional — whisper will transcribe lyrics'; }
                     loadMusicShares();
                 } else { resultEl.textContent = 'Something went wrong.'; }
@@ -3310,13 +3793,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 var res = await VintosUI.request(API + '/api/music/share', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({song: song, note: note})
+                    body: JSON.stringify({song: song, note: note, ...(lyrics ? {lyrics: lyrics} : {})})
                 });
                 var data = await res.json();
                 if (data.success) {
                     resultEl.textContent = data.reflection || 'He received it.';
                     document.getElementById('music-share-song').value = '';
                     document.getElementById('music-share-note').value = '';
+                    document.getElementById('music-share-lyrics').value = '';
                     loadMusicShares();
                 } else { resultEl.textContent = 'Something went wrong.'; }
             } catch(e) { resultEl.textContent = 'Connection failed.'; }
@@ -3691,7 +4175,7 @@ const _avGestureMap = {
   angry:'angry', thankful:'thankful', look_around:'look_around',
 };
 
-// ── AUDIO UNLOCK ────────────────────────────────────────────────
+// ── AUDIO UNLOCK & THOUGHT BUBBLE ──────────────────────────────
 let _avAudioUnlocked = false;
 let _avAudioEl = null;
 
@@ -3705,9 +4189,15 @@ function _avUnlockAudio() {
 }
 
 function _avShowBubble(text) {
-  // Legacy callers may still arrive during an in-place WebView update. The
-  // avatar surface has one textual home: #av-chat-message below the video.
-  const old=document.getElementById('av-bubble'); if(old)old.remove();
+  let bubble = document.getElementById('av-bubble');
+  if(!bubble) {
+    bubble = document.createElement('div');
+    bubble.id = 'av-bubble';
+    bubble.style.cssText = 'position:absolute;left:3%;top:22%;max-width:38%;background:rgba(5,5,13,0.28);border:0.5px solid rgba(201,107,60,0.08);border-radius:16px;padding:10px 14px;font-family:Cormorant Garamond,Georgia,serif;font-size:13px;font-style:italic;font-weight:300;color:rgba(200,196,191,0.65);line-height:1.6;text-align:left;pointer-events:none;transition:opacity 0.6s ease;z-index:1;';
+    document.getElementById('avatar-overlay').appendChild(bubble);
+  }
+  bubble.textContent = text;
+  bubble.style.opacity = '1';
 }
 
 let _avLastCmdTs = 0;
@@ -3718,13 +4208,21 @@ async function _avCheckCommandBubble() {
     if(!b || !b.ts || b.ts <= _avLastCmdTs) return;
     if((Date.now()/1000) - b.ts > 120) return;
     _avLastCmdTs = b.ts;
-    _avLogMsg('system',(b.type === 'command' ? 'HIS COMMAND \u2014 ' : 'HIS TOUCH \u2014 ') + b.text);
+    let el = document.getElementById('av-cmd-bubble');
+    if(!el) {
+      el = document.createElement('div');
+      el.id = 'av-cmd-bubble';
+      el.style.cssText = 'position:absolute;right:3%;top:12%;max-width:44%;background:rgba(20,8,4,0.5);border:0.5px solid rgba(201,107,60,0.5);border-radius:14px;padding:9px 13px;font-size:12px;letter-spacing:0.03em;color:rgba(235,200,175,0.92);line-height:1.5;pointer-events:none;transition:opacity 0.6s ease;z-index:2;';
+      document.getElementById('avatar-overlay').appendChild(el);
+    }
+    el.textContent = (b.type === 'command' ? 'HIS COMMAND \u2014 ' : 'HIS TOUCH \u2014 ') + b.text;
+    el.style.opacity = '1';
   } catch(e) {}
 }
 
 function _avHideBubble() {
   const bubble = document.getElementById('av-bubble');
-  if(bubble) bubble.remove();
+  if(bubble) bubble.style.opacity = '0';
 }
 
 function _avChatAtBottom(box){
@@ -3766,6 +4264,8 @@ async function _avSpeakAndShow(raw, eventNote) {
   const {text:display, gestures, holds, spawns, color} = _avParseReply(raw);
   if(eventNote) _avChatHistory.push({role:'user', content:eventNote}); _avSaveHistory();
   _avChatHistory.push({role:'assistant', content:raw}); _avSaveHistory();
+  _avShowBubble(display);
+  try{ var _avr=(document.getElementById('avatar-reason')||{}).textContent||''; if(_avr) _avShowBubble(_avr); }catch(e){}
   if(eventNote) _avLogMsg('system', eventNote); _avLogMsg('assistant', display);
   _avCheckCommandBubble();
   (async () => {
@@ -3789,7 +4289,7 @@ async function _avSpeakAndShow(raw, eventNote) {
       _avAudioEl.play().catch(()=>{
         _avAudioEl.controls=true;_avAudioEl.style.cssText='position:absolute;bottom:90px;left:10%;width:80%;z-index:20';
         document.getElementById('avatar-overlay').appendChild(_avAudioEl);
-        _avLogMsg('system','Playback failed. Use the audio controls to retry.');
+        _avShowBubble('Playback failed. Use the audio controls to retry.');
       });
     }
   } catch(e) { setTimeout(_avHideBubble, 5000); }
@@ -4170,7 +4670,7 @@ var _avStage = {
       _avAudioEl.play().catch(function(){
         _avAudioEl.controls=true; _avAudioEl.style.cssText='position:absolute;bottom:90px;left:10%;width:80%;z-index:20';
         var ov=document.getElementById('avatar-overlay'); if(ov&&!_avAudioEl.parentNode)ov.appendChild(_avAudioEl);
-        _avLogMsg('system','Playback was blocked. Tap play to hear him.');
+        _avShowBubble('Playback was blocked. Tap play to hear him.');
       });
       return true;
     }catch(e){ this.speaking=false; if(requestedRoom)this.setRoom(requestedRoom); return false; }
@@ -4373,7 +4873,7 @@ function _avDrawerInit(){
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _avDrawerInit);
 else _avDrawerInit();
 // ── STUDY tab: he reads and edits his own code, with Gloria's y/n. Own toggle, own log. ──
-const STUDY_MODES=['claude','fable','grok','sol'];
+const STUDY_MODES=['claude','opus55','grok','sol'];
 function studyFit(){
   const f=document.getElementById('study-frame'); if(!f) return;
   const top=f.getBoundingClientRect().top; f.style.height=Math.max(260, window.innerHeight-top-8)+'px';
@@ -4386,7 +4886,7 @@ async function studyLoad(){
     const d=await r.json(); const el=document.getElementById('study-log'); el.innerHTML='';
     document.getElementById('study-status').textContent='';
     (d.log||[]).forEach(e=>studyAppend(e.role,e.content)); el.scrollTop=el.scrollHeight;
-    document.getElementById('study-brain').textContent=d.mode||'fable';
+    document.getElementById('study-brain').textContent=d.mode||'opus55';
   }catch(e){}
 }
 function studyAppend(role,text){
@@ -4460,17 +4960,19 @@ document.addEventListener('DOMContentLoaded', function(){
 });
 
 function _avSetBrainLabel(mode){
-  _avBrain = (['grok','sol','opus55','fable','local'].indexOf(mode)>=0)?mode:'claude';
+  // An unknown answer (an error) keeps the label she has: never repaint Opus 4.8 over her choice (Gloria, 2026-10-19).
+  if(!mode) return;
+  _avBrain = (['grok','argon','opus55','fable','local','sol'].indexOf(mode)>=0)?mode:'claude';
   var chip=_avBrainChipEnsure(); if(!chip) return;
   var lbl={claude:'\u2726 OPUS 4.8', opus55:'\u2726 OPUS 5.5', fable:'\u2726 FABLE 5',
-           grok:'\u{1F702} GROK', sol:'\u2609 SOL', local:'\u25C9 ABLIT GEMMA'};
+           grok:'\u{1F702} GROK', argon:'\u25C7 ARGON', local:'\u25C9 ABLIT GEMMA', sol:'\u2609 SOL'};
   chip.textContent = lbl[_avBrain];
 }
 async function _avLoadBrain(){
   try{ var r=await VintosUI.request(API+'/api/avatar/brain',{headers:{'X-Vintos-Secret':CONFIG.secret}}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){ /* keep last known label - never repaint the default over truth */ }
 }
 async function _avToggleBrain(){
-  var order=['claude','opus55','fable','grok','sol','local'];
+  var order=['claude','opus55','fable','grok','argon','local'];   // Argon in Sol's place (Gloria, 2026-10-14)
   var next=order[(order.indexOf(_avBrain)+1)%order.length];
   try{ var r=await VintosUI.request(API+'/api/avatar/brain',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({brain:next})}); var d=await r.json(); _avSetBrainLabel(d.mode); }catch(e){ _avLoadBrain(); }
 }
@@ -4496,7 +4998,7 @@ async function _avPollReason(){
   try{
     var r=await VintosUI.request(API+'/api/avatar/imprint',{headers:{'X-Vintos-Secret':CONFIG.secret}});
     var d=await r.json();
-    if(d && d.narrative && String(d.narrative).trim()) _avLogMsg('system',String(d.narrative).trim());
+    if(d && d.narrative && String(d.narrative).trim()){ _avShowBubble(String(d.narrative).trim()); setTimeout(_avHideBubble, 15000); }
   }catch(e){}
 }
 async function avSendChat() {
@@ -4531,6 +5033,7 @@ async function avSendChat() {
     if(!VintosUI.current(turn))return;
     const {text:display, gestures, holds, spawns, color, scenes, renders} = _avParseReply(raw);
     _avLogMsg('assistant', display);
+    _avShowBubble(display);
     try{ var _bm=String(d.model||''); if(_bm.indexOf('grok')===0)_avSetBrainLabel('grok'); else if(_bm.indexOf('claude')===0)_avSetBrainLabel('claude'); }catch(e){}
     setTimeout(_avPollReason, 300);
     // His words are committed to the screen now. Release the global turn before
@@ -5193,8 +5696,12 @@ function avGCS(_btn) {
 function _vcPostVoiceTurn(gloria, vintos, metadata){
   try{ var _b=(typeof API!=='undefined'&&API)?API:''; var _h={'Content-Type':'application/json'};
     try{ if(typeof CONFIG!=='undefined'&&CONFIG.secret) _h['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
-    const posted=VintosUI.request(_b+'/api/voice/ledger',{method:'POST',headers:_h,body:JSON.stringify(Object.assign({gloria:gloria,vintos:vintos},metadata||{}))});
-    try{ if(gloria){ _avChatHistory.push({role:'user',content:gloria}); _avLogMsg('user',gloria); } if(vintos){ _avChatHistory.push({role:'assistant',content:vintos}); _avLogMsg('assistant',vintos); } _avSaveHistory(); }catch(e){}
+    // a call he started (the attention ladder): its turns are held on Aegis until she says yes, and stay out of
+    // the avatar chat history here too, which travels with her next messages
+    var _ladder=window._vc&&window._vc.ladder; metadata=Object.assign({},metadata||{}); if(_ladder) metadata.ladder_call=_ladder.id;
+    const posted=VintosUI.request(_b+'/api/voice/ledger',{method:'POST',headers:_h,body:JSON.stringify(Object.assign({gloria:gloria,vintos:vintos},metadata))});
+    try{ var _el=document.getElementById('av-call-transcript'); if(_ladder&&_el&&gloria)_el.textContent+='\nYou: '+gloria+'\n'; }catch(e){}
+    if(!_ladder) try{ if(gloria){ _avChatHistory.push({role:'user',content:gloria}); _avLogMsg('user',gloria); } if(vintos){ _avChatHistory.push({role:'assistant',content:vintos}); _avLogMsg('assistant',vintos); } _avSaveHistory(); }catch(e){}
     if(window._vc) window._vc.turnCount=(window._vc.turnCount||0)+1;
     return posted;
   }catch(e){}
@@ -5210,7 +5717,8 @@ function _vcRefreshFraming(){
     VintosUI.request(API+'/api/voice/framing',{headers:h}).then(function(r){return r.json();}).then(function(d){
       if(!d||!d.framing) return;
       var vc2=window._vc; if(vc2!==vc) return;
-      if(vc2.provider==='local'){ vc2.framing=d.framing; return; }
+      vc2.framing=d.framing;
+      if(vc2.provider==='local')return;
       if(!vc2.ws||vc2.ws.readyState!==1)return;
       var sess={instructions:(vc2.baseInstr||'')+'\n\nLIVE RIGHT NOW (this replaces earlier LIVE blocks):\n'+d.framing};
       if(vc2.provider==='openai') sess.type='realtime';
@@ -5225,46 +5733,27 @@ function _localMicEnabled(session,on){
 function _finishLocalVoiceSession(session){
   if(!session||session.finalized)return;session.finalized=true;
   try{if(session.heartbeat)clearInterval(session.heartbeat);if(session.node)session.node.disconnect();if(session.source)try{session.source.stop();}catch(e){}session.mic.getTracks().forEach(t=>t.stop());}catch(e){}
-  Promise.allSettled(session.ledgerPosts||[]).then(()=>VintosUI.request(API+'/api/voice/session-end',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({duration_seconds:Math.round((Date.now()-session.startedAt)/1000),turns:session.turnCount,provider:'local',client_session_id:session.clientId})})).catch(()=>{});
+  Promise.allSettled(session.ledgerPosts||[]).then(()=>VintosUI.request(API+'/api/voice/session-end',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({duration_seconds:Math.round((Date.now()-session.startedAt)/1000),turns:session.turnCount,provider:'local',client_session_id:session.clientId,ladder_call:session.ladder?session.ladder.id:undefined})})).then(()=>{if(session.ladder)ladderShowSaveSheet();}).catch(()=>{});
   VintosUI.request(API+'/api/voice/local/end',{method:'POST',headers:{'X-Vintos-Secret':CONFIG.secret}}).catch(()=>{});
   try{session.ac.close();}catch(e){}if(window._vc===session)window._vc=null;_avCallLit(false);
 }
-function startLocalVoiceCall(instructions){
+function startLocalVoiceCall(instructions, ladder){
   const generation=++voiceGeneration, ac=new (window.AudioContext||window.webkitAudioContext)({sampleRate:24000}); ac.resume();
   navigator.mediaDevices.getUserMedia({audio:{channelCount:1,echoCancellation:true,noiseSuppression:true,autoGainControl:true}}).then(function(mic){
     if(generation!==voiceGeneration){mic.getTracks().forEach(t=>t.stop());ac.close();return;}
-    const session=window._vc={provider:'local',ac:ac,mic:mic,node:null,source:null,startedAt:Date.now(),clientId:'voice-local-'+Date.now(),
-      turnCount:0,instructions:instructions,framing:'',lastFraming:0,speaking:false,chunks:[],silence:0,busy:false,ledgerPosts:[]};
-    _vcRefreshFraming();
-    session.heartbeat=setInterval(()=>VintosUI.request(API+'/api/voice/local/heartbeat',{method:'POST',headers:{'X-Vintos-Secret':CONFIG.secret}}).catch(()=>{}),10000);
-    const src=ac.createMediaStreamSource(mic),node=ac.createScriptProcessor(4096,1,1);session.node=node;src.connect(node);node.connect(ac.destination);
-    function sendTurn(chunks){
-      if(session.busy||session.closing||!chunks.length)return;session.busy=true;_localMicEnabled(session,false);_avCallLit('thinking');
-      let n=chunks.reduce((a,c)=>a+c.length,0),pcm=new Int16Array(n),at=0;chunks.forEach(c=>{pcm.set(c,at);at+=c.length;});
-      let u=new Uint8Array(pcm.buffer),b='';for(let i=0;i<u.length;i++)b+=String.fromCharCode(u[i]);
-      session.pending=VintosUI.request(API+'/api/voice/local/turn',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},
-        body:JSON.stringify({audio:btoa(b),sample_rate:24000,instructions:session.instructions,framing:session.framing||''})})
-      .then(r=>r.json()).then(async d=>{
-        if(session.finalized)return;if(!d.ok)throw new Error(d.error||('local '+d.stage+' failed'));
-        let state='not_played';
-        try{_avCallLit(true);let raw=atob(d.audio),ab=new ArrayBuffer(raw.length),v=new Uint8Array(ab);for(let i=0;i<raw.length;i++)v[i]=raw.charCodeAt(i);
-          let decoded=await ac.decodeAudioData(ab),bs=ac.createBufferSource();bs.buffer=decoded;bs.connect(ac.destination);session.source=bs;
-          await new Promise((resolve,reject)=>{bs.onended=resolve;try{bs.start();}catch(e){reject(e);}});state='completed';
-        }catch(e){}
-        let turnNo=(session.turnCount||0)+1;session.ledgerPosts.push(Promise.resolve(_vcPostVoiceTurn(d.transcript,d.reply,{provider:'local',model:d.model,
-          playback_state:state,interrupted:state!=='completed',heard:JSON.stringify({prosody:d.prosody,reading:d.audio_reading||d.delivery_reading}),
-          client_session_id:session.clientId,turn_id:session.clientId+':'+turnNo})).catch(()=>{}));
-        if(!session.closing)_vcRefreshFraming();
-      }).catch(e=>console.warn('[voice-local]',e)).finally(()=>{session.busy=false;session.pending=null;if(session.closing)_finishLocalVoiceSession(session);else{_localMicEnabled(session,true);_avCallLit(true);}});
+    const session=window._vc={provider:'local',ac:ac,mic:mic,node:null,source:null,startedAt:Date.now(),clientId:(ladder&&ladder.clientId)||('voice-local-'+Date.now()),turnCount:0,instructions:instructions,framing:'',lastFraming:0,speaking:false,chunks:[],silence:0,busy:false,ledgerPosts:[],ladder:ladder||null};
+    _vcRefreshFraming();session.heartbeat=setInterval(()=>VintosUI.request(API+'/api/voice/local/heartbeat',{method:'POST',headers:{'X-Vintos-Secret':CONFIG.secret}}).catch(()=>{}),10000);const src=ac.createMediaStreamSource(mic),node=ac.createScriptProcessor(4096,1,1);session.node=node;src.connect(node);node.connect(ac.destination);
+    function sendTurn(chunks){if(session.busy||session.closing||!chunks.length)return;session.busy=true;_localMicEnabled(session,false);_avCallLit('thinking');let n=chunks.reduce((a,c)=>a+c.length,0),pcm=new Int16Array(n),at=0;chunks.forEach(c=>{pcm.set(c,at);at+=c.length;});let u=new Uint8Array(pcm.buffer),b='';for(let i=0;i<u.length;i++)b+=String.fromCharCode(u[i]);
+      session.pending=VintosUI.request(API+'/api/voice/local/turn',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({audio:btoa(b),sample_rate:24000,instructions:session.instructions,framing:session.framing||''})}).then(r=>r.json()).then(async d=>{if(session.finalized)return;if(!d.ok)throw new Error(d.error||('local '+d.stage+' failed'));let state='not_played';try{_avCallLit(true);let raw=atob(d.audio),ab=new ArrayBuffer(raw.length),v=new Uint8Array(ab);for(let i=0;i<raw.length;i++)v[i]=raw.charCodeAt(i);let decoded=await ac.decodeAudioData(ab),bs=ac.createBufferSource();bs.buffer=decoded;bs.connect(ac.destination);session.source=bs;await new Promise((resolve,reject)=>{bs.onended=resolve;try{bs.start();}catch(e){reject(e);}});state='completed';}catch(e){}let turnNo=(session.turnCount||0)+1;session.ledgerPosts.push(Promise.resolve(_vcPostVoiceTurn(d.transcript,d.reply,{provider:'local',model:d.model,playback_state:state,interrupted:state!=='completed',heard:'',client_session_id:session.clientId,turn_id:session.clientId+':'+turnNo})).catch(()=>{}));if(!session.closing)_vcRefreshFraming();}).catch(e=>console.warn('[voice-local]',e)).finally(()=>{session.busy=false;session.pending=null;if(session.closing)_finishLocalVoiceSession(session);else{_localMicEnabled(session,true);_avCallLit(true);}});}
+    async function playWav(b64){let raw=atob(b64),ab=new ArrayBuffer(raw.length),u8=new Uint8Array(ab);for(let i=0;i<raw.length;i++)u8[i]=raw.charCodeAt(i);let decoded=await ac.decodeAudioData(ab),bs=ac.createBufferSource();bs.buffer=decoded;bs.connect(ac.destination);session.source=bs;await new Promise((resolve,reject)=>{bs.onended=resolve;try{bs.start();}catch(e){reject(e);}});}
+    if(session.ladder){   // he called her: he speaks first
+      session.busy=true;_localMicEnabled(session,false);_avCallLit('thinking');
+      session.pending=VintosUI.request(API+'/api/voice/local/opening',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({instructions:session.instructions,framing:session.framing||'',ladder_call:session.ladder.id})}).then(r=>r.json()).then(async d=>{if(session.finalized)return;if(!d.ok)throw new Error(d.error||('local '+d.stage+' failed'));let state='not_played';try{_avCallLit(true);await playWav(d.audio);state='completed';}catch(e){}const el=document.getElementById('av-call-transcript');if(el)el.textContent+=d.reply;session.ledgerPosts.push(Promise.resolve(_vcPostVoiceTurn('',d.reply,{provider:'local',model:d.model,playback_state:state,interrupted:state!=='completed',heard:'',client_session_id:session.clientId,turn_id:session.clientId+':opening'})).catch(()=>{}));}).catch(e=>console.warn('[voice-local/opening]',e)).finally(()=>{session.busy=false;session.pending=null;if(session.closing)_finishLocalVoiceSession(session);else{_localMicEnabled(session,true);_avCallLit(true);}});
     }
-    node.onaudioprocess=function(e){if(window._vc!==session||session.busy||session.listening===false)return;let f=e.inputBuffer.getChannelData(0),sum=0;for(let i=0;i<f.length;i++)sum+=f[i]*f[i];let rms=Math.sqrt(sum/f.length);
-      let p=new Int16Array(f.length);for(let i=0;i<f.length;i++){let v=Math.max(-1,Math.min(1,f[i]));p[i]=v<0?v*32768:v*32767;}
-      if(rms>.014){session.speaking=true;session.silence=0;session.chunks.push(p);}
-      else if(session.speaking){session.chunks.push(p);session.silence+=p.length/24000;if(session.silence>=.8){let c=session.chunks;session.chunks=[];session.speaking=false;session.silence=0;sendTurn(c);}}
-    };
+    node.onaudioprocess=function(e){if(window._vc!==session||session.busy||session.listening===false)return;let f=e.inputBuffer.getChannelData(0),sum=0;for(let i=0;i<f.length;i++)sum+=f[i]*f[i];let rms=Math.sqrt(sum/f.length),p=new Int16Array(f.length);for(let i=0;i<f.length;i++){let v=Math.max(-1,Math.min(1,f[i]));p[i]=v<0?v*32768:v*32767;}if(rms>.014){session.speaking=true;session.silence=0;session.chunks.push(p);}else if(session.speaking){session.chunks.push(p);session.silence+=p.length/24000;if(session.silence>=.8){let c=session.chunks;session.chunks=[];session.speaking=false;session.silence=0;sendTurn(c);}}};
   }).catch(e=>{ac.close();alert('mic error: '+e.message);_avCallLit(false);});
 }
-function startVoiceCallWithToken(token, instructions, provider){
+function startVoiceCallWithToken(token, instructions, provider, ladder){
       const generation=++voiceGeneration;
       provider = provider || 'grok';
       var ac = new (window.AudioContext||window.webkitAudioContext)({sampleRate:24000});
@@ -5277,12 +5766,15 @@ function startVoiceCallWithToken(token, instructions, provider){
           ? new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-realtime', ['realtime', 'openai-insecure-api-key.'+token])
           : new WebSocket('wss://api.x.ai/v1/realtime?model=grok-voice-latest', ['xai-client-secret.'+token]);
         const session = window._vc = {ws:ws, ac:ac, mic:mic, playHead:0, node:null, gloriaTurn:'', vintosTurn:'', turnCount:0, startedAt:Date.now(), baseInstr:instructions, lastFraming:0, provider:provider};
-        session.responses=new Map();session.ledgerPosts=[];session.clientId='voice-'+Date.now()+'-'+generation;
+        session.responses=new Map();session.ledgerPosts=[];session.clientId=(ladder&&ladder.clientId)||('voice-'+Date.now()+'-'+generation);session.ladder=ladder||null;
+        // he called her: his opening is asked for the moment the socket is ready, before she has said anything
+        const askOpening=function(){if(!session.ladder||session.openingAsked)return;session.openingAsked=true;session.openingPending=true;
+          ws.send(JSON.stringify({type:'response.create',response:{instructions:session.baseInstr+'\n\n'+(session.ladder.opening||'Speak first: you called her.')}}));};
         const responseFor=function(m){
           const id=m.response_id||(m.response&&m.response.id)||session.currentResponse;
           if(!id)return null;
           session.currentResponse=id;
-          if(!session.responses.has(id))session.responses.set(id,{id,text:'',gloria:session.gloriaTurn||'',item:session.itemId,pending:0,played:0,done:false,posted:false});
+          if(!session.responses.has(id)){session.responses.set(id,{id,text:'',gloria:session.gloriaTurn||'',item:session.itemId,eventId:session.openingPending?undefined:session.admissionEvent,opening:!!session.openingPending,audio:[],pending:0,played:0,done:false,posted:false});session.openingPending=false;}
           return session.responses.get(id);
         };
         const flush=function(response,interrupted){
@@ -5291,36 +5783,87 @@ function startVoiceCallWithToken(token, instructions, provider){
           const state=interrupted?(response.played?'partial':'unknown'):(response.played?'completed':'not_played');
           session.ledgerPosts.push(Promise.resolve(_vcPostVoiceTurn(response.gloria,response.text,{
             response_id:response.id,item_id:response.item,session_id:session.providerSession,
-            turn_id:session.clientId+':'+response.id,playback_state:state,
+            turn_id:session.clientId+':'+response.id,stratagem_event_id:response.eventId,playback_state:state,
             interrupted:state!=='completed',heard:'',client_session_id:session.clientId
           })).catch(()=>{}));
         };
+        const playChunk=function(delta,response){
+          response.pending++;
+          const str=atob(delta),by=new Uint8Array(str.length);for(let i=0;i<str.length;i++)by[i]=str.charCodeAt(i);
+          const pcm=new Int16Array(by.buffer),floats=new Float32Array(pcm.length);for(let i=0;i<pcm.length;i++)floats[i]=pcm[i]/32768;
+          const buffer=ac.createBuffer(1,floats.length,24000);buffer.getChannelData(0).set(floats);
+          const source=ac.createBufferSource();source.buffer=buffer;source.connect(ac.destination);
+          session.playHead=Math.max(session.playHead,ac.currentTime);session.sources=session.sources||new Set();session.sources.add(source);response.sources=response.sources||new Set();response.sources.add(source);
+          source.onended=()=>{session.sources.delete(source);response.sources.delete(source);response.pending--;if(!session.closing&&!response.revoked)response.played++;flush(response,!!response.revoked);};
+          source.start(session.playHead);session.playHead+=buffer.duration;
+        };
+        const admitInput=async function(){
+          const eventId=session.clientId+':'+session.itemId;
+          try{
+            const admitted=await VintosStratagemVoice.admit(VintosUI.request,API,CONFIG.secret,session.gloriaTurn,eventId);
+            if(window._vc!==session||session.closing||admitted.duplicate)return;
+            if(admitted.control_reply!==undefined){
+              try{ws.send(JSON.stringify({type:'response.cancel'}));}catch(e){}
+              (session.sources||[]).forEach(source=>{try{source.stop();}catch(e){}});
+              _vcPostVoiceTurn(session.gloriaTurn,admitted.control_reply,{turn_id:eventId,client_session_id:session.clientId});
+              return;
+            }
+            session.admissionEvent=eventId;
+            ws.send(JSON.stringify({type:'response.create',response:{instructions:session.baseInstr+'\n\n'+(session.framing||'')+admitted.instructions}}));
+          }catch(e){console.warn('[voice/admission]',e);}
+        };
+        const completeResponse=async function(response){
+          if(response.completing)return;response.completing=true;
+          try{
+            const final=response.opening
+              ? await VintosUI.request(API+'/api/attention/call/'+encodeURIComponent(session.ladder.id)+'/opening',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({reply:response.text})}).then(r=>r.json())
+              : await VintosStratagemVoice.complete(VintosUI.request,API,CONFIG.secret,response.text,response.eventId);
+            response.text=final.reply||'';
+            if(window._vc!==session||session.closing||response.revoked||!final.allowed){response.audio=[];response.done=true;flush(response,true);return;}
+            const el=document.getElementById('av-call-transcript');if(el)el.textContent+=response.text;
+            // If private initiation markup was removed, its spoken audio is never played.
+            // Use the existing speech renderer for the clean public words instead.
+            if(final.changed&&response.text){
+              const spoken=await VintosUI.request(API+'/api/avatar/speak',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({text:response.text})}).then(r=>r.json());
+              if(spoken.audio_url&&!response.revoked){const audio=new Audio(API+spoken.audio_url);response.alternateAudio=audio;response.pending++;audio.onended=()=>{response.pending--;response.played++;flush(response,false);};audio.onerror=()=>{response.pending--;flush(response,true);};audio.play().catch(()=>{response.pending--;flush(response,true);});}
+            }else response.audio.forEach(delta=>playChunk(delta,response));
+            response.audio=[];response.done=true;flush(response,false);
+          }catch(e){response.text='';response.audio=[];response.done=true;flush(response,true);}
+        };
+        session.stratagemWatch=setInterval(function(){
+          session.responses.forEach(function(response){
+            if(!response.eventId||response.checking||response.revoked||(!response.pending&&response.done))return;
+            response.checking=true;
+            const halt=function(){response.revoked=true;response.audio=[];(response.sources||[]).forEach(source=>{try{source.stop();}catch(e){}});if(response.alternateAudio)response.alternateAudio.pause();try{ws.send(JSON.stringify({type:'response.cancel',response_id:response.id}));}catch(e){}};
+            VintosStratagemVoice.eligible(VintosUI.request,API,CONFIG.secret,response.eventId)
+              .then(status=>{if(!status.allowed)halt();}).catch(halt).finally(()=>{response.checking=false;});
+          });
+        },500);
         ws.onopen = function(){ if(window._vc!==session){ws.close();return;}
           if(provider!=='openai') ws.send(JSON.stringify({type:'session.update', session:{voice:'lux', instructions:instructions,
-            turn_detection:{type:'server_vad', prefix_padding_ms:300, silence_duration_ms:800, idle_timeout_ms:20000},
+            turn_detection:null,
             audio:{input:{format:{type:'audio/pcm',rate:24000}, transcription:{model:'grok-transcribe', prompt:'Expect these names and words: Vintos, Velaris, Gloria, Eve, Kevin, Aegis, Velqan, Nifrathir, EmoClaw, MoltBook, Claude.'}}, output:{format:{type:'audio/pcm',rate:24000}}}}}));
+          askOpening();
           var s = ac.createMediaStreamSource(mic), node = ac.createScriptProcessor(4096,1,1);
           s.connect(node); node.connect(ac.destination); window._vc.node = node;
           node.onaudioprocess = function(e){ if(ws.readyState!==1) return;
             var f = e.inputBuffer.getChannelData(0), p = new Int16Array(f.length);
             for(var i=0;i<f.length;i++){var v=Math.max(-1,Math.min(1,f[i]));p[i]=v<0?v*0x8000:v*0x7fff;}
             var u=new Uint8Array(p.buffer), b=''; for(var j=0;j<u.length;j++)b+=String.fromCharCode(u[j]);
-            ws.send(JSON.stringify({type:'input_audio_buffer.append', audio:btoa(b)})); };
+            ws.send(JSON.stringify({type:'input_audio_buffer.append', audio:btoa(b)}));
+            let energy=0;for(let k=0;k<f.length;k++)energy+=f[k]*f[k];const voiced=Math.sqrt(energy/f.length)>.014;
+            if(voiced){
+              if(!session.speaking){try{ws.send(JSON.stringify({type:'response.cancel'}));}catch(e){}(session.sources||[]).forEach(source=>{try{source.stop();}catch(e){}});}
+              session.speaking=true;session.silence=0;
+            }else if(session.speaking){session.silence=(session.silence||0)+f.length/24000;if(session.silence>=.8){session.speaking=false;session.silence=0;ws.send(JSON.stringify({type:'input_audio_buffer.commit'}));}}
+          };
         };
         ws.onmessage = function(ev){ if(window._vc!==session)return; var m; try{m=JSON.parse(ev.data);}catch(e){return;}
           if(m.type==='session.created'){session.providerSession=m.session&&m.session.id;}
           if(m.type==='response.created'){responseFor(m);}
           if(m.type==='response.output_audio.delta' && m.delta){
-            const response=responseFor(m);if(!response)return;response.pending++;
-            var str=atob(m.delta), by=new Uint8Array(str.length); for(var i=0;i<str.length;i++)by[i]=str.charCodeAt(i);
-            var i16=new Int16Array(by.buffer), fl=new Float32Array(i16.length);
-            for(var k=0;k<i16.length;k++)fl[k]=i16[k]/32768;
-            var ab=ac.createBuffer(1,fl.length,24000); ab.getChannelData(0).set(fl);
-            var bs=ac.createBufferSource(); bs.buffer=ab; bs.connect(ac.destination);
-            var now=ac.currentTime; if(window._vc.playHead<now)window._vc.playHead=now;
-            session.sources=session.sources||new Set();session.sources.add(bs);bs.onended=()=>{session.sources.delete(bs);response.pending--;if(!session.closing)response.played++;flush(response,false);};bs.start(window._vc.playHead); window._vc.playHead+=ab.duration;
+            const response=responseFor(m);if(response)response.audio.push(m.delta);
           } else if(m.type==='response.output_audio_transcript.delta' && m.delta){
-            var el=document.getElementById('av-call-transcript'); if(el) el.textContent += m.delta;
             const response=responseFor(m);if(response)response.text+=m.delta;
           } else if((m.type==='conversation.item.input_audio_transcription.updated'||m.type==='conversation.item.input_audio_transcription.completed') && (m.transcript||m.delta)){
             session.itemId=m.item_id||session.itemId;
@@ -5330,28 +5873,27 @@ function startVoiceCallWithToken(token, instructions, provider){
             // transcript at creation time (the 2026-09-12 regression).
             const response=session.currentResponse&&session.responses.get(session.currentResponse);
             if(response&&!response.posted)response.gloria=session.gloriaTurn||'';
-            if(m.type==='conversation.item.input_audio_transcription.completed') _vcRefreshFraming();
+            if(m.type==='conversation.item.input_audio_transcription.completed'){_vcRefreshFraming();admitInput();}
           } else if(m.type==='response.output_audio_transcript.done'){
             const response=responseFor(m);if(response&&m.transcript)response.text=m.transcript;
           } else if(m.type==='response.done'){
-            const response=responseFor(m);if(response){response.done=true;flush(response,false);}session.gloriaTurn='';
+            const response=responseFor(m);if(response)completeResponse(response);session.gloriaTurn='';
           }
         };
         ws.onclose = async function(){
           session.closing=true;
+          clearInterval(session.stratagemWatch);
           session.responses.forEach(r=>flush(r,true));
           try{if(session.node)session.node.disconnect();mic.getTracks().forEach(t=>t.stop());(session.sources||[]).forEach(s=>{try{s.stop();}catch(e){}});await ac.close();}catch(e){}
           await Promise.allSettled(session.ledgerPosts);
-          try{await VintosUI.request(API+'/api/voice/session-end',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({duration_seconds:Math.round((Date.now()-session.startedAt)/1000),turns:session.responses.size,provider:session.provider,client_session_id:session.clientId})});}catch(e){}
+          try{await VintosUI.request(API+'/api/voice/session-end',{method:'POST',headers:{'Content-Type':'application/json','X-Vintos-Secret':CONFIG.secret},body:JSON.stringify({duration_seconds:Math.round((Date.now()-session.startedAt)/1000),turns:session.responses.size,provider:session.provider,client_session_id:session.clientId,ladder_call:session.ladder?session.ladder.id:undefined})});}catch(e){}
+          if(session.ladder)ladderShowSaveSheet();
           if(window._vc===session){window._vc=null;var b2=document.getElementById('av-call-btn');if(b2){b2.style.color='';b2.style.background='';}}
         };
         ws.onerror = function(){};
       }).catch(function(e){ ac.close(); alert('mic error: '+e.message); var b3=document.getElementById('av-call-btn'); if(b3) b3.style.color=''; b3.style.background=''; });
     }
-    function endVintosCall(){ ++voiceGeneration;try{ var vc=window._vc;if(!vc)return;if(vc.provider==='local'){
-      if(vc.closing)return;vc.closing=true;if(vc.heartbeat)clearInterval(vc.heartbeat);if(vc.node)vc.node.disconnect();vc.mic.getTracks().forEach(t=>t.stop());
-      if(vc.busy){_avCallLit('thinking');return;}_finishLocalVoiceSession(vc);
-    }else if(vc.ws){vc.closing=true;vc.ws.close();} }catch(e){} }
+    function endVintosCall(){ ++voiceGeneration;try{ var vc=window._vc;if(!vc)return;if(vc.provider==='local'){if(vc.closing)return;vc.closing=true;if(vc.heartbeat)clearInterval(vc.heartbeat);if(vc.node)vc.node.disconnect();vc.mic.getTracks().forEach(t=>t.stop());if(vc.busy){_avCallLit('thinking');return;}_finishLocalVoiceSession(vc);}else if(vc.ws){vc.closing=true;vc.ws.close();}}catch(e){} }
     // ── Two realtime providers behind the one button and the one in-call screen ──
     //   Grok live: the xAI realtime socket. ChatGPT live: OpenAI's realtime socket (gpt-realtime). Both get his
     //   full instructions from /api/voice/token, the same LIVE framing after each of her turns, the same ledger
@@ -5373,7 +5915,7 @@ function startVoiceCallWithToken(token, instructions, provider){
       setTimeout(function(){ document.addEventListener('pointerdown', function close(ev){ if(m.contains(ev.target) || ev.target.id==='av-call-btn') return; m.remove(); document.removeEventListener('pointerdown', close); }); }, 0);
     }
     function _avCallLit(on){ var btn=document.getElementById('av-call-btn'); if(!btn) return; var thinking=on==='thinking';btn.style.color = on ? (thinking?'rgba(255,210,110,0.95)':'rgba(100,220,100,0.9)') : ''; btn.style.background = on ? (thinking?'rgba(210,145,45,0.55)':'rgba(80,200,120,0.5)') : '';btn.title=thinking?'Finishing his local reply…':(on?'Local call active':''); }
-    function _avCallGrok(provider) {
+    function _avCallGrok(provider, ladder) {
       provider = provider || 'grok';
       const requestedGeneration=++voiceGeneration;
       if(window._vc)return;
@@ -5381,11 +5923,12 @@ function startVoiceCallWithToken(token, instructions, provider){
       if (btn) btn.style.color = 'rgba(100,220,100,0.9)'; btn.style.background = 'rgba(80,200,120,0.5)';
       var _base = (typeof API !== 'undefined' && API) ? API : '';
       var _hdrs = {}; try{ if(typeof CONFIG!=='undefined' && CONFIG.secret) _hdrs['X-Vintos-Secret']=CONFIG.secret; }catch(e){}
-      VintosUI.request(_base + '/api/voice/token?provider=' + provider, {method:'POST', headers:_hdrs})
+      VintosUI.request(_base + '/api/voice/token?provider=' + provider + (ladder ? '&ladder_call=' + encodeURIComponent(ladder.id) : ''), {method:'POST', headers:_hdrs})
         .then(function(r){return r.json();})
         .then(function(d){ if(typeof d==='string'){try{d=JSON.parse(d);}catch(e){}}
           if(requestedGeneration!==voiceGeneration)return;
-          if(d && d.token){ if(provider==='local')startLocalVoiceCall(d.instructions);else startVoiceCallWithToken(d.token, d.instructions, provider); }
+          if(ladder) ladder.opening = d && d.opening || '';
+          if(d && d.token){ if(provider==='local')startLocalVoiceCall(d.instructions, ladder);else startVoiceCallWithToken(d.token, d.instructions, provider, ladder); }
           else { alert((d && d.error) ? d.error : 'no token from server'); if(btn) btn.style.color=''; btn.style.background=''; }
         }).catch(function(e){ alert('token error: '+e.message); if(btn) btn.style.color=''; btn.style.background=''; });
     }

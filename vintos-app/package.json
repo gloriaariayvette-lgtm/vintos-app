@@ -9,6 +9,7 @@
     "watch:configure": "ruby scripts/configure-watch-targets.rb"
   },
   "dependencies": {
+    "@capacitor/app": "^5.0.8",
     "@capacitor/background-runner": "^1.1.0",
     "@capacitor/core": "^5.7.0",
     "@capacitor/haptics": "^5.0.7",

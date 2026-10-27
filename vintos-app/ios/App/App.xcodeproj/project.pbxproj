@@ -21,6 +21,7 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		54F4AC6741DC99C87FD67D2B /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F683D90CD052727E4195D138 /* Foundation.framework */; };
 		5CD7AE00E046BDD94B5932CE /* SharedMoment.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF62E175A5FEA60B9A7E4178 /* SharedMoment.swift */; };
+		7278A81416D29DA0C2A234CF /* VintosCallPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 4F5B191EE18403459DA66913 /* VintosCallPlugin.m */; };
 		843AA19FF32D2736C3773CDA /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37B5F2CC7702F63A55DE6A35 /* AudioPlayer.swift */; };
 		8B59A8E74F91EB40DE5EE54C /* Pods_Vintos.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3D10C1B4A14F204F13F750E3 /* Pods_Vintos.framework */; };
 		9B7B4F19964AC91408195827 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F683D90CD052727E4195D138 /* Foundation.framework */; };
@@ -33,6 +34,7 @@
 		C19E07A22C064A43AA210107 /* amused.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA210106 /* amused.mp4 */; };
 		C19E07A22C064A43AA210109 /* tender.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA210108 /* tender.mp4 */; };
 		C19E07A22C064A43AA21010B /* speaking.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C19E07A22C064A43AA21010A /* speaking.mp4 */; };
+		DB7944BB7066D4825BE64CC3 /* VintosCall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D457D1E0BE13735C8420034 /* VintosCall.swift */; };
 		FA729A316ABE63D988A1B07E /* VintosWatchWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C134AA46DC08A51C3FEC3C77 /* VintosWatchWidget.swift */; };
 		FB721357B8D54CABCD3E5B28 /* SensorBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = EADF8DCEB3119369F3BE96F8 /* SensorBridge.swift */; };
 		FF9369286AC8BC398A018B82 /* WatchAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4440B34205E1DD30C843396D /* WatchAPI.swift */; };
@@ -83,6 +85,7 @@
 /* Begin PBXFileReference section */
 		0F28DE12DF781BC6183ABD95 /* VintosWatchApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VintosWatchApp.swift; sourceTree = "<group>"; };
 		0FC6D650FF7FE21C37EBF10F /* VintosWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VintosWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		1D457D1E0BE13735C8420034 /* VintosCall.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VintosCall.swift; sourceTree = "<group>"; };
 		20DF2DD0F04C3E62B416E0FC /* Pods-Vintos.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Vintos.release.xcconfig"; path = "Pods/Target Support Files/Pods-Vintos/Pods-Vintos.release.xcconfig"; sourceTree = "<group>"; };
 		2FAD9762203C412B000D30F8 /* config.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = config.xml; sourceTree = "<group>"; };
 		37B5F2CC7702F63A55DE6A35 /* AudioPlayer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
@@ -90,7 +93,9 @@
 		3D10C1B4A14F204F13F750E3 /* Pods_Vintos.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Vintos.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		432C8C8416F4607D37A49BF4 /* VintosWatchWidget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VintosWatchWidget.swift; sourceTree = "<group>"; };
 		4440B34205E1DD30C843396D /* WatchAPI.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WatchAPI.swift; sourceTree = "<group>"; };
+		493AD8FD49A56E97B653B3D4 /* App.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		4CCA2AB3F84B83E29F3F0C1D /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		4F5B191EE18403459DA66913 /* VintosCallPlugin.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = VintosCallPlugin.m; sourceTree = "<group>"; };
 		50379B222058CBB4000EE86E /* capacitor.config.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = capacitor.config.json; sourceTree = "<group>"; };
 		504EC3041FED79650016851F /* Vintos.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Vintos.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		504EC3071FED79650016851F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -204,6 +209,9 @@
 				504EC3131FED79650016851F /* Info.plist */,
 				2FAD9762203C412B000D30F8 /* config.xml */,
 				50B271D01FEDC1A000F3C39B /* public */,
+				1D457D1E0BE13735C8420034 /* VintosCall.swift */,
+				4F5B191EE18403459DA66913 /* VintosCallPlugin.m */,
+				493AD8FD49A56E97B653B3D4 /* App.entitlements */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -476,6 +484,8 @@
 			files = (
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				A711C3E18F704D64A27A1001 /* SceneDelegate.swift in Sources */,
+				DB7944BB7066D4825BE64CC3 /* VintosCall.swift in Sources */,
+				7278A81416D29DA0C2A234CF /* VintosCallPlugin.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -671,6 +681,7 @@
 			baseConfigurationReference = EB7B0E94F932E3F76D905FA8 /* Pods-Vintos.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;
@@ -692,6 +703,7 @@
 			baseConfigurationReference = 20DF2DD0F04C3E62B416E0FC /* Pods-Vintos.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = LH37Z6K7GP;

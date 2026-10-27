@@ -1,6 +1,8 @@
 PODS:
   - Capacitor (5.7.8):
     - CapacitorCordova
+  - CapacitorApp (5.0.8):
+    - Capacitor
   - CapacitorBackgroundRunner (1.1.0):
     - Capacitor
   - CapacitorCordova (5.7.8)
@@ -11,6 +13,7 @@ PODS:
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorBackgroundRunner (from `../../node_modules/@capacitor/background-runner`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
@@ -19,6 +22,8 @@ DEPENDENCIES:
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorApp:
+    :path: "../../node_modules/@capacitor/app"
   CapacitorBackgroundRunner:
     :path: "../../node_modules/@capacitor/background-runner"
   CapacitorCordova:
@@ -30,11 +35,12 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Capacitor: 9686e5711b48a1aa84671ede795d0175848abcba
+  CapacitorApp: 8026f7ce1ac72780258d05a90c07deb5c724c0fa
   CapacitorBackgroundRunner: d8e1a39a7618292a78653a857a12028bf89f6571
   CapacitorCordova: 31ab98dca2ddcee051027a1afe7e8c85c82f7297
   CapacitorHaptics: acd823c6ed0ec2cd968a09316768144b0495a1e7
   CapacitorLocalNotifications: 73765422be07829b2d0a4c7c22a77ea2252ca210
 
-PODFILE CHECKSUM: 949d27e60fa3831bf7517108463171c8afeb4e9d
+PODFILE CHECKSUM: 6c8217c3869bf9e8f7dcd3fde527bf38f4f4d592
 
 COCOAPODS: 1.16.2
