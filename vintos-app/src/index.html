@@ -3841,7 +3841,7 @@ let _avOverlayGeneration=0, _avAnimationFrame=null;
 function openAvatarOverlay() {
   ++_avOverlayGeneration;
   if(_avStage.active()){_avStage._unfreeze();const l=_avStage.layers[_avStage.front];if(l&&l.bg)l.bg.play().catch(()=>{});}
-  try{ if(!_avStage.man) _avStage.load(); else if(_avStage.active()) _avStage._hideCanvas(); }catch(e){}
+  try{ if(!_avStage.man) _avStage.load(); else { var live=_avStage.layers[_avStage.front]; if(live && live.fg.readyState>=2 && live.wrap.style.opacity==='1') _avStage._hideCanvas(); } }catch(e){}
   try{
     if(!window._avStripRO && window.ResizeObserver){
       window._avStripRO=new ResizeObserver(function(){ try{_avStage.relayout();}catch(e){} });
@@ -4535,27 +4535,37 @@ var _avStage = {
       this.man=await r.json();
       var rooms=Object.keys(this.man.rooms||{}).filter(n=>(this.man.rooms[n].clips||[]).length);
       if(!rooms.length){ this.man=null; return; }
-      this._hideCanvas();
       this.setRoom(this.man.default && rooms.indexOf(this.man.default)>=0 ? this.man.default : rooms[0]);
     }catch(e){ this.man=null; }
   },
   _show: async function(url, opts){
-    var next=1-this.front, L=this._el(next), old=this.layers[this.front];
+    var previousFront=this.front, next=1-this.front, L=this._el(next), old=this.layers[this.front];
     var self=this, seq=(this._seq=(this._seq||0)+1), settled=false, lightweight=!!opts.lightweight;
     this.front=next;                      // claim the layer now: a second _show while this one loads takes the other layer
     var prev=L.url; L.url=url;
     L.fg.loop=!!opts.loop; L.fg.muted=!!opts.muted;
     L.fg.oncanplay=null; L.fg.onerror=null; L.fg.onended=null;
     var fail=function(why){
-      if(settled) return; settled=true;
+      if(settled || seq!==self._seq) return; settled=true;
+      self.front=previousFront; L.wrap.style.opacity='0';
+      if(!old || old.fg.readyState<2){ var canvas=document.getElementById('avatar-canvas'); if(canvas)canvas.style.display='block'; }
       try{ console.log('[stage] clip did not start: '+why); }catch(e){}
       if(opts.onfail) try{ opts.onfail(); }catch(e){}
     };
-    L.fg.oncanplay=function(){
-      if(settled || seq!==self._seq) return; settled=true;
-      L.fg.oncanplay=null;
-      var p=L.fg.play(); if(!lightweight)L.bg.play().catch(function(){});
-      if(p && p.catch) p.catch(function(){ if(!opts.muted){ L.fg.muted=true; L.fg.play().catch(function(){}); if(opts.onfail) setTimeout(opts.onfail, 300); } });
+    var starting=false;
+    L.fg.oncanplay=async function(){
+      if(settled || starting || seq!==self._seq) return;
+      starting=true;
+      try { await L.fg.play(); }
+      catch(error){
+        if(!opts.muted){
+          L.fg.muted=true;
+          try { await L.fg.play(); } catch(retryError){ fail('play rejected'); return; }
+        } else { fail('play rejected'); return; }
+      }
+      if(settled || seq!==self._seq) return;
+      settled=true; L.fg.oncanplay=null;
+      if(!lightweight)L.bg.play().catch(function(){});
       L.wrap.style.opacity='1';
       if(old && old!==L){ old.wrap.style.opacity='0'; if(lightweight){try{old.fg.pause();old.bg.pause();}catch(e){}}else setTimeout(function(){ if(old!==self.layers[self.front]) try{old.fg.pause();old.bg.pause();}catch(e){} }, 1000); }
       self._hideCanvas();
@@ -4819,7 +4829,7 @@ function _avDrawerInit(){
     try{h.setPointerCapture(e.pointerId);}catch(_e){}
     e.preventDefault();
   });
-  h.addEventListener('pointermove', function(e){
+  window.addEventListener('pointermove', function(e){
     if(!drag || e.pointerId!==drag.id) return;
     var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
     if(Math.hypot(dx,dy)>=14) drag.moved=true;
@@ -4841,9 +4851,10 @@ function _avDrawerInit(){
     if(d) d.style.transition='transform 0.3s cubic-bezier(.4,0,.2,1)';
     if(!cancelled && !moved) avToggleDrawer(); else _avDrawerApply();
   }
-  h.addEventListener('pointerup', end);
-  h.addEventListener('pointercancel', end);
-  h.addEventListener('lostpointercapture', end);
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+  // WebKit may drop capture when the transformed drawer crosses edges.
+  // Window listeners retain the active pointer until release or cancellation.
   h.addEventListener('click', function(e){
     // Pointer taps act immediately on release; retain keyboard/VoiceOver clicks.
     if(Date.now()<suppressClickUntil){e.preventDefault();return;}
