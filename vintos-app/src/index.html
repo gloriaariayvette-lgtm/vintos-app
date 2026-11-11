@@ -3853,20 +3853,9 @@ function openAvatarOverlay() {
   overlay.style.display = 'block';
   overlay.style.pointerEvents = 'all';
   requestAnimationFrame(() => { overlay.style.opacity = '1'; });
-  if (!_avOpen) {
-    _avOpen = true;
-    function _waitBundle(attempts) {
-      if (window.THREE && window.GLTFLoader && window._avatarBundleReady) {
-        _avInit();
-      } else if (attempts < 50) {
-        document.getElementById('av-load-status').textContent = 'loading libs ' + attempts;
-        setTimeout(() => _waitBundle(attempts+1), 200);
-      } else {
-        document.getElementById('av-load-status').textContent = 'THREE:'+!!window.THREE+' GL:'+!!window.GLTFLoader;
-      }
-    }
-    _waitBundle(0);
-  }
+  _avOpen = true;
+  // This screen is his filmed avatar. Never load the legacy 3D character here.
+  _avStage._hideCanvas();
   try { _avRenderChatLog(true); } catch(e){}
   try { _avLoadBrain(); } catch(e){}
   try { _avLoadHistory(); } catch(e){}
@@ -4483,6 +4472,11 @@ function _avParseReply(raw) {
    nothing changes - the 3D avatar keeps working exactly as before. */
 var _avStage = {
   man: null, room: null, front: 0, layers: [null, null], speaking: false,
+  _status: function(message){
+    var status=document.getElementById('av-load-status');
+    if(status){ status.textContent=message; status.style.cursor=message?'pointer':'';
+      status.onclick=message?()=>{this.room=null;this.load();}:null; }
+  },
   active: function(){ return !!(this.man && this.room && (this.man.rooms[this.room]||{}).clips?.length); },
   _fit: function(L){
     // Feather the PICTURE's real edges (not the element's): compute the
@@ -4529,14 +4523,15 @@ var _avStage = {
     return URL.createObjectURL(await r.blob());
   },
   load: async function(){
+    this._hideCanvas(); this._status('Loading his video…');
     try{
       var r=await VintosUI.request(API+'/avatar/stage/manifest',{headers:{'X-Vintos-Secret':CONFIG.secret}});
-      if(!r.ok) return;
+      if(!r.ok) throw new Error('manifest '+r.status);
       this.man=await r.json();
       var rooms=Object.keys(this.man.rooms||{}).filter(n=>(this.man.rooms[n].clips||[]).length);
-      if(!rooms.length){ this.man=null; return; }
+      if(!rooms.length){ throw new Error('no video renders available'); }
       this.setRoom(this.man.default && rooms.indexOf(this.man.default)>=0 ? this.man.default : rooms[0]);
-    }catch(e){ this.man=null; }
+    }catch(e){ this.man=null; this._status('Video unavailable — tap to retry'); }
   },
   _show: async function(url, opts){
     var previousFront=this.front, next=1-this.front, L=this._el(next), old=this.layers[this.front];
@@ -4548,7 +4543,7 @@ var _avStage = {
     var fail=function(why){
       if(settled || seq!==self._seq) return; settled=true;
       self.front=previousFront; L.wrap.style.opacity='0';
-      if(!old || old.fg.readyState<2){ var canvas=document.getElementById('avatar-canvas'); if(canvas)canvas.style.display='block'; }
+      if(!old || old.fg.readyState<2) self._status('Video unavailable — tap to retry');
       try{ console.log('[stage] clip did not start: '+why); }catch(e){}
       if(opts.onfail) try{ opts.onfail(); }catch(e){}
     };
@@ -4568,7 +4563,7 @@ var _avStage = {
       if(!lightweight)L.bg.play().catch(function(){});
       L.wrap.style.opacity='1';
       if(old && old!==L){ old.wrap.style.opacity='0'; if(lightweight){try{old.fg.pause();old.bg.pause();}catch(e){}}else setTimeout(function(){ if(old!==self.layers[self.front]) try{old.fg.pause();old.bg.pause();}catch(e){} }, 1000); }
-      self._hideCanvas();
+      self._hideCanvas(); self._status('');
     };
     L.fg.onerror=function(){ fail('error'); };
     setTimeout(function(){ if(!settled && seq===self._seq) fail('timeout'); }, 12000);
@@ -4630,7 +4625,7 @@ var _avStage = {
       // the clip did not arrive (server busy rendering speech, network): try once more, then at least
       // keep whatever is on screen moving instead of a frozen last frame (Gloria, 2026-09-05)
       if(generation!==this.roomGeneration)return;
-      if(!_retry) setTimeout(function(){ if(generation===self.roomGeneration)self.setRoom(name,true); }, 1500); else this._unfreeze();
+      if(!_retry) setTimeout(function(){ if(generation===self.roomGeneration)self.setRoom(name,true); }, 1500); else {this._unfreeze();this._status('Video unavailable — tap to retry');}
     }
   },
   _unfreeze: function(){
@@ -5525,7 +5520,7 @@ document.querySelector('[data-tab="pearls"]').addEventListener('click', function
 </script>
 
 <div id="avatar-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;z-index:9999;opacity:0;transition:opacity 0.4s ease;background:radial-gradient(ellipse at 50% 60%, #0d0820 0%, #05050d 70%);pointer-events:none;overflow:hidden;">
-  <canvas id="avatar-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;display:block;"></canvas>
+  <canvas id="avatar-canvas" style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;"></canvas>
   <div id="av-telemetry" style="position:absolute;z-index:7;top:56px;right:16px;font-family:JetBrains Mono,monospace;font-size:8px;letter-spacing:0.08em;color:rgba(201,107,60,0.55);line-height:1.6;pointer-events:none;">
     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span style="min-width:22px;text-align:right;">val</span><div style="width:36px;height:2px;background:rgba(201,107,60,0.12);border-radius:1px;overflow:hidden;"><div id="av-valence" style="height:100%;background:rgba(201,107,60,0.55);border-radius:1px;transition:width 2s ease;width:50%"></div></div></div>
     <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span style="min-width:22px;text-align:right;">aro</span><div style="width:36px;height:2px;background:rgba(201,107,60,0.12);border-radius:1px;overflow:hidden;"><div id="av-arousal" style="height:100%;background:rgba(201,107,60,0.55);border-radius:1px;transition:width 2s ease;width:50%"></div></div></div>
@@ -5916,7 +5911,7 @@ function startVoiceCallWithToken(token, instructions, provider, ladder){
         }).catch(function(e){ alert('token error: '+e.message); if(btn) btn.style.color=''; btn.style.background=''; });
     }
 </script>
-<script src="avatar-bundle.js" onload="document.getElementById('av-load-status').textContent='bundle:loaded T:'+!!window.THREE" onerror="document.getElementById('av-load-status').textContent='bundle:FAILED'">
+<script src="avatar-bundle.js" >
 // === PEARL TAB ===
 </script>
 
